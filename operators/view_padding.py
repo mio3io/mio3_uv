@@ -10,7 +10,7 @@ mio3uv_view_padding_msgbus = object()
 
 
 def callback(cls, context):
-    MIO3UV_OT_view_padding.handle_remove()
+    MIO3UV_OT_view_padding.handle_remove(context)
     bpy.msgbus.clear_by_owner(mio3uv_view_padding_msgbus)
 
 
