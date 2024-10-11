@@ -39,7 +39,7 @@ from .ui import ui_view
 bl_info = {
     "name": "Mio3 UV",
     "author": "mio",
-    "version": (1, 0, 1),
+    "version": (1, 0, 0),
     "blender": (3, 6, 0),
     "location": "View3D > UV",
     "description": "UV Edit support",
