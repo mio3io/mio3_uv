@@ -1,6 +1,8 @@
 # Mio3 UV
 
-A UV editing support addon designed to make UV unwrapping more enjoyable. It includes features particularly suited for character modeling.
+A UV editing support addon I'm creating to make UV unwrapping more enjoyable. It includes features particularly suited for character modeling.
+
+To preview all the features currently implemented, please refer to the documentation page.
 
 Document [English](https://addon.mio3io.com/#/en/mio3uv/) / [Japanese](https://addon.mio3io.com/#/ja/mio3uv/)
 
