@@ -41,7 +41,7 @@ bl_info = {
     "author": "mio",
     "version": (1, 0, 0),
     "blender": (3, 6, 0),
-    "location": "View3D > UV",
+    "location": "UV Image Editor > Sidebar > Mio3",
     "description": "UV Edit support",
     "category": "UV",
 }
