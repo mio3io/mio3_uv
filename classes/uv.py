@@ -5,7 +5,7 @@ from mathutils import Vector
 from dataclasses import dataclass, field
 from typing import List, Set, Dict, Optional, Literal
 from bpy.types import Operator, Panel, Object
-from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace
+from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
 from collections import defaultdict
 from functools import cached_property
 
@@ -16,6 +16,7 @@ class UVIsland:
     uv_layer: BMLayerItem
     obj: Object
     extend: bool = True
+    boundary_edge: Set[BMEdge] = field(default_factory=set)
 
     face_count: int = field(init=False, default=0)
     uv_count: int = field(init=False, default=0)
@@ -261,6 +262,7 @@ class UVIslandManager:
             if face not in processed_faces:
                 island_faces = set()
                 island_edges = set()
+                boundary_edges = set()
                 faces_to_check = [face]
                 face_count = 0
                 uv_count = 0
@@ -275,12 +277,15 @@ class UVIslandManager:
                             island_edges.add(edge)
                             if not edge.seam:
                                 faces_to_check.extend(edge.link_faces)
+                            else:
+                                boundary_edges.add(edge)
 
                 if island_faces:
                     new_island = UVIsland(island_faces, bm, uv_layer, obj, self.extend)
                     new_island.face_count = face_count
                     new_island.uv_count = uv_count
                     new_island.edge_count = len(island_edges)
+                    new_island.boundary_edge = boundary_edges
                     islands.append(new_island)
 
         if self.find_all and self.uv_select:

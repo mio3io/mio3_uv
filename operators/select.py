@@ -268,6 +268,10 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        uv_select_mode = context.tool_settings.uv_select_mode
+
+        context.tool_settings.uv_select_mode = "EDGE"
+
         if use_uv_select_sync:
             return self.use_uv_select_sync_process()
 
@@ -277,52 +281,35 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
 
         island_manager = UVIslandManager(self.objects)
 
-        boundary_dict = {}
-        boundary_edges_dict = {}
         for obj, islands in island_manager.islands_by_object.items():
             bm = island_manager.bmesh_dict[obj]
-            boundary_dict[obj] = set()
-            boundary_edges_dict[obj] = set()
-            for edge in bm.edges:
-                is_border = False
-                if self.use_mesh_boundary and edge.is_boundary:
-                    is_border = True
-                if self.use_seam and edge.seam:
-                    is_border = True
-                if is_border:
-                    boundary_edges_dict[obj].add(edge)
-                    for vert in edge.verts:
-                        for loop in vert.link_loops:
-                            boundary_dict[obj].add(loop)
+            uv_layer = island_manager.uv_layer_dict[obj]
 
             for island in islands:
-                bm = island.bm
-                uv_layer = island.uv_layer
                 original_selected_loops = {
                     loop for face in island.faces for loop in face.loops if loop[uv_layer].select
                 }
 
-                boundary = boundary_dict[island.obj]
-                boundary_edges = boundary_edges_dict[island.obj]
                 island.deselect_all_uv()
                 for face in island.faces:
                     for loop in face.loops:
                         uv = loop[uv_layer]
                         if loop in original_selected_loops:
-                            if loop in boundary:
+                            is_boundary = False
+                            if self.use_mesh_boundary and loop.edge.is_boundary:
+                                is_boundary = True
+                            if self.use_seam and loop.edge.seam:
+                                is_boundary = True
+                            if self.use_uv_boundary and loop.edge in island.boundary_edge:
+                                is_boundary = True
+
+                            if is_boundary:
                                 uv.select = True
-                                if loop.edge in boundary_edges:
-                                    uv.select_edge = True
-                            elif self.use_uv_boundary:
-                                for linked_loop in loop.vert.link_loops:
-                                    if linked_loop.face != face:
-                                        linked_uv = linked_loop[uv_layer]
-                                        if (Vector(uv.uv) - Vector(linked_uv.uv)).length > 1e-6:
-                                            uv.select = True
-                                            break
+                                uv.select_edge = True
 
         island_manager.update_uvmeshes()
 
+        context.tool_settings.uv_select_mode = uv_select_mode
         if use_uv_select_sync:
             self.sync_mesh_from_uv(context, self.objects)
         self.print_time(time.time() - self.start_time)
