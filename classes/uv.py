@@ -237,24 +237,34 @@ class UVIslandManager:
                     if face.select:
                         target_faces.add(face)
             else:
-                for face in bm.faces:
-                    if face.select:
-                        for loop in face.loops:
-                            uv = loop[uv_layer]
-                            if uv.select and face not in target_faces:
-                                target_faces.add(face)
-                                break
+                if not self.extend:
+                    for face in bm.faces:
+                        if face.select and all(loop[uv_layer].select for loop in face.loops):
+                            target_faces.add(face)
+                else:
+                    for face in bm.faces:
+                        if face.select:
+                            for loop in face.loops:
+                                uv = loop[uv_layer]
+                                if uv.select and face not in target_faces:
+                                    target_faces.add(face)
+                                    break
         else:
             if self.find_all:
                 for face in bm.faces:
                     target_faces.add(face)
             else:
-                for face in bm.faces:
-                    for loop in face.loops:
-                        uv = loop[uv_layer]
-                        if uv.select and face not in target_faces:
-                            target_faces.add(face)
-                            break
+                if not self.extend:
+                    for face in bm.faces:
+                        if all(loop[uv_layer].select for loop in face.loops):
+                            target_faces.add(face) 
+                else:
+                    for face in bm.faces:
+                        for loop in face.loops:
+                            uv = loop[uv_layer]
+                            if uv.select and face not in target_faces:
+                                target_faces.add(face)
+                                break
 
         islands = []
         processed_faces = set()
