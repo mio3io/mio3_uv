@@ -2,7 +2,7 @@ import bpy
 import os
 from ..classes.operator import Mio3UVOperator
 
-CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images/checker_maps")
+CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "checker_maps")
 
 
 class MIO3UV_OT_color_grid(Mio3UVOperator):
@@ -23,8 +23,7 @@ class MIO3UV_OT_color_grid(Mio3UVOperator):
 
         obj = context.active_object
 
-        size = 2048 if mio3uv.image_size == "AUTO" else int(mio3uv.image_size)
-        self.size = size if size in {1024, 2048, 4096} else 4096 if size == 8192 else 2048
+        self.size = int(mio3uv.image_size)
 
         existing_material = self.find_existing_material()
 

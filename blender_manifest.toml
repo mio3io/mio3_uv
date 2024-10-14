@@ -11,3 +11,5 @@ license = ["SPDX:GPL-3.0-or-later"]
 website = "https://github.com/mio3io"
 copyright = ["2024 Mio"]
 
+[permissions]
+files = "Imports checker map images"

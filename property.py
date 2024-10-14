@@ -69,14 +69,13 @@ class MIO3UV_ObjectProps(PropertyGroup):
         name="Size",
         description="Choose an image size",
         items=[
-            ("AUTO", "Auto", "AUTO"),
             ("512", "512", "512x512 (4px)"),
             ("1024", "1024", "1024x1024 (8px)"),
             ("2048", "2048", "2048x2048 (16px)"),
             ("4096", "4096", "4096x4096 (32px)"),
             ("8192", "8192", "8192x8192 (64px)"),
         ],
-        default="AUTO",
+        default="2048",
         update=callback_update_padding,
     )
     padding_px: IntProperty(
