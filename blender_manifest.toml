@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 id = "mio3_uv"
 name = "Mio3 UV"
-version = "1.0.0"
+version = "1.1.0"
 tagline = "UV Edit Assistant Tool"
 maintainer = "Mio"
 type = "add-on"

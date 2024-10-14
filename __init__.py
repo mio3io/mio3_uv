@@ -40,7 +40,7 @@ from .ui import ui_view
 bl_info = {
     "name": "Mio3 UV",
     "author": "mio",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (3, 6, 0),
     "location": "UV Image Editor > Sidebar > Mio3",
     "description": "UV Edit support",
