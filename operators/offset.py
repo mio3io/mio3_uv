@@ -48,7 +48,7 @@ class MIO3UV_OT_offset(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        island_manager = UVIslandManager(self.objects, extend=False)
+        island_manager = UVIslandManager(self.objects)
 
         for island in island_manager.islands:
             self.expand_uv_boundary_outward(island, self.offset)

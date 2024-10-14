@@ -23,7 +23,7 @@ class MIO3UV_OT_paste(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        island_manager = UVIslandManager(self.objects, extend=False)
+        island_manager = UVIslandManager(self.objects)
         if self.mode == "AUTO":
             bpy.ops.uv.copy()
 

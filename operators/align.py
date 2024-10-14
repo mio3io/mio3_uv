@@ -69,9 +69,9 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
         if self.island and not self.edge_mode:
             if use_uv_select_sync:
-                island_manager = UVIslandManager(self.objects, extend=True, mesh_keep=True, mesh_link_uv=True)
+                island_manager = UVIslandManager(self.objects, mesh_keep=True, mesh_link_uv=True)
             else:
-                island_manager = UVIslandManager(self.objects, extend=True)
+                island_manager = UVIslandManager(self.objects)
             if not island_manager.islands:
                 return {"CANCELLED"}
             self.align_islands(island_manager, self.type)
