@@ -8,6 +8,7 @@ from .operators import straight
 from .operators import rectify
 from .operators import gridify
 from .operators import seam
+from .operators import normalize
 
 from .operators import rotate
 from .operators import orient
@@ -55,6 +56,7 @@ modules = [
     rectify,
     gridify,
     seam,
+    normalize,
     rotate,
     orient,
     select,

@@ -48,6 +48,8 @@ translation_dict = {
         ("*", "Keep Pin"): "ピンを維持",
         ("*", "Keep Seam"): "シームを維持",
 
+        ("*", "Keep Aspect"): "アスペクトを維持",
+
         ("*", "Unify Shapes"): "UVの形状を揃える",
         ("*", "Stack"): "重ねる",
         ("*", "Overlap similar UV shapes"): "類似した形状のUVシェイプを重ねます",
