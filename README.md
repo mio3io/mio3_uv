@@ -6,6 +6,10 @@ To preview all the features currently implemented, please refer to the documenta
 
 Document [English](https://addon.mio3io.com/#/en/mio3uv/) / [Japanese](https://addon.mio3io.com/#/ja/mio3uv/)
 
+## Install
+
+[Blender Extensions](https://extensions.blender.org/add-ons/mio3-uv/)
+
 ## Features
 
 ### Unwrap
