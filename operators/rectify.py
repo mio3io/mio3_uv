@@ -43,7 +43,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         for island in island_manager.islands:
             island.store_selection()
             island.deselect_all_uv()
-            if island.selection_uv_count < 4:
+            if island.selection_uv_count < 3:
                 island_manager.remove_island(island)
 
         for island in island_manager.islands:
@@ -139,11 +139,12 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
             self.adjust_aspect_ratio(island, bbox_uv, adjustbox)
 
-        if self.unwrap:
             # 隣接しているUVがshortest_path_selectで選択解除されるため
             for _, _, _, loops in corner_mapping:
                 for loop in loops:
                     loop[uv_layer].pin_uv = True
+
+        if self.unwrap:
             for island in island_manager.islands:
                 island.select_all_uv()
             bpy.ops.uv.unwrap(method="ANGLE_BASED")
