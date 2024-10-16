@@ -87,6 +87,9 @@ def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=Fal
         else 0
     )
 
+    if len(ordered_nodes) <= 1:
+        return
+
     if mode == "GEOMETRY":
         total_3d_distance = 0
         cumulative_3d_distances = [0]
