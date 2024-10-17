@@ -77,7 +77,7 @@ translation_dict = {
         ("*", "Grid Threshold"): "グリッドのしきい値",
         ("*", "UV Distance"): "UV空間での距離",
         ("*", "UV Similar"): "UVの類似性",
-        ("*", "Fixed Size"): "グリッド幅",
+        ("*", "Grid Size"): "グリッド幅",
         ("*", "Align Type"): "整列タイプ",
         ("*", "Align by group"): "グループごとに整列",
         ("*", "Group Margin"): "グループの間隔",

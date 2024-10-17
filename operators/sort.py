@@ -451,6 +451,7 @@ class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
             row_sub.prop(self, "grid_threshold", text="")
 
         row_axis = layout.row()
+        row_axis.scale_x = 1.2
         row_axis.label(text="Base Axis")
         row_axis.prop(self, "axis", expand=True)
 
@@ -502,7 +503,7 @@ class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
     bl_label = "Gridding"
     bl_description = "Gridding island based on coordinates in 3D space"
 
-    aling_mode: EnumProperty(items=[("FIXED", "Fixed Size", "")])
+    aling_mode: EnumProperty(items=[("FIXED", "Grid Size", "")])
     by_group: BoolProperty(name="By Group", default=True, options={"HIDDEN"})
     group_unit: BoolProperty(name="Groups as Unit", default=False, options={"HIDDEN"})
 
@@ -540,6 +541,7 @@ class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
             row_sub.prop(self, "grid_threshold", text="")
 
         row_axis = layout.row()
+        row_axis.scale_x = 1.2
         row_axis.label(text="Base Axis")
         row_axis.prop(self, "axis", expand=True)
 
@@ -548,7 +550,7 @@ class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
         row_align_uv.prop(self, "align_uv", expand=True)
 
         row = layout.row(align=True)
-        row.label(text="Fixed Size")
+        row.label(text="Grid Size")
         row.scale_x = 0.8
         row.prop(self, "grid_x", text="")
         row.scale_x = 1.25

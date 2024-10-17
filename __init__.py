@@ -43,7 +43,7 @@ bl_info = {
     "version": (1, 1, 1),
     "blender": (3, 6, 0),
     "location": "UV Image Editor > Sidebar > Mio3",
-    "description": "UV Edit support",
+    "description": "UV Edit Assistant Tools",
     "category": "UV",
 }
 
