@@ -121,6 +121,7 @@ translation_dict = {
         ("*", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
         ("*", "Padding"): "パディング",
+        ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
 
     }
 }  # fmt: skip

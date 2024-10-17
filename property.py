@@ -64,7 +64,7 @@ class MIO3_UVProperties(PropertyGroup):
 
 
 class MIO3UV_ObjectProps(PropertyGroup):
-    realtime: BoolProperty(name="Realtime", default=False)
+    realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance",  default=False)
     image_size: EnumProperty(
         name="Size",
         description="Choose an image size",

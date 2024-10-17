@@ -44,9 +44,9 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
 
     @classmethod
     def __draw(cls, context):
-        # obj = context.active_object
-        # if obj.mio3uv.realtime:
-        #     cls.update_mesh(context)
+        obj = context.active_object
+        if obj.mio3uv.realtime:
+            cls.update_mesh(context)
         viewport_vertices = [cls.__region.view2d.view_to_region(v[0], v[1], clip=False) for v in cls.__vertices]
         batch = batch_for_shader(cls.__shader, "LINES", {"pos": viewport_vertices})
 

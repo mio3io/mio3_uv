@@ -66,6 +66,8 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row.scale_x=1
         row.label(text="px")
 
+        row = layout.row()
+        row.prop(mio3uv, "realtime")
 
 classes = [MIO3UV_PT_View, MIO3UV_PT_SubGuidePadding]
 
