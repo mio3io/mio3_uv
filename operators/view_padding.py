@@ -20,6 +20,7 @@ def reload_view(context):
             if area.type == "IMAGE_EDITOR":
                 area.tag_redraw()
 
+
 class MIO3UV_OT_view_padding(Mio3UVOperator):
     bl_idname = "mio3uv.guide_padding"
     bl_label = "Preview Padding"
@@ -43,10 +44,9 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
 
     @classmethod
     def __draw(cls, context):
-        obj = context.active_object
-        if obj.mio3uv.realtime:
-            cls.update_mesh(context)
-
+        # obj = context.active_object
+        # if obj.mio3uv.realtime:
+        #     cls.update_mesh(context)
         viewport_vertices = [cls.__region.view2d.view_to_region(v[0], v[1], clip=False) for v in cls.__vertices]
         batch = batch_for_shader(cls.__shader, "LINES", {"pos": viewport_vertices})
 
@@ -159,7 +159,18 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
     @classmethod
     def unregister(cls):
         cls.handle_remove(bpy.context)
-        
+
+
+class MIO3UV_OT_view_padding_refresh(Mio3UVOperator):
+    bl_idname = "mio3uv.guide_padding_refresh"
+    bl_label = "Refresh Preview Padding"
+    bl_description = "Refresh Preview Padding"
+    bl_options = {"REGISTER", "UNDO", "INTERNAL"}
+
+    def execute(self, context):
+        if MIO3UV_OT_view_padding.is_running():
+            MIO3UV_OT_view_padding.redraw(context)
+        return {"FINISHED"}
 
 
 @bpy.app.handlers.persistent
@@ -167,7 +178,7 @@ def load_handler(dummy):
     MIO3UV_OT_view_padding.handle_remove(bpy.context)
 
 
-classes = [MIO3UV_OT_view_padding]
+classes = [MIO3UV_OT_view_padding, MIO3UV_OT_view_padding_refresh]
 
 
 def register():

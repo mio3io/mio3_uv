@@ -34,7 +34,7 @@ class MIO3UV_PT_View(Panel):
 
 
 class MIO3UV_PT_SubGuidePadding(Panel):
-    bl_label = "Margin"
+    bl_label = "Padding"
     bl_idname = "MIO3UV_PT_SubGuidePadding"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
@@ -46,13 +46,18 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         icons = preview_collections["icons"]
         layout = self.layout
         mio3uv = context.active_object.mio3uv
-        layout.operator(
-            MIO3UV_OT_view_padding.bl_idname,
+        row = layout.row(align=True)
+        row.operator(
+            "mio3uv.guide_padding",
             text=tt_iface("Preview Padding"),
             icon_value=icons["OFFSET"].icon_id,
             depress=True if MIO3UV_OT_view_padding.is_running() else False,
         )
-
+        row.operator(
+            "mio3uv.guide_padding_refresh",
+            text="",
+            icon="FILE_REFRESH",
+        )
         row = layout.row()
         row.label(text="Padding")
         row.alignment="RIGHT"
@@ -60,8 +65,6 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row.prop(mio3uv, "padding_px", text="")
         row.scale_x=1
         row.label(text="px")
-
-        layout.row().prop(mio3uv, "realtime")
 
 
 classes = [MIO3UV_PT_View, MIO3UV_PT_SubGuidePadding]
