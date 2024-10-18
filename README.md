@@ -33,7 +33,7 @@ UV Image Editor > Sidebar > Mio3
 -   **Orient Edge**: Adjust the angle and position of the island so that the selected edge becomes vertical or horizontal
 -   **Align Axis**: Adjust to be vertical to the X or Y axis
 -   **Orient World**: Align the angle of the island to the Z axis
--   **Noemalize**: Normalize the size and position of selected UVs
+-   **Normalize**: Normalize the size and position of selected UVs
 -   **Align Seams**: Align UV coordinates with the same 3D vertex that are separated by seams
 
 ### Vertex Operations
@@ -48,14 +48,14 @@ UV Image Editor > Sidebar > Mio3
 -   **Sort**: Sort islands based on coordinates in 3D space
 -   **Stack**: Stack similar islands
 -   **Copy & Paste UV Shape**: Copy and paste the shape while maintaining the original position
--   **Unify Shapes**: Align UV shapes while maintaining the original position
 -   **Shuffle**: Randomly rearrange island positions. If two islands are selected, exchange their positions
+-   **Unify Shapes**: Align UV shapes while maintaining the original position
 -   **Average Island Scales**: Adjust size based on the mesh size in 3D space
--   **Unfoldify**: Automatically layout selected islands based on their spatial relationships in 3D space
 
 ### Island Arrangement
 
--   **Sort Grid**: Arrange islands by grouping and sorting
+-   **Grid Sort**: Arrange islands by grouping and sorting
+-   **Unfoldify**: Automatically layout selected islands based on their spatial relationships in 3D space
 -   **Align Body Parts**: Identify body parts based on coordinates and align orientation and order for intuitive layout
 
 ### Symmetry
@@ -71,14 +71,14 @@ UV Image Editor > Sidebar > Mio3
 -   **Boundary**: Select island boundaries
 -   **Select Vertical/Horizontal Edges Only**
 -   **No Region**: Select UVs that do not have an area
--   **Inverted UV Faces**: Select inverted UVs
+-   **Flipped UV Faces**: Select Flipped UVs
 
 ### Mark Seams
 
--   **Angle-Based Seams**
+-   **Mark Seams Angle-Based**
 -   **Mark Seams on Selection Boundary**
 
 ### Display Support
 
--   Use an original checker map
+-   Original checker map
 -   Display padding lines
