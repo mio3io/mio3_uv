@@ -62,7 +62,6 @@ translation_dict = {
         ("*", "Fixed Boundary"): "境界を固定",
 
         ("*", "Sort Method"): "ソート方式",
-        ("*", "One Axis"): "単一軸",
         ("*", "Top Align"): "上揃え",
         ("*", "Middle Align"): "中央",
         ("*", "Bottom Align"): "下揃え",
