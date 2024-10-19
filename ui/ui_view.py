@@ -30,7 +30,9 @@ class MIO3UV_PT_View(Panel):
         row.prop(mio3uv, "image_size")
 
         col = layout.column(align=True)
-        col.operator("mio3uv.color_grid", text=tt_iface("Checker Map"), icon_value=icons["COLOR_GRID"].icon_id)
+        row = col.row(align=True)
+        row.operator("mio3uv.checker_map", text=tt_iface("Checker Map"), icon_value=icons["COLOR_GRID"].icon_id)
+        row.operator("mio3uv.checker_map_clear", text=tt_iface(""), icon="CANCEL")
 
 
 class MIO3UV_PT_SubGuidePadding(Panel):
