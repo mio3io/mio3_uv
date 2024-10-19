@@ -31,7 +31,7 @@ from .operators import unfoldify
 from .operators import body_preset
 
 from .operators import view_padding
-from .operators import view_colorgid
+from .operators import view_checker_map
 
 from .ui import ui_main
 from .ui import ui_view
@@ -74,7 +74,7 @@ modules = [
     unfoldify,
     body_preset,
     view_padding,
-    view_colorgid,
+    view_checker_map,
     ui_main,
     ui_view,
     property,
