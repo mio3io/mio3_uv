@@ -34,6 +34,7 @@ def register():
     icons.load("ALIGN_L", os.path.join(ICON_DIR, "align_left.png"), "IMAGE")
     icons.load("ALIGN_R", os.path.join(ICON_DIR, "align_right.png"), "IMAGE")
     icons.load("Z", os.path.join(ICON_DIR, "z.png"), "IMAGE")
+    icons.load("NORMALIZE", os.path.join(ICON_DIR, "normalize.png"), "IMAGE")
 
     icons.load("FLIP_Y", os.path.join(ICON_DIR, "flip_y.png"), "IMAGE")
     icons.load("FLIP_X", os.path.join(ICON_DIR, "flip_x.png"), "IMAGE")

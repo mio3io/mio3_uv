@@ -116,7 +116,7 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_orient_edge", text=tt_iface("Orient Edge"), icon_value=icons["ALIGN_EDGE"].icon_id)
-        row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon="SHADING_BBOX")
+        row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_align_seam", text=tt_iface("Align Seam"), icon_value=icons["ALIGN_SEAM_Y"].icon_id)

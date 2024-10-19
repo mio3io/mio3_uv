@@ -98,7 +98,6 @@ translation_dict = {
         ("*", "Back Hair"): "後髪",
         ("*", "Auto Body Parts"): "自動で分類 or 整列",
 
-        ("*", "Symmetrize ←"): "対称化",
         ("*", "Snap"): "スナップ",
         ("*", "Symmetrize based on 3D space"): "3D空間の対称性に基づいてUVを対称化します",
         ("*", "Symmetrize based on UV space"): "UV空間での対称位置にスナップします",
