@@ -226,6 +226,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
     bl_label = "Align Edge Loops"
     bl_description = "Align Edge Loops"
     bl_options = {"REGISTER", "UNDO"}
+
     axis: EnumProperty(
         name="Direction",
         items=[
@@ -235,6 +236,13 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         default="X",
     )
     threshold: FloatProperty(name="Threshold", default=0.3, min=0.01, max=0.8, step=1)
+    blend_factor: FloatProperty(
+        name="Blend Factor",
+        description="",
+        default=1.0,
+        min=0.0,
+        max=1.0,
+    )
 
     def execute(self, context):
         self.start_time = time.time()
@@ -317,15 +325,20 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
     def align_uv_nodes(self, node_manager, alignment_type="X"):
         for group in node_manager.groups:
             nodes = group.nodes
+            original_uvs = [node.uv.copy() for node in nodes]
             uv_coords = [node.uv for node in nodes]
+            
             if alignment_type == "Y":
                 avg_x = sum(uv.x for uv in uv_coords) / len(uv_coords)
-                for node in nodes:
-                    node.uv.x = avg_x
+                for node, original_uv in zip(nodes, original_uvs):
+                    aligned_x = avg_x
+                    node.uv.x = original_uv.x * (1 - self.blend_factor) + aligned_x * self.blend_factor
             else:
                 avg_y = sum(uv.y for uv in uv_coords) / len(uv_coords)
-                for node in nodes:
-                    node.uv.y = avg_y
+                for node, original_uv in zip(nodes, original_uvs):
+                    aligned_y = avg_y
+                    node.uv.y = original_uv.y * (1 - self.blend_factor) + aligned_y * self.blend_factor
+            
             group.update_uvs()
 
 
