@@ -12,7 +12,7 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
     bl_description = "Normalize UVs"
     bl_options = {"REGISTER", "UNDO"}
 
-    keep_aspect: BoolProperty(name="Keep Aspect", default=True)
+    keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=True)
     individual: BoolProperty(name="Individual", default=False)
 
     def execute(self, context):
