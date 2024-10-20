@@ -6,11 +6,15 @@ from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
+
 class MIO3UV_OT_grid(Mio3UVOperator):
     bl_idname = "uv.mio3_gridify"
     bl_label = "Gridify"
     bl_description = "Align UVs of a quadrangle in a grid"
     bl_options = {"REGISTER", "UNDO"}
+
+    normalize: BoolProperty(name="Normalize", default=False)
+    keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
 
     def execute(self, context):
         self.start_time = time.time()
@@ -65,16 +69,19 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
         island_manager.update_uvmeshes()
 
+        if self.normalize:
+            bpy.ops.uv.mio3_normalize(keep_aspect=self.keep_aspect)
+
         self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
 
     def find_anchor_face(self, uv_layer, selected_faces):
         best_face = None
         best_score = float("inf")
-        
+
         total_area = sum(face.calc_area() for face in selected_faces)
         avg_area = total_area / len(selected_faces)
-        
+
         for face in selected_faces:
             if len(face.loops) == 4 and all(loop[uv_layer].select for loop in face.loops):
                 max_angle_diff = 0
@@ -84,19 +91,18 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                     angle_diff = abs(math.degrees(math.atan2(v1.x * v2.y - v1.y * v2.x, v1.dot(v2))) - 90)
                     if angle_diff > max_angle_diff:
                         max_angle_diff = angle_diff
-                
+
                 area_diff = abs(face.calc_area() - avg_area)
-                
+
                 angle_weight = 0.5
                 area_weight = 1.0
                 score = angle_weight * max_angle_diff + area_weight * (area_diff / avg_area)
-                
+
                 if score < best_score:
                     best_score = score
                     best_face = face
-        
-        return best_face
 
+        return best_face
 
     # 四角形にする
     def align_active_uv_to_square(self, uv_layer, active_face):
@@ -146,6 +152,15 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
         for (_, loop), new_uv in zip(sorted_pairs, new_uvs):
             loop[uv_layer].uv = new_uv
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.prop(self, "normalize")
+
+        row = layout.row()
+        row.enabled = self.normalize
+        row.prop(self, "keep_aspect")
 
 
 classes = [
