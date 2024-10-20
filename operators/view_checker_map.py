@@ -42,7 +42,7 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
 
             modifier = obj.modifiers.new(name="Mio3CheckerMapModifier", type="NODES")
             modifier.node_group = geometry_node
-            modifier["Socket_1"] = mat
+            modifier["Socket_2"] = mat
 
         for area in context.screen.areas:
             if area.type == "VIEW_3D":
@@ -63,30 +63,29 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
         return obj.modifiers.get("Mio3CheckerMapModifier")
 
     def create_new_geometry_node(self, mat):
-        geonode_name = "Mio3CheckerMap"
-        gnode = bpy.data.node_groups.new(type="GeometryNodeTree", name=geonode_name)
+        node_group = bpy.data.node_groups.new(type="GeometryNodeTree", name="Mio3CheckerMap")
+        node_group.is_modifier = True
 
-        group_input = gnode.nodes.new("NodeGroupInput")
-        set_material = gnode.nodes.new("GeometryNodeSetMaterial")
-        group_output = gnode.nodes.new("NodeGroupOutput")
+        node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+        node_group.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+        node_group.interface.new_socket(name="Material", in_out="INPUT", socket_type="NodeSocketMaterial")
+
+        group_input = node_group.nodes.new("NodeGroupInput")
+        node_set_material = node_group.nodes.new("GeometryNodeSetMaterial")
+        group_output = node_group.nodes.new("NodeGroupOutput")
 
         group_input.location = (-200, 0)
-        set_material.location = (0, 0)
+        node_set_material.location = (0, 0)
         group_output.location = (200, 0)
 
-        gnode.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
-        gnode.interface.new_socket(name="Material", in_out="INPUT", socket_type="NodeSocketMaterial")
-        gnode.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+        node_group.links.new(group_input.outputs[0], node_set_material.inputs[0])
+        node_group.links.new(node_set_material.outputs[0], group_output.inputs[0])
+        node_group.links.new(group_input.outputs[1], node_set_material.inputs[2])
 
-        gnode.links.new(group_input.outputs[0], set_material.inputs[0])
-        gnode.links.new(set_material.outputs[0], group_output.inputs[0])
-        gnode.links.new(group_input.outputs[1], set_material.inputs[2])
-
-        return gnode
+        return node_group
 
     def create_new_material(self):
-        material_name = "Mio3CheckerMapMat_{}".format(self.size)
-        mat = bpy.data.materials.new(name=material_name)
+        mat = bpy.data.materials.new(name="Mio3CheckerMapMat_{}".format(self.size))
         mat.use_nodes = True
 
         nodes = mat.node_tree.nodes
@@ -94,22 +93,22 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
 
         nodes.clear()
 
-        tex_coord_node = nodes.new(type="ShaderNodeTexCoord")
-        mapping_node = nodes.new(type="ShaderNodeMapping")
-        image_node = nodes.new(type="ShaderNodeTexImage")
-        bsdf_node = nodes.new(type="ShaderNodeBsdfPrincipled")
-        output_node = nodes.new(type="ShaderNodeOutputMaterial")
+        node_tex_coord = nodes.new(type="ShaderNodeTexCoord")
+        node_mapping = nodes.new(type="ShaderNodeMapping")
+        node_image = nodes.new(type="ShaderNodeTexImage")
+        node_bsdf = nodes.new(type="ShaderNodeBsdfPrincipled")
+        node_output = nodes.new(type="ShaderNodeOutputMaterial")
 
-        tex_coord_node.location = (0, 0)
-        mapping_node.location = (160, 0)
-        image_node.location = (340, 0)
-        bsdf_node.location = (600, 0)
-        output_node.location = (860, 0)
+        node_tex_coord.location = (0, 0)
+        node_mapping.location = (160, 0)
+        node_image.location = (340, 0)
+        node_bsdf.location = (600, 0)
+        node_output.location = (860, 0)
 
-        links.new(tex_coord_node.outputs["UV"], mapping_node.inputs["Vector"])
-        links.new(mapping_node.outputs["Vector"], image_node.inputs["Vector"])
-        links.new(image_node.outputs["Color"], bsdf_node.inputs["Base Color"])
-        links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
+        links.new(node_tex_coord.outputs["UV"], node_mapping.inputs["Vector"])
+        links.new(node_mapping.outputs["Vector"], node_image.inputs["Vector"])
+        links.new(node_image.outputs["Color"], node_bsdf.inputs["Base Color"])
+        links.new(node_bsdf.outputs["BSDF"], node_output.inputs["Surface"])
 
         image_name = "chocomint_{}.png".format(self.size)
         image_path = os.path.join(bpy.path.abspath(CHECKER_MAP_DIR), image_name)
@@ -121,7 +120,7 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
             image = bpy.data.images.new("Mio3CheckerMapTex_{}".format(self.size), width=self.size, height=self.size)
             image.generated_type = "COLOR_GRID"
 
-        image_node.image = image
+        node_image.image = image
 
         return mat
 
