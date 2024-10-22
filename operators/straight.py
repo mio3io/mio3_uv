@@ -6,6 +6,7 @@ from ..utils import straight_uv_nodes
 from ..classes.uv import UVNodeManager
 from ..classes.operator import Mio3UVOperator
 
+
 class MIO3UV_OT_straight(Mio3UVOperator):
     bl_idname = "uv.mio3_straight"
     bl_label = "Straight"
@@ -29,24 +30,21 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        uv_select_mode = context.tool_settings.uv_select_mode
 
-        if context.tool_settings.uv_select_mode not in ["VERTEX", "ISLAND"]:
-            context.tool_settings.uv_select_mode = "VERTEX"
+        if uv_select_mode not in ["VERTEX", "EDGE"]:
+            return {"CANCELLED"}
 
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            bpy.ops.mesh.select_linked(delimit={'UV'})
+            bpy.ops.mesh.select_linked(delimit={"UV"})
             context.tool_settings.use_uv_select_sync = False
             node_manager = UVNodeManager(self.objects, mode="VERT")
         else:
-            node_manager = UVNodeManager(self.objects)
-    
-        original_selected = {}
+            node_manager = UVNodeManager(self.objects, mode="EDGE")
+
         for group in node_manager.groups:
-            original_selected[group] = {}
-            for face in group.bm.faces:
-                for loop in face.loops:
-                    original_selected[group][loop] = loop[group.uv_layer].select
+            group.store_selection()
 
         for group in node_manager.groups:
             straight_uv_nodes(group, self.distribute, self.keep_length, center=True)
@@ -58,10 +56,10 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
         bpy.ops.uv.pin(clear=True)
 
+        bpy.ops.uv.select_all(action="DESELECT")
+
         for group in node_manager.groups:
-            for loop, was_selected in original_selected[group].items():
-                loop[group.uv_layer].select = was_selected
-            group.update_uvs()
+            group.restore_selection()
 
         node_manager.update_uvmeshes()
 
@@ -76,9 +74,11 @@ classes = [
     MIO3UV_OT_straight,
 ]
 
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
+
 
 def unregister():
     for c in classes:
