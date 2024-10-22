@@ -386,6 +386,8 @@ class UVNodeGroup:
     bm: BMesh = None
     uv_layer: BMLayerItem = None
 
+    selection_states: Dict[int, bool] = field(default_factory=dict)
+
     def __hash__(self):
         return hash((self.obj, id(self.bm), id(self.uv_layer)))
 
@@ -402,6 +404,22 @@ class UVNodeGroup:
         for node in self.nodes:
             for loop in node.loops:
                 loop[self.uv_layer].select = False
+                loop[self.uv_layer].select_edge = False
+
+    def store_selection(self):
+        self.selection_states.clear()
+        for node in self.nodes:
+            for loop in node.loops:
+                uv = loop[self.uv_layer]
+                self.selection_states[loop.index] = (uv.select, uv.select_edge)
+
+    def restore_selection(self):
+        for node in self.nodes:
+            for loop in node.loops:
+                if loop.index in self.selection_states:
+                    select, select_edge = self.selection_states[loop.index]
+                    loop[self.uv_layer].select = select
+                    loop[self.uv_layer].select_edge = select_edge
 
 @dataclass
 class UVNodeManager:
