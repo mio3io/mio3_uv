@@ -1,9 +1,11 @@
 import bpy
 import os
-from bpy.props import EnumProperty
 from ..classes.operator import Mio3UVOperator
 
 CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "checker_maps")
+BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
+NAME_NODE_GROUP_OVERRIDE = "Mio3MaterialOverride"
+NAME_MOD_CHECKER_MAP = "Mio3CheckerMapModifier"
 
 
 class MIO3UV_OT_checker_map(Mio3UVOperator):
@@ -34,55 +36,49 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
             else:
                 mat = self.create_new_material()
 
-            existing_geometry_node = self.find_geometry_node()
+            existing_geometry_node = self.find_node_groups()
             if existing_geometry_node:
                 geometry_node = existing_geometry_node
             else:
-                geometry_node = self.create_new_geometry_node(mat)
+                geometry_node = self.create_new_geometry_node()
 
-            modifier = obj.modifiers.new(name="Mio3CheckerMapModifier", type="NODES")
+            modifier = obj.modifiers.new(name=NAME_MOD_CHECKER_MAP, type="NODES")
             modifier.node_group = geometry_node
             modifier["Socket_2"] = mat
 
-        for area in context.screen.areas:
-            if area.type == "VIEW_3D":
-                if area.spaces.active.shading.type != "MATERIAL":
-                    area.spaces.active.shading.type = "MATERIAL"
-                area.tag_redraw()
-                break
+            for area in context.screen.areas:
+                if area.type == "VIEW_3D":
+                    if area.spaces.active.shading.type != "MATERIAL":
+                        area.spaces.active.shading.type = "MATERIAL"
+                    area.tag_redraw()
+                    break
 
         return {"FINISHED"}
 
     def find_material(self):
         return bpy.data.materials.get("Mio3CheckerMapMat_{}".format(self.size))
 
-    def find_geometry_node(self):
-        return bpy.data.node_groups.get("Mio3CheckerMap")
+    def find_node_groups(self):
+        return bpy.data.node_groups.get(NAME_NODE_GROUP_OVERRIDE)
 
     def find_modifier(self, obj):
-        return obj.modifiers.get("Mio3CheckerMapModifier")
+        return obj.modifiers.get(NAME_MOD_CHECKER_MAP)
 
-    def create_new_geometry_node(self, mat):
-        node_group = bpy.data.node_groups.new(type="GeometryNodeTree", name="Mio3CheckerMap")
-        node_group.is_modifier = True
-
-        node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-        node_group.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
-        node_group.interface.new_socket(name="Material", in_out="INPUT", socket_type="NodeSocketMaterial")
-
-        group_input = node_group.nodes.new("NodeGroupInput")
-        node_set_material = node_group.nodes.new("GeometryNodeSetMaterial")
-        group_output = node_group.nodes.new("NodeGroupOutput")
-
-        group_input.location = (-200, 0)
-        node_set_material.location = (0, 0)
-        group_output.location = (200, 0)
-
-        node_group.links.new(group_input.outputs[0], node_set_material.inputs[0])
-        node_group.links.new(node_set_material.outputs[0], group_output.inputs[0])
-        node_group.links.new(group_input.outputs[1], node_set_material.inputs[2])
-
-        return node_group
+    def create_new_geometry_node(self):
+        blend_path = os.path.join(BLEND_DIR, "mio3uv_3_6.blend")
+        try:
+            bpy.ops.object.mode_set(mode="OBJECT")
+            bpy.ops.wm.append(
+                filename=NAME_NODE_GROUP_OVERRIDE,
+                directory=os.path.join(blend_path, "NodeTree"),
+                link=False,
+            )
+            node_group = bpy.data.node_groups.get(NAME_NODE_GROUP_OVERRIDE)
+            node_group.use_fake_user = True
+            return node_group
+        except:
+            self.report({"ERROR"}, "Failed import node group")
+        return None
 
     def create_new_material(self):
         mat = bpy.data.materials.new(name="Mio3CheckerMapMat_{}".format(self.size))
@@ -138,7 +134,7 @@ class MIO3UV_OT_checker_map_clear(Mio3UVOperator):
 
     def execute(self, context):
         obj = context.active_object
-        modifier = obj.modifiers.get("Mio3CheckerMapModifier")
+        modifier = obj.modifiers.get(NAME_MOD_CHECKER_MAP)
         if not modifier:
             return {"CANCELLED"}
 
