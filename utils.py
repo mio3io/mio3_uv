@@ -139,12 +139,18 @@ def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=Fal
             new_positions[node] = scaled_position
 
     if center:
-        mid_point = (start_uv + end_uv) / 2
-        sum_positions = Vector((0, 0))
+        original_center = Vector((0, 0))
+        for node in ordered_nodes:
+            original_center += node.uv
+        original_center /= len(ordered_nodes)
+        
+        aligned_center = Vector((0, 0))
         for pos in new_positions.values():
-            sum_positions += pos
-        avg_position = sum_positions / len(new_positions)
-        center_offset = mid_point - avg_position
+            aligned_center += pos
+        aligned_center /= len(new_positions)
+        
+        center_offset = original_center - aligned_center
+        
         for node in new_positions:
             new_positions[node] += center_offset
 
