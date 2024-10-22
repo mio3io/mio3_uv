@@ -12,4 +12,4 @@ website = "https://github.com/mio3io"
 copyright = ["2024 Mio"]
 
 [permissions]
-files = "Imports checker map images"
+files = "Import Images and NodeTree from disk"
