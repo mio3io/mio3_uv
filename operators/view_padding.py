@@ -22,7 +22,7 @@ def reload_view(context):
 
 
 class MIO3UV_OT_view_padding(Mio3UVOperator):
-    bl_idname = "mio3uv.guide_padding"
+    bl_idname = "uv.mio3_guide_padding"
     bl_label = "Preview Padding"
     bl_description = "Preview the padding lines"
     bl_options = {"REGISTER", "UNDO"}
@@ -162,7 +162,7 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
 
 
 class MIO3UV_OT_view_padding_refresh(Mio3UVOperator):
-    bl_idname = "mio3uv.guide_padding_refresh"
+    bl_idname = "uv.mio3_guide_padding_refresh"
     bl_label = "Refresh Preview Padding"
     bl_description = "Refresh Preview Padding"
     bl_options = {"REGISTER", "UNDO", "INTERNAL"}

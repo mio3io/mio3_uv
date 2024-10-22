@@ -50,13 +50,13 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         mio3uv = context.active_object.mio3uv
         row = layout.row(align=True)
         row.operator(
-            "mio3uv.guide_padding",
+            "uv.mio3_guide_padding",
             text=tt_iface("Preview Padding"),
             icon_value=icons["OFFSET"].icon_id,
             depress=True if MIO3UV_OT_view_padding.is_running() else False,
         )
         row.operator(
-            "mio3uv.guide_padding_refresh",
+            "uv.mio3_guide_padding_refresh",
             text="",
             icon="FILE_REFRESH",
         )
