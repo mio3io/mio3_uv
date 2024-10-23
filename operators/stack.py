@@ -53,6 +53,8 @@ class MIO3UV_OT_stack(Mio3UVOperator):
     selected: BoolProperty(name="Selected Only", default=False)
 
     def execute(self, context):
+        self.start_time = time.time()
+
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
@@ -65,22 +67,22 @@ class MIO3UV_OT_stack(Mio3UVOperator):
 
         selected_islands = [island for island in island_manager.islands if island.is_any_uv_selected()]
         islands = selected_islands if self.selected else island_manager.islands
-        base_island = next(iter(selected_islands), None)
-
-        if not base_island:
-            return self.cancel_operator(context, use_uv_select_sync, island_manager)
-
-        base_face_count = len(base_island.faces)
-        base_uv_count = self.get_island_uv_count(base_island)
-        base_island.select_all_uv()
 
         bpy.ops.uv.copy()
 
-        for island in islands:
-            if island == base_island:
+        visited = set()
+        for base_island in selected_islands:
+            if base_island in visited:
                 continue
-            if not self.is_different(island, base_face_count, base_uv_count):
-                island.select_all_uv()
+            base_face_count = len(base_island.faces)
+            base_uv_count = self.get_island_uv_count(base_island)
+
+            for island in islands:
+                if island == base_island:
+                    continue
+                if not self.is_different(island, base_face_count, base_uv_count):
+                    island.select_all_uv()
+                    visited.add(island)
 
         bpy.ops.uv.paste()
 
@@ -89,14 +91,8 @@ class MIO3UV_OT_stack(Mio3UVOperator):
             context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()
-
+        self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
-    
-    def cancel_operator(self, context, use_uv_select_sync, island_manager):
-        if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-            context.tool_settings.use_uv_select_sync = True
-        return {"CANCELLED"}
 
     def get_island_uv_count(self, island):
         return sum(len(face.loops) for face in island.faces)
