@@ -15,6 +15,7 @@ class MIO3UV_OT_paste(Mio3UVOperator):
     mode: EnumProperty(
         name="Mode", items=[("PASTE", "Paste", ""), ("AUTO", "Auto", "")], default="PASTE", options={"HIDDEN"}
     )
+    keep_position: BoolProperty(name="Keep Position", default=True)
 
     def execute(self, context):
         self.objects = self.get_selected_objects(context)
@@ -32,10 +33,11 @@ class MIO3UV_OT_paste(Mio3UVOperator):
 
         bpy.ops.uv.paste()
 
-        for island in island_manager.islands:
-            island.update_bounds()
-            offset = island.original_center - island.center
-            island.move(offset)
+        if self.keep_position:
+            for island in island_manager.islands:
+                island.update_bounds()
+                offset = island.original_center - island.center
+                island.move(offset)
 
         island_manager.update_uvmeshes()
 
