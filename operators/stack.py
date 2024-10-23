@@ -48,48 +48,53 @@ class MIO3UV_OT_stack(Mio3UVOperator):
     bl_description = "Overlap similar UV shapes"
     bl_options = {"REGISTER", "UNDO"}
 
+    selected: BoolProperty(name="Selected Only", default=False)
+
     def execute(self, context):
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        current_select_mode = context.tool_settings.mesh_select_mode[:]
 
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            island_manager = UVIslandManager(self.objects)
-
-            bpy.ops.uv.copy()
-            bpy.ops.uv.select_all(action="SELECT")
-            bpy.ops.uv.paste()
-
-            island_manager.restore_vertex_selection()
-            island_manager.update_uvmeshes()
+            context.tool_settings.use_uv_select_sync = False
+            island_manager = UVIslandManager(self.objects, find_all=True, mesh_all=True)
         else:
-            island_manager = UVIslandManager(self.objects, find_all=True, uv_select=False)
+            island_manager = UVIslandManager(self.objects, find_all=True)
 
-            if not island_manager.islands:
-                return {"CANCELLED"}
+        selected_islands = [island for island in island_manager.islands if island.is_any_uv_selected()]
+        islands = selected_islands if self.selected else island_manager.islands
+        base_island = next(iter(selected_islands), None)
 
-            base_island = next((island for island in island_manager.islands if island.is_any_uv_selected()), None)
-            if not base_island:
-                return {"CANCELLED"}
+        if not base_island:
+            return self.cancel_operator(context, use_uv_select_sync, island_manager)
 
-            base_face_count = len(base_island.faces)
-            base_uv_count = self.get_island_uv_count(base_island)
-            base_island.select_all_uv()
+        base_face_count = len(base_island.faces)
+        base_uv_count = self.get_island_uv_count(base_island)
+        base_island.select_all_uv()
 
-            bpy.ops.uv.copy()
+        bpy.ops.uv.copy()
 
-            for island in island_manager.islands:
-                if island == base_island:
-                    continue
-                if not self.is_different(island, base_face_count, base_uv_count):
-                    island.select_all_uv()
+        for island in islands:
+            if island == base_island:
+                continue
+            if not self.is_different(island, base_face_count, base_uv_count):
+                island.select_all_uv()
 
-            bpy.ops.uv.paste()
+        bpy.ops.uv.paste()
 
-            island_manager.update_uvmeshes()
+        if use_uv_select_sync:
+            island_manager.restore_vertex_selection()
+            context.tool_settings.use_uv_select_sync = True
+
+        island_manager.update_uvmeshes()
 
         return {"FINISHED"}
+    
+    def cancel_operator(self, context, use_uv_select_sync, island_manager):
+        if use_uv_select_sync:
+            island_manager.restore_vertex_selection()
+            context.tool_settings.use_uv_select_sync = True
+        return {"CANCELLED"}
 
     def get_island_uv_count(self, island):
         return sum(len(face.loops) for face in island.faces)
