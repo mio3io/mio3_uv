@@ -23,7 +23,7 @@ class MIO3UV_OT_orient_edge(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, mesh_keep=True, mesh_select=True)
+            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, mesh_keep=True)
         else:
             island_manager = UVIslandManager(self.objects)
 
