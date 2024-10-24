@@ -145,14 +145,13 @@ class UVIslandManager:
     bmesh_dict: Dict[Object, BMesh] = field(default_factory=dict, init=False)
     uv_layer_dict: Dict[Object, BMLayerItem] = field(default_factory=dict, init=False)
 
-    extend: bool = True
-    uv_select: bool = True
-    mesh_select: bool = True
-    mesh_keep: bool = False
-    mesh_link_uv: bool = False
-    find_all: bool = False
-
-    mesh_all: bool = False
+    extend: bool = True # 選択しているUVを境界まで拡張する
+    uv_select: bool = True # UVを選択しているもののみ
+    mesh_select: bool = True # メッシュを選択しているもののみ
+    mesh_keep: bool = False # メッシュの選択状態をキープする（選択同期用）
+    mesh_link_uv: bool = False # メッシュのアイランドを境界まで拡張する（選択同期用）
+    find_all: bool = False # すべてのアイランドを対象にする
+    mesh_all: bool = False # すべてのメッシュを対象にする
 
     islands_by_object: Dict[Object, List[UVIsland]] = field(default_factory=lambda: defaultdict(list), init=False)
     orientation_mode: Literal["WORLD", "LOCAL"] = "WORLD"
