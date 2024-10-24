@@ -82,24 +82,19 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
     def execute(self, context):
         self.start_time = time.time()
         self.objects = self.get_selected_objects(context)
+
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
-            context.tool_settings.mesh_select_mode = (False, False, True)
-            try:
-                bpy.ops.mesh.select_similar_region()
-            except:
-                return {"CANCELLED"}
-            return {"FINISHED"}
+            context.tool_settings.use_uv_select_sync = False
+            self.sync_uv_from_mesh(context, self.objects)
+            island_manager = UVIslandManager(self.objects, find_all=True, mesh_all=True, uv_select=False)
+
         else:
             island_manager = UVIslandManager(self.objects, find_all=True, uv_select=False)
 
-        if not island_manager.islands:
-            return {"CANCELLED"}
-
         base_island = None
         for island in island_manager.islands:
-            if island.is_any_uv_selected():
-                # if any(all(loop[island.uv_layer].select for loop in face.loops) for face in island.faces):
+            if any(all(loop[island.uv_layer].select for loop in face.loops) for face in island.faces):
                 base_island = island
                 base_face_count = len(base_island.faces)
                 base_uv_count = self.get_island_uv_count(base_island)
@@ -108,7 +103,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
                 break
 
         if not base_island:
-            return {"CANCELLED"}
+            return self.cancel_operator(context, use_uv_select_sync, island_manager)
 
         for island in island_manager.islands:
             if island == base_island:
@@ -119,8 +114,18 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
 
         island_manager.update_uvmeshes()
 
+        if use_uv_select_sync:
+            self.sync_mesh_from_uv(context, self.objects)
+            context.tool_settings.use_uv_select_sync = True
         self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
+
+    def cancel_operator(self, context, use_uv_select_sync, island_manager):
+        if use_uv_select_sync:
+            island_manager.restore_vertex_selection()
+            island_manager.update_uvmeshes()
+            context.tool_settings.use_uv_select_sync = True
+        return {"CANCELLED"}
 
     def get_island_uv_count(self, island):
         return sum(len(face.loops) for face in island.faces)
@@ -136,12 +141,6 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
         if self.check_edges and self.get_island_edge_count(island) != base_edge_count:
             return True
         return False
-
-    def draw(self, context):
-        row = self.layout.row()
-        row.prop(self, "check_edges")
-        if context.tool_settings.use_uv_select_sync:
-            row.enabled = False
 
 
 class MIO3UV_OT_select_shared(Mio3UVOperator):
@@ -488,7 +487,7 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
                     continue
 
                 face_uvs = [loop[uv_layer].uv.copy() for loop in face.loops]
-                
+
                 if len(face_uvs) >= 3:
                     a, b, c = face_uvs[:3]
                     area = abs((b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)) * 0.5
