@@ -19,7 +19,7 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return obj is not None
+        return obj is not None and obj.type == "MESH"
 
     def execute(self, context):
         mio3uv = context.active_object.mio3uv
