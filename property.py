@@ -1,12 +1,8 @@
 import bpy
-from .operators import view_padding
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty, PointerProperty
 from .icons import preview_collections
-
-
-def callback_update_padding(self, context):
-    view_padding.MIO3UV_OT_view_padding.redraw(context)
+from .operators import view_padding
 
 
 class MIO3_UVProperties(PropertyGroup):
@@ -68,6 +64,27 @@ class MIO3_UVProperties(PropertyGroup):
 
 
 class MIO3UV_ObjectProps(PropertyGroup):
+    def callback_update_padding(self, context):
+        view_padding.MIO3UV_OT_view_padding.redraw(context)
+
+    def callback_update_uvmesh_factor(self, context):
+        modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
+        if modifier:
+            node_group = modifier.node_group
+            if hasattr(node_group, "interface"):
+                modifier[node_group.interface.items_tree["Factor"].identifier] = self.uvmesh_factor
+            else:
+                modifier[node_group.inputs["Factor"].identifier] = self.uvmesh_factor
+
+    def callback_update_uvmesh_size(self, context):
+        modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
+        if modifier:
+            node_group = modifier.node_group
+            if hasattr(node_group, "interface"):
+                modifier[node_group.interface.items_tree["Size"].identifier] = self.uvmesh_size
+            else:
+                modifier[node_group.inputs["Size"].identifier] = self.uvmesh_size
+
     realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance", default=False)
     image_size: EnumProperty(
         name="Size",
@@ -83,6 +100,8 @@ class MIO3UV_ObjectProps(PropertyGroup):
         update=callback_update_padding,
     )
     padding_px: IntProperty(name="Padding (px)", default=16, update=callback_update_padding)
+    uvmesh_factor: FloatProperty(name="Factor", default=1, min=0, max=1, update=callback_update_uvmesh_factor)
+    uvmesh_size: IntProperty(name="Size", default=2, min=1, max=10, update=callback_update_uvmesh_size)
 
 
 class MIO3UV_ImageProps(PropertyGroup):

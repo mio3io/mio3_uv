@@ -32,6 +32,7 @@ from .operators import body_preset
 
 from .operators import view_padding
 from .operators import view_checker_map
+from .operators import mesh_uvmesh
 
 from .ui import ui_main
 from .ui import ui_view
@@ -76,6 +77,7 @@ modules = [
     body_preset,
     view_padding,
     view_checker_map,
+    mesh_uvmesh,
     ui_main,
     ui_view,
     ui_options,
