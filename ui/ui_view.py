@@ -23,14 +23,20 @@ class MIO3UV_PT_View(Panel):
         icons = preview_collections["icons"]
 
         mio3uv = context.active_object.mio3uv
-
-        row = layout.row()
-        row.prop(mio3uv, "image_size")
+        if context.edit_image is not None:
+            mio3uv_image = context.edit_image.mio3uv
+            row = layout.row()
+            row.prop(mio3uv_image, "use_exposure", text=tt_iface("Exposure"))
+            exposure_row = row.column()
+            exposure_row.enabled = mio3uv_image.use_exposure
+            exposure_row.prop(mio3uv_image, "exposure", text="")
 
         col = layout.column(align=True)
         row = col.row(align=True)
         row.operator("mio3uv.checker_map", text=tt_iface("Checker Map"), icon_value=icons["COLOR_GRID"].icon_id)
         row.operator("mio3uv.checker_map_clear", text=tt_iface(""), icon="CANCEL")
+        row = layout.row()
+        row.prop(mio3uv, "image_size")
 
 
 class MIO3UV_PT_SubGuidePadding(Panel):

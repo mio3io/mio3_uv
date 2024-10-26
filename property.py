@@ -1,7 +1,7 @@
 import bpy
 from .operators import view_padding
 from bpy.types import PropertyGroup
-from bpy.props import BoolProperty, IntProperty, EnumProperty, PointerProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty, PointerProperty
 from .icons import preview_collections
 
 
@@ -64,7 +64,7 @@ class MIO3_UVProperties(PropertyGroup):
 
 
 class MIO3UV_ObjectProps(PropertyGroup):
-    realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance",  default=False)
+    realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance", default=False)
     image_size: EnumProperty(
         name="Size",
         description="Choose an image size",
@@ -78,12 +78,23 @@ class MIO3UV_ObjectProps(PropertyGroup):
         default="2048",
         update=callback_update_padding,
     )
-    padding_px: IntProperty(
-        name="Padding (px)", default=16, update=callback_update_padding
-    )
+    padding_px: IntProperty(name="Padding (px)", default=16, update=callback_update_padding)
 
 
-classes = [MIO3_UVProperties, MIO3UV_ObjectProps]
+class MIO3UV_ImageProps(PropertyGroup):
+    def callback_update_use_exposure(self, context):
+        if context.edit_image is not None:
+            context.edit_image.use_view_as_render = self.use_exposure
+            context.scene.view_settings.exposure = self.exposure if self.use_exposure else 0
+
+    def callback_update_exposure(self, context):
+        context.scene.view_settings.exposure = self.exposure
+
+    use_exposure: BoolProperty(name="Exposure", default=False, update=callback_update_use_exposure)
+    exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
+
+
+classes = [MIO3_UVProperties, MIO3UV_ObjectProps, MIO3UV_ImageProps]
 
 
 def register():
@@ -91,9 +102,11 @@ def register():
         bpy.utils.register_class(c)
     bpy.types.Scene.mio3uv = PointerProperty(type=MIO3_UVProperties)
     bpy.types.Object.mio3uv = PointerProperty(type=MIO3UV_ObjectProps)
+    bpy.types.Image.mio3uv = PointerProperty(type=MIO3UV_ImageProps)
 
 
 def unregister():
+    del bpy.types.Image.mio3uv
     del bpy.types.Object.mio3uv
     del bpy.types.Scene.mio3uv
     for c in classes:
