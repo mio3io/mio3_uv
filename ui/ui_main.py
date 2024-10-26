@@ -18,13 +18,19 @@ class MIO3UV_PT_main(Mio3UVPanel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
+
         row = layout.row(align=True)
         row.prop(context.space_data, "pivot_point", icon_only=True, expand=True)
-        
-        row2 = row.row(align=True)
+
+        row2 = row.row(align=False)
         row2.alignment = "RIGHT"
-        row.operator("uv.pin", text="", icon="PINNED").clear = False
-        row.operator("uv.pin", text="", icon="UNPINNED").clear = True
+
+        if context.edit_image is not None:
+            mio3uv_image = context.edit_image.mio3uv
+            row2.prop(mio3uv_image, "use_exposure", text="", icon="NODE_TEXTURE", toggle=True)
+        row3 = row.row(align=True)
+        row3.operator("uv.pin", text="", icon="PINNED").clear = False
+        row3.operator("uv.pin", text="", icon="UNPINNED").clear = True
 
         col_unwrap = layout.column(align=True)
         col_unwrap.scale_y = 1.1

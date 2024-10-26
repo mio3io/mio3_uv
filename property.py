@@ -10,6 +10,8 @@ def callback_update_padding(self, context):
 
 
 class MIO3_UVProperties(PropertyGroup):
+    def callback_update_exposure(self, context):
+        context.scene.view_settings.exposure = self.exposure
 
     edge_mode: BoolProperty(name="Edge Mode", description="Edge Mode", default=False)
     island_mode: BoolProperty(name="Island Mode", description="Island Mode", default=False)
@@ -62,6 +64,7 @@ class MIO3_UVProperties(PropertyGroup):
     )
     grid_link: BoolProperty(name="Grid Link", default=True)
     use_exposure: BoolProperty(name="Exposure", default=False)
+    exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
 
 class MIO3UV_ObjectProps(PropertyGroup):
@@ -87,13 +90,9 @@ class MIO3UV_ImageProps(PropertyGroup):
         if hasattr(context, "edit_image"):
             context.edit_image.use_view_as_render = self.use_exposure
             context.scene.mio3uv.use_exposure = self.use_exposure
-            context.scene.view_settings.exposure = self.exposure if self.use_exposure else 0
-
-    def callback_update_exposure(self, context):
-        context.scene.view_settings.exposure = self.exposure
+            context.scene.view_settings.exposure = context.scene.mio3uv.exposure if self.use_exposure else 0
 
     use_exposure: BoolProperty(name="Exposure", default=False, update=callback_update_use_exposure)
-    exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
     @classmethod
     def reset_images(cls):

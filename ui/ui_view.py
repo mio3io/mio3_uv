@@ -22,21 +22,22 @@ class MIO3UV_PT_View(Panel):
         layout = self.layout
         icons = preview_collections["icons"]
 
-        mio3uv = context.active_object.mio3uv
+        props_object = context.active_object.mio3uv
         if context.edit_image is not None:
-            mio3uv_image = context.edit_image.mio3uv
+            props_scene = context.scene.mio3uv
+            props_image = context.edit_image.mio3uv
             row = layout.row()
-            row.prop(mio3uv_image, "use_exposure", text=tt_iface("Exposure"))
+            row.prop(props_image, "use_exposure", text=tt_iface("Exposure"))
             exposure_row = row.column()
-            exposure_row.enabled = mio3uv_image.use_exposure
-            exposure_row.prop(mio3uv_image, "exposure", text="")
+            exposure_row.enabled = props_image.use_exposure
+            exposure_row.prop(props_scene, "exposure", text="")
 
         col = layout.column(align=True)
         row = col.row(align=True)
         row.operator("mio3uv.checker_map", text=tt_iface("Checker Map"), icon_value=icons["COLOR_GRID"].icon_id)
         row.operator("mio3uv.checker_map_clear", text=tt_iface(""), icon="CANCEL")
         row = layout.row()
-        row.prop(mio3uv, "image_size")
+        row.prop(props_object, "image_size")
 
 
 class MIO3UV_PT_SubGuidePadding(Panel):
@@ -51,7 +52,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
-        mio3uv = context.active_object.mio3uv
+        props_object = context.active_object.mio3uv
         row = layout.row(align=True)
         row.operator(
             "uv.mio3_guide_padding",
@@ -68,12 +69,12 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row.label(text="Padding")
         row.alignment="RIGHT"
         row.scale_x=5
-        row.prop(mio3uv, "padding_px", text="")
+        row.prop(props_object, "padding_px", text="")
         row.scale_x=1
         row.label(text="px")
 
         row = layout.row()
-        row.prop(mio3uv, "realtime")
+        row.prop(props_object, "realtime")
 
 classes = [MIO3UV_PT_View, MIO3UV_PT_SubGuidePadding]
 
