@@ -24,8 +24,6 @@ class MIO3UV_PT_View(Panel):
 
         mio3uv = context.active_object.mio3uv
 
-        layout.prop(context.scene.mio3uv, "udim")
-
         row = layout.row()
         row.prop(mio3uv, "image_size")
 

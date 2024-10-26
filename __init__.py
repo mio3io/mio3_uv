@@ -35,6 +35,7 @@ from .operators import view_checker_map
 
 from .ui import ui_main
 from .ui import ui_view
+from .ui import ui_options
 
 
 bl_info = {
@@ -77,6 +78,7 @@ modules = [
     view_checker_map,
     ui_main,
     ui_view,
+    ui_options,
     property,
 ]
 
