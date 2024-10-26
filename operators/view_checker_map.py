@@ -65,7 +65,7 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
         return obj.modifiers.get(NAME_MOD_CHECKER_MAP)
 
     def create_new_geometry_node(self):
-        blend_path = os.path.join(BLEND_DIR, "mio3uv_3_6.blend")
+        blend_path = os.path.join(BLEND_DIR, "mio3uv.blend")
         try:
             bpy.ops.object.mode_set(mode="OBJECT")
             bpy.ops.wm.append(
