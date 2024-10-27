@@ -96,7 +96,7 @@ class MIO3UV_ObjectProps(PropertyGroup):
             ("4096", "4096", "4096x4096 (32px)"),
             ("8192", "8192", "8192x8192 (64px)"),
         ],
-        default="2048",
+        default="1024",
         update=callback_update_padding,
     )
     padding_px: IntProperty(name="Padding (px)", default=16, update=callback_update_padding)

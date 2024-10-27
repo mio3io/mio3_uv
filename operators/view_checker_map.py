@@ -14,7 +14,7 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
     bl_description = ""
     bl_options = {"REGISTER", "UNDO"}
 
-    size = 2048
+    size = 1024
 
     @classmethod
     def poll(cls, context):
