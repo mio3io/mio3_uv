@@ -36,7 +36,7 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             if existing_geometry_node:
                 geometry_node = existing_geometry_node
             else:
-                geometry_node = self.create_new_geometry_node()
+                geometry_node = self.create_new_geometry_node(context)
 
             modifier = obj.modifiers.new(name=NAME_MOD_UV_MESH, type="NODES")
             modifier.show_expanded = False
@@ -56,10 +56,12 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
     def find_modifier(self, obj):
         return obj.modifiers.get(NAME_MOD_UV_MESH)
 
-    def create_new_geometry_node(self):
+    def create_new_geometry_node(self, context):
         blend_path = os.path.join(BLEND_DIR, "mio3uv.blend")
         try:
-            bpy.ops.object.mode_set(mode="OBJECT")
+            mode = context.active_object.mode
+            if mode != "OBJECT":
+                bpy.ops.object.mode_set(mode="OBJECT")
             bpy.ops.wm.append(
                 filename=NAME_NODE_GROUP_UV_MESH,
                 directory=os.path.join(blend_path, "NodeTree"),
@@ -67,8 +69,8 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             )
             node_group = bpy.data.node_groups.get(NAME_NODE_GROUP_UV_MESH)
             node_group.use_fake_user = True
-            bpy.ops.object.mode_set(mode="EDIT")
-
+            if mode != context.active_object.mode:
+                bpy.ops.object.mode_set(mode=mode)
             return node_group
         except:
             self.report({"ERROR"}, "Failed import node group")

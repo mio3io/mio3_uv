@@ -99,10 +99,11 @@ class MIO3UV_OT_relax(Mio3UVOperator):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
         layout.prop(self, "method")
 
         row = layout.row(align=True)
-        row.label(text="Direction")
         row.prop(self, "relax_x", toggle=True)
         row.prop(self, "relax_y", toggle=True)
         if self.method == "MINIMIZE":
@@ -119,8 +120,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
             row.enabled = False
 
         row = layout.row()
-        row.label(text="Iterations")
-        row.prop(self, "iterations", text="")
+        row.prop(self, "iterations")
 
 
 classes = [

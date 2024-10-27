@@ -231,7 +231,8 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         row.label(text="Direction")
         row.prop(self, "direction", expand=True)
         row = layout.row()
-        row.prop(self, "threshold")
+        row.label(text="Threshold")
+        row.prop(self, "threshold", text="")
 
 
 class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
@@ -421,7 +422,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         row.prop(self, "center", expand=True)
         row = layout.row()
         row.label(text="Direction")
-        row.prop(self, "direction", text="")
+        row.prop(self, "direction", expand=True)
         row = layout.row()
         row.label(text="Threshold")
         row.prop(self, "threshold", text="")

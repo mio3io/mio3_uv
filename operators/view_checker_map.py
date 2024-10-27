@@ -40,9 +40,10 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
             if existing_geometry_node:
                 geometry_node = existing_geometry_node
             else:
-                geometry_node = self.create_new_geometry_node()
+                geometry_node = self.create_new_geometry_node(context)
 
             modifier = obj.modifiers.new(name=NAME_MOD_CHECKER_MAP, type="NODES")
+            modifier.show_expanded = False
             modifier.node_group = geometry_node
             modifier["Socket_2"] = mat
 
@@ -64,10 +65,12 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
     def find_modifier(self, obj):
         return obj.modifiers.get(NAME_MOD_CHECKER_MAP)
 
-    def create_new_geometry_node(self):
+    def create_new_geometry_node(self, context):
         blend_path = os.path.join(BLEND_DIR, "mio3uv.blend")
         try:
-            bpy.ops.object.mode_set(mode="OBJECT")
+            mode = context.active_object.mode
+            if mode != "OBJECT":
+                bpy.ops.object.mode_set(mode="OBJECT")
             bpy.ops.wm.append(
                 filename=NAME_NODE_GROUP_OVERRIDE,
                 directory=os.path.join(blend_path, "NodeTree"),
@@ -75,6 +78,8 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
             )
             node_group = bpy.data.node_groups.get(NAME_NODE_GROUP_OVERRIDE)
             node_group.use_fake_user = True
+            if mode != context.active_object.mode:
+                bpy.ops.object.mode_set(mode=mode)
             return node_group
         except:
             self.report({"ERROR"}, "Failed import node group")
