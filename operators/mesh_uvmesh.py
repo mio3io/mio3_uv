@@ -77,8 +77,8 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         return None
 
 
-class MIO3UV_OT_uvmesh_cotrol(Mio3UVOperator):
-    bl_idname = "mesh.mio3_uvmesh_cotrol"
+class MIO3UV_OT_uvmesh_control(Mio3UVOperator):
+    bl_idname = "mesh.mio3_uvmesh_control"
     bl_label = "UV Mesh"
     bl_description = "Control UV Mesh Factor"
     bl_options = {"REGISTER", "UNDO", "INTERNAL"}
@@ -135,14 +135,14 @@ def panel_tools(self, context):
             props_object = context.active_object.mio3uv
             row = self.layout.row(align=True)
             row.operator(
-                "mesh.mio3_uvmesh_cotrol",
+                "mesh.mio3_uvmesh_control",
                 text="",
                 icon_value=icons["UNFOLDIFY"].icon_id if props_object.uvmesh_factor > 0 else icons["CUBE"].icon_id,
                 depress=True if props_object.uvmesh_factor > 0 else False,
             ).mode = "TOGGLE"
 
 
-classes = [MIO3UV_OT_uvmesh, MIO3UV_OT_uvmesh_cotrol, MIO3UV_OT_uvmesh_clear]
+classes = [MIO3UV_OT_uvmesh, MIO3UV_OT_uvmesh_control, MIO3UV_OT_uvmesh_clear]
 
 
 def register():

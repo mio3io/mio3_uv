@@ -22,14 +22,15 @@ class MIO3UV_PT_View(Panel):
         icons = preview_collections["icons"]
 
         props_object = context.active_object.mio3uv
-        if context.edit_image is not None:
-            props_scene = context.scene.mio3uv
-            props_image = context.edit_image.mio3uv
-            row = layout.row()
-            row.prop(props_image, "use_exposure", text=tt_iface("Exposure"))
-            exposure_row = row.column()
-            exposure_row.active = props_image.use_exposure
-            exposure_row.prop(props_scene, "exposure", text="")
+        props_image = context.edit_image.mio3uv if context.edit_image is not None else context.scene.mio3uv
+
+        props_scene = context.scene.mio3uv
+        row = layout.row()
+        row.prop(props_image, "use_exposure")
+        row.enabled = context.edit_image is not None
+        exposure_row = row.column()
+        exposure_row.active = props_image.use_exposure
+        exposure_row.prop(props_scene, "exposure", text="")
 
         col = layout.column(align=True)
         row = col.row(align=True)
@@ -61,13 +62,13 @@ class MIO3UV_PT_UVMesh(Panel):
             col = layout.column(align=False)
             row = col.row(align=True)
             row.operator(
-                "mesh.mio3_uvmesh_cotrol",
+                "mesh.mio3_uvmesh_control",
                 text=tt_iface("Mesh"),
                 icon_value=icons["CUBE"].icon_id,
                 depress=False if props_object.uvmesh_factor > 0 else True,
             ).mode = "MESH"
             row.operator(
-                "mesh.mio3_uvmesh_cotrol",
+                "mesh.mio3_uvmesh_control",
                 text=tt_iface("UV"),
                 icon_value=icons["UNFOLDIFY"].icon_id,
                 depress=True if props_object.uvmesh_factor > 0 else False,
