@@ -87,6 +87,8 @@ translation_dict = {
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Body Preset"): "パーツにあわせて整列",
         ("*", "Unfoldify"): "展開図レイアウト",
+        ("*", "Group by Linked Faces"): "接続した面でグループ化",
+        ("*", "Based on Active"): "アクティブをベースに",
 
         ("*", "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"): "髪の房や指をまとめて選択して自動的に回転と順序を揃えます.\n全身を選択している場合はパーツで分類します",
         ("*", "Hand L"): "左手L",
