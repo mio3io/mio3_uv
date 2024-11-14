@@ -5,6 +5,7 @@ from bpy.props import BoolProperty, FloatProperty
 from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..icons import preview_collections
+from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
 
@@ -56,10 +57,28 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
         context.view_layer.objects.active = self.objects[0]
 
         if self.units:
-            bpy.ops.uv.mio3_place("INVOKE_DEFAULT", axis="X")
+            island_manager = UVIslandManager(self.objects)
+            self.align_islands(island_manager.islands)
+            island_manager.update_uvmeshes()
 
         self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
+
+    def align_islands(self, islands):
+        if not islands:
+            return
+
+        islands.sort(key=lambda island: island.width * island.height)
+        # islands.sort(key=lambda island: (island.center_3d.x, -island.center_3d.z, island.center_3d.y))
+
+        current_x = 0
+        current_y = 0
+
+        for island in islands:
+            offset_x = current_x - island.min_uv.x
+            offset_y = current_y - island.min_uv.y
+            island.move(Vector((offset_x, offset_y)))
+            current_x += island.width + 0.01
 
     def get_connected_face_groups(self, faces):
         face_groups = []
