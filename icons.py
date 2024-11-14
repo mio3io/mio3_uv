@@ -52,7 +52,8 @@ def register():
     icons.load("ROTATE", os.path.join(ICON_DIR, "align_rotate.png"), "IMAGE")
 
     icons.load("STACK", os.path.join(ICON_DIR, "stack.png"), "IMAGE")
-    icons.load("UNSTACK", os.path.join(ICON_DIR, "unstack.png"), "IMAGE")
+    icons.load("DIST_X", os.path.join(ICON_DIR, "dist_x.png"), "IMAGE")
+    icons.load("DIST_Y", os.path.join(ICON_DIR, "dist_y.png"), "IMAGE")
 
     icons.load("GRID_SORT", os.path.join(ICON_DIR, "grid_sorting.png"), "IMAGE")
 

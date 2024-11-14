@@ -263,7 +263,7 @@ class MIO3UV_PT_rearrange(Mio3UVPanel):
         icons = preview_collections["icons"]
         layout = self.layout
 
-        layout.label(text="Group Rearrange", icon_value=icons["UNSTACK"].icon_id)
+        layout.label(text="Group Rearrange", icon_value=icons["DIST_X"].icon_id)
         col = layout.column(align=True)
         col.scale_y = 1.1
 
