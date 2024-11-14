@@ -22,7 +22,6 @@ from .operators import offset
 from .operators import stitch
 
 from .operators import sort
-from .operators import place
 from .operators import stack
 from .operators import shuffle
 
@@ -37,6 +36,7 @@ from .operators import mesh_uvmesh
 from .ui import ui_main
 from .ui import ui_view
 from .ui import ui_options
+from .ui import ui_menu
 
 
 bl_info = {
@@ -69,7 +69,6 @@ modules = [
     offset,
     stitch,
     sort,
-    place,
     stack,
     shuffle,
     symmetrize,
@@ -81,6 +80,7 @@ modules = [
     ui_main,
     ui_view,
     ui_options,
+    ui_menu,
     property,
 ]
 

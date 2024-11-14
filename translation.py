@@ -27,7 +27,7 @@ translation_dict = {
         ("*", "Axis-align the island to the selected edge"): "選択した辺を基準にアイランドを軸整列させる",
         ("*", "Align Axis"): "軸整列",
         ("*", "Orient World"): "ワールド方向",
-        ("*", "Align Seam"): "シーム整列",
+        ("*", "Align Seam"): "シームの頂点を整列",
         ("*", "Align UVs of the same 3D vertex split by a seam"): "シームで別れた同じ3D頂点を持つUV座標を整列します",
 
         ("*", "Island Mode"): "アイランドモード",
@@ -122,6 +122,13 @@ translation_dict = {
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
         ("*", "Padding"): "パディング",
         ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
+
+        ("*", "Unwrap Horizontal(U) Only"): "水平(U軸)のみを展開",
+        ("*", "Unwrap Vertical(V) Only"): "垂直(V軸)のみを展開",
+
+        
+        ("*", "Distribute"): "分布",
+
 
     }
 }  # fmt: skip
