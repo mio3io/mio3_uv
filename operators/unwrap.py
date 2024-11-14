@@ -22,6 +22,15 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         ],
         default="ANGLE_BASED",
     )
+    axis: EnumProperty(
+        name="Direction",
+        items=[
+            ("BOTH", "Both", ""),
+            ("Y", "Vertical", ""),
+            ("X", "Horizontal", ""),
+        ],
+        default="BOTH",
+    )
 
     @classmethod
     def poll(cls, context):
@@ -34,7 +43,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         for obj in self.objects:
             if not obj.data.uv_layers:
                 bpy.ops.uv.unwrap(method=self.method, margin=0.001)
-                break
+                return {"FINISHED"}
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
@@ -44,9 +53,19 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         else:
             island_manager = UVIslandManager(self.objects)
 
+        axis = self.axis
+        
+        original_uvs = {}
         for island in island_manager.islands:
             island.store_selection()
             island.ajast = self.init_select_uvs(island)
+
+            original_uvs[island] = {}
+            if axis != "BOTH":
+                for face in island.faces:
+                    for loop in face.loops:
+                        original_uvs[island][loop] = loop[island.uv_layer].uv.copy()
+
             if island.ajast:
                 island.update_bounds()
                 island.original_center = island.center.copy()
@@ -56,6 +75,15 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         for island in island_manager.islands:
+            if axis != "BOTH":
+                for face in island.faces:
+                    for loop in face.loops:
+                        current_uv = loop[island.uv_layer].uv
+                        original_uv = original_uvs[island][loop]
+                        if axis == "X":
+                            loop[island.uv_layer].uv = Vector((original_uv.x, current_uv.y))
+                        elif axis == "Y":
+                            loop[island.uv_layer].uv = Vector((current_uv.x, original_uv.y))
             if island.ajast:
                 island.update_bounds()
                 offset = island.original_center - island.center
@@ -97,6 +125,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         return True
 
     def init_select_uvs(self, island):
+        island.tmp_uv_list = []
+
         pinned_count = sum(1 for face in island.faces for loop in face.loops if loop[island.uv_layer].pin_uv)
         if pinned_count >= 2:
             return False
@@ -106,7 +136,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             return False
 
         uv_layer = island.uv_layer
-        island.tmp_uv_list = []
         selected_nodes = {}
         for face in island.faces:
             for loop in face.loops:
@@ -134,6 +163,12 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 break
         return additional_deselect_needed == 0
 
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "method")
+        layout.label(text="Direction")
+        row = layout.row()
+        row.prop(self, "axis", expand=True)
 
 classes = [MIO3UV_OT_unwrap]
 
