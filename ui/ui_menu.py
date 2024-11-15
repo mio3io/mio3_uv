@@ -14,16 +14,14 @@ class MIO3UV_MT_unwrap(Menu):
         layout = self.layout
         layout.operator(
             "uv.mio3_unwrap",
-            text=tt_iface("Unwrap Horizontal(U) Only"),
+            text=tt_iface("Unwrap Horizontal(X) Only"),
             icon_value=icons["EDGE_X"].icon_id,
         ).axis = "X"
         layout.operator(
             "uv.mio3_unwrap",
-            text=tt_iface("Unwrap Vertical(V) Only"),
+            text=tt_iface("Unwrap Vertical(Y) Only"),
             icon_value=icons["EDGE_Y"].icon_id,
         ).axis = "Y"
-
-
 
 
 classes = [
