@@ -385,6 +385,10 @@ class UVNodeGroup:
     bm: BMesh = None
     uv_layer: BMLayerItem = None
 
+    min_uv: Vector = field(default_factory=lambda: Vector((float("inf"), float("inf"))))
+    max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
+    center: Vector = field(init=False)
+
     selection_states: Dict[int, bool] = field(default_factory=dict)
 
     def __hash__(self):
@@ -394,6 +398,19 @@ class UVNodeGroup:
         if not isinstance(other, UVNodeGroup):
             return NotImplemented
         return (self.obj, id(self.bm), id(self.uv_layer)) == (other.obj, id(other.bm), id(other.uv_layer))
+
+    def update_bounds(self):
+        uv_points = [node.uv for node in self.nodes]
+        if uv_points:
+            x_coords = [uv.x for uv in uv_points]
+            y_coords = [uv.y for uv in uv_points]
+            self.min_uv = Vector((min(x_coords), min(y_coords)))
+            self.max_uv = Vector((max(x_coords), max(y_coords)))
+            self.center = Vector((sum(x_coords) / len(x_coords), sum(y_coords) / len(y_coords)))
+        else:
+            self.min_uv = Vector((0, 0))
+            self.max_uv = Vector((0, 0))
+            self.center = Vector((0, 0))
 
     def update_uvs(self):
         for node in self.nodes:
