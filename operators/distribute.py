@@ -1,7 +1,7 @@
 import bpy
 import time
 import numpy as np
-from bpy.props import BoolProperty, FloatProperty, EnumProperty
+from bpy.props import FloatProperty, EnumProperty
 from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
@@ -12,7 +12,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
     bl_label = "Distribute"
     bl_description = "Distribute Islands"
     bl_options = {"REGISTER", "UNDO"}
-    method: EnumProperty(name="Method", items=[("ALIGN", "Align", ""), ("DISTRIBUTE", "Distribute", "")])
+    method: EnumProperty(name="Method", items=[("DISTRIBUTE", "Distribute", ""), ("ALIGN", "Align", "")])
     axis: EnumProperty(name="Direction", items=[("AUTO", "Auto", ""), ("X", "Align V", ""), ("Y", "Align H", "")])
     spacing: FloatProperty(name="Margin", default=0.01, min=0.0, step=0.1, precision=3)
 
