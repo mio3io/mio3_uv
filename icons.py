@@ -95,6 +95,7 @@ def register():
     icons.load("LENGTH", os.path.join(ICON_DIR, "length.png"), "IMAGE")
     icons.load("OFFSET", os.path.join(ICON_DIR, "offset.png"), "IMAGE")
     icons.load("STITCH", os.path.join(ICON_DIR, "stitch.png"), "IMAGE")
+    icons.load("STRATCH", os.path.join(ICON_DIR, "stretch.png"), "IMAGE")
 
     icons.load("CUBE", os.path.join(ICON_DIR, "cube.png"), "IMAGE")
 
