@@ -36,8 +36,17 @@ class MIO3UV_PT_main(Mio3UVPanel):
         col_unwrap.scale_y = 1.1
 
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons["UNWRAP"].icon_id)
+        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons["UNWRAP"].icon_id).axis="BOTH"
+        row.menu("MIO3UV_MT_unwrap", text="", icon="TRIA_DOWN")
+        # row.operator("uv.mio3_unwrap", text="H").axis="Y"
+        # row.operator("uv.mio3_unwrap", text="V").axis="X"
+
+        col_unwrap = layout.column(align=True)
+
+        row = col_unwrap.row(align=True)
         op = row.operator("uv.mio3_straight", text=tt_iface("Straight"), icon_value=icons["STRAIGHT"].icon_id)
+        row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
+
         op.distribute = "GEOMETRY"
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_gridify", text=tt_iface("Gridify"), icon_value=icons["GRID"].icon_id)
@@ -63,16 +72,15 @@ class MIO3UV_PT_align(Mio3UVPanel):
         grid = col_left.grid_flow(row_major=True, columns=3, even_columns=True, even_rows=True, align=True)
 
         grid.label(text="")
-
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
         grid.label(text="")
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
 
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
         dummy = grid.row(align=True)
         dummy.scale_x = 3
         dummy.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_CENTER"].icon_id).type = "CENTER"
-
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_R"].icon_id).type = "MAX_X"
+
         grid.label(text="")
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B"].icon_id).type = "MIN_Y"
 
@@ -122,10 +130,12 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_orient_edge", text=tt_iface("Orient Edge"), icon_value=icons["ALIGN_EDGE"].icon_id)
-        row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
+        # row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
+        row.operator("uv.mio3_distribute", text=tt_iface("Distribute"), icon_value=icons["DIST_X"].icon_id)
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_align_seam", text=tt_iface("Align Seam"), icon_value=icons["ALIGN_SEAM_Y"].icon_id)
+
 
         row = layout.row(align=True)
         row.label(text=tt_iface("Fixed Mode"))

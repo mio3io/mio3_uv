@@ -22,6 +22,7 @@ from .operators import offset
 from .operators import stitch
 
 from .operators import sort
+from .operators import distribute
 from .operators import stack
 from .operators import shuffle
 
@@ -69,6 +70,7 @@ modules = [
     offset,
     stitch,
     sort,
+    distribute,
     stack,
     shuffle,
     symmetrize,
