@@ -9,7 +9,7 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_relax(Mio3UVOperator):
     bl_idname = "uv.mio3_relax"
     bl_label = "Relax"
-    bl_description = "Relax UV"
+    bl_description = "Relax UVs"
     bl_options = {"REGISTER", "UNDO"}
 
     method: EnumProperty(

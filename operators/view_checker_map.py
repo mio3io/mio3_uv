@@ -11,7 +11,7 @@ NAME_MOD_CHECKER_MAP = "Mio3CheckerMapModifier"
 class MIO3UV_OT_checker_map(Mio3UVOperator):
     bl_idname = "mio3uv.checker_map"
     bl_label = "Cheker Maps"
-    bl_description = ""
+    bl_description = "Set the checker map (using Geometry Nodes)"
     bl_options = {"REGISTER", "UNDO"}
 
     size = 1024

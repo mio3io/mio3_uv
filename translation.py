@@ -48,9 +48,15 @@ translation_dict = {
         ("*", "Orient World"): "ワールド方向",
         ("*", "Align Seam"): "シーム整列",
         ("*", "Align UVs of the same 3D vertex split by a seam"): "シームで別れた同じ3D頂点を持つUV座標を整列します",
+        ("*", "Align the width of islands or UV groups"): "アイランドやUVグループの幅を揃える",
         ("*", "Distribute"): "分布",
+        ("*", "Distribute islands evenly"): "アイランドを等間隔に分布する",
 
+        ("*", "Distribute UV"): "UVを分布",
+        ("*", "Distribute UVs evenly or based on geometry"): "UVを等間隔またはジオメトリに基づくように分布する",
+        ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("*", "Offset Boundary"): "オフセット",
+        ("*", "Expand/Shrink UV Borders"): "境界のUVを拡大/縮小する",
 
         ("*", "Base Axis"): "基準軸",
 
@@ -120,9 +126,12 @@ translation_dict = {
         ("*", "Select only vertical or horizontal edges"): "垂直または水平のエッジのみを選択",
 
         ("*", "Checker Map"): "チェッカーマップ",
+        ("*", "Set the checker map (using Geometry Nodes)"): "チェッカーマップを設定します（ジオメトリノードを使用）",
         ("*", "Padding"): "パディング",
         ("*", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
+        ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
+
         ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
     }
 }  # fmt: skip

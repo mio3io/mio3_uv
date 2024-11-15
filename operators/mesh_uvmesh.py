@@ -17,7 +17,7 @@ NAME_MOD_UV_MESH = "Mio3UVMeshModifier"
 class MIO3UV_OT_uvmesh(Mio3UVOperator):
     bl_idname = "mesh.mio3_uvmesh"
     bl_label = "UV Mesh"
-    bl_description = ""
+    bl_description = "Set up a modifier for UV to Mesh (using Geometry Nodes)"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod

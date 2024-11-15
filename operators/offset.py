@@ -9,7 +9,7 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_offset(Mio3UVOperator):
     bl_idname = "uv.mio3_offset"
     bl_label = "Offset"
-    bl_description = "Expand UV boundary"
+    bl_description = "Expand/Shrink UV Borders"
     bl_options = {"REGISTER", "UNDO"}
 
     offset: FloatProperty(

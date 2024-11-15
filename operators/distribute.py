@@ -10,7 +10,7 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_distribute(Mio3UVOperator):
     bl_idname = "uv.mio3_distribute"
     bl_label = "Distribute"
-    bl_description = "Distribute Islands"
+    bl_description = "Distribute islands evenly"
     bl_options = {"REGISTER", "UNDO"}
     method: EnumProperty(name="Method", items=[("DISTRIBUTE", "Distribute", ""), ("ALIGN", "Align", "")])
     axis: EnumProperty(name="Direction", items=[("AUTO", "Auto", ""), ("X", "Align H", ""), ("Y", "Align V", "")])

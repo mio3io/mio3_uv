@@ -9,7 +9,7 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_stretch(Mio3UVOperator):
     bl_idname = "uv.mio3_stretch"
     bl_label = "Stretch Island"
-    bl_description = "Stretch Island"
+    bl_description = "Align the width of islands or UV groups"
     bl_options = {"REGISTER", "UNDO"}
 
     axis: EnumProperty(

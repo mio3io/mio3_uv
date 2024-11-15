@@ -9,8 +9,8 @@ from ..classes.operator import Mio3UVOperator
 
 class MIO3UV_OT_circle(Mio3UVOperator):
     bl_idname = "uv.mio3_circle"
-    bl_label = "Circle"
-    bl_description = "Circular"
+    bl_label = "Circular"
+    bl_description = "Shape the edge loop into a circular shape"
     bl_options = {"REGISTER", "UNDO"}
 
     composite: BoolProperty(
@@ -69,8 +69,8 @@ class MIO3UV_OT_circle(Mio3UVOperator):
 
 class MIO3UV_OT_adjust_edge(Mio3UVOperator):
     bl_idname = "uv.mio3_adjust_edge"
-    bl_label = "Adjust UV Edge Length"
-    bl_description = "Adjust UV edge lengths"
+    bl_label = "Distribute UV"
+    bl_description = "Distribute UVs evenly or based on geometry"
     bl_options = {"REGISTER", "UNDO"}
 
     method: EnumProperty(
