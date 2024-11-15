@@ -2,6 +2,25 @@ import bpy
 
 translation_dict = {
     "ja_JP": {
+        ("*", "Fixed Mode"): "モード固定",
+        ("*", "Island Mode"): "アイランドモード",
+        ("*", "Edge Mode"): "辺モード",
+        ("*", "Process each edge loops"): "エッジループ毎に処理する",
+        ("*", "Composite Edges"): "複合エッジ",
+        ("*", "Process multiple edge loops as a single group"): "複数のエッジループをひとつのグループとして処理する",
+
+        ("*", "UV Space"): "UV空間",
+        ("*", "Arrange"): "調整",
+        ("*", "Keep Aspect Ratio"): "アスペクト比を維持",
+        ("*", "Keep Position"): "位置を維持",
+        ("*", "Keep Angle"): "角度を維持",
+        ("*", "Keep Scale"): "スケールを維持",
+        ("*", "Keep Pin"): "ピンを維持",
+        ("*", "Keep Seam"): "シームを維持",
+        ("*", "Keep Boundary"): "境界を維持",
+
+        ("*", "Unwrap Horizontal(U) Only"): "水平(U軸)のみを展開",
+        ("*", "Unwrap Vertical(V) Only"): "垂直(V軸)のみを展開",
         ("*", "Straight"): "ストレート",
         ("*", "Unwrap selected edge loop to a straight line"): "選択したエッジループが直線になるように展開する",
         ("*", "Rectify"): "矩形",
@@ -29,26 +48,11 @@ translation_dict = {
         ("*", "Orient World"): "ワールド方向",
         ("*", "Align Seam"): "シーム整列",
         ("*", "Align UVs of the same 3D vertex split by a seam"): "シームで別れた同じ3D頂点を持つUV座標を整列します",
+        ("*", "Distribute"): "分布",
 
-        ("*", "Island Mode"): "アイランドモード",
-        ("*", "Edge Mode"): "辺モード",
-        ("*", "Process each edge loops"): "エッジループ毎に処理する",
-        ("*", "Fixed Mode"): "モード固定",
-
-        ("*", "Relax"): "Relax",
         ("*", "Offset Boundary"): "オフセット",
 
-        ("*", "UV Space"): "UV空間",
         ("*", "Base Axis"): "基準軸",
-        ("*", "Arrange"): "調整",
-
-        ("*", "Keep Position"): "位置を維持",
-        ("*", "Keep Angle"): "角度を維持",
-        ("*", "Keep Scale"): "スケールを維持",
-        ("*", "Keep Pin"): "ピンを維持",
-        ("*", "Keep Seam"): "シームを維持",
-
-        ("*", "Keep Aspect Ratio"): "アスペクト比を維持",
 
         ("*", "Unify Shapes"): "UVの形状を揃える",
         ("*", "Stack"): "重ねる",
@@ -57,9 +61,6 @@ translation_dict = {
 
         ("*", "Shuffle"): "シャッフル",
         ("*", "Average Island Scales"): "3Dに基づく大きさ",
-
-        ("*", "Fixed Pins"): "ピンを固定",
-        ("*", "Fixed Boundary"): "境界を固定",
 
         ("*", "Sort Method"): "ソート方式",
         ("*", "Top Align"): "上揃え",
@@ -79,6 +80,7 @@ translation_dict = {
         ("*", "Grid Size"): "グリッド幅",
         ("*", "Align Type"): "整列タイプ",
         ("*", "Align by group"): "グループごとに整列",
+        ("sort", "Island Margin"): "アイランドの間隔",
         ("*", "Group Margin"): "グループの間隔",
         ("*", "Wrap Count"): "折り返し",
         ("*", "Reverse Order"): "順番を反転",
@@ -118,18 +120,10 @@ translation_dict = {
         ("*", "Select only vertical or horizontal edges"): "垂直または水平のエッジのみを選択",
 
         ("*", "Checker Map"): "チェッカーマップ",
+        ("*", "Padding"): "パディング",
         ("*", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
-        ("*", "Padding"): "パディング",
         ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
-
-        ("*", "Unwrap Horizontal(U) Only"): "水平(U軸)のみを展開",
-        ("*", "Unwrap Vertical(V) Only"): "垂直(V軸)のみを展開",
-
-        
-        ("*", "Distribute"): "分布",
-
-
     }
 }  # fmt: skip
 

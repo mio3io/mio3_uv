@@ -19,8 +19,8 @@ class MIO3UV_OT_relax(Mio3UVOperator):
         ],
         name="Mode",
     )
-    keep_pin: BoolProperty(name="Fixed Pins", default=False)
-    keep_boundary: BoolProperty(name="Fixed Boundary", default=False)
+    keep_pin: BoolProperty(name="Keep Pin", default=False)
+    keep_boundary: BoolProperty(name="Keep Boundary", default=False)
     relax_x: BoolProperty(name="X", default=True)
     relax_y: BoolProperty(name="Y", default=True)
     iterations: IntProperty(
