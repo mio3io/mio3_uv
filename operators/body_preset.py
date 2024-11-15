@@ -30,7 +30,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         default="AUTO",
     )
 
-    align_uv: EnumProperty(name="Align", items=[("X", "Align V", ""), ("Y", "Align H", "")], default="X")
+    align_uv: EnumProperty(name="Align", items=[("X", "Align H", ""), ("Y", "Align V", "")], default="X")
 
     def execute(self, context):
         self.start_time = time.time()

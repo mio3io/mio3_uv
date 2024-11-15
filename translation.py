@@ -19,8 +19,8 @@ translation_dict = {
         ("*", "Keep Seam"): "シームを維持",
         ("*", "Keep Boundary"): "境界を維持",
 
-        ("*", "Unwrap Horizontal(U) Only"): "水平(U軸)のみを展開",
-        ("*", "Unwrap Vertical(V) Only"): "垂直(V軸)のみを展開",
+        ("*", "Unwrap Horizontal(X) Only"): "水平(X軸)のみを展開",
+        ("*", "Unwrap Vertical(Y) Only"): "垂直(Y軸)のみを展開",
         ("*", "Straight"): "ストレート",
         ("*", "Unwrap selected edge loop to a straight line"): "選択したエッジループが直線になるように展開する",
         ("*", "Rectify"): "矩形",
@@ -68,8 +68,8 @@ translation_dict = {
         ("*", "Bottom Align"): "下揃え",
         ("*", "Reorder islands based on coordinates in 3D space"): "3D空間の座標を基準にアイランドを並び替え",
         ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標を基準にアイランドをグリッド状に並び替え",
-        ("*", "Align V"): "横に並べる",
-        ("*", "Align H"): "縦に並べる",
+        ("*", "Align H"): "横に並べる",
+        ("*", "Align V"): "縦に並べる",
         ("*", "Orient"): "向き",
         ("*", "Start Angle (Clock)"): "開始角度（時計）",
 

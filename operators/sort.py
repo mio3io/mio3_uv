@@ -19,7 +19,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         items=[("AXIS", "Single Axis", "Single Axis"), ("RADIAL", "Radial", "Radial"), ("GRID", "Grid", "Grid"), ("UV", "UV Space", "UV Space")],
     )
     aling_mode: EnumProperty(items=[("DEFAULT", "Space", "")])
-    align_uv: EnumProperty(name="Align", items=[("X", "Align V", ""), ("Y", "Align H", "")], default="X")
+    align_uv: EnumProperty(name="Align", items=[("X", "Align H", ""), ("Y", "Align V", "")], default="X")
     alignment: EnumProperty(
         name="Alignment",
         items=[("TOP", "Top Align", "Top Align"), ("MIDDLE", "Middle Align", "Middle Align"), ("BOTTOM", "Bottom Align", "Bottom Align")],
