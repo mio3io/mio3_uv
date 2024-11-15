@@ -2,8 +2,8 @@ import bpy
 import time
 import math
 from mathutils import Vector
-from bpy.props import IntProperty, FloatProperty, EnumProperty
-from ..classes.uv import UVNodeManager
+from bpy.props import BoolProperty, IntProperty, FloatProperty, EnumProperty
+from ..classes.uv import UVNodeManager, UVNodeGroup
 from ..classes.operator import Mio3UVOperator
 
 
@@ -12,6 +12,11 @@ class MIO3UV_OT_circle(Mio3UVOperator):
     bl_label = "Circle"
     bl_description = "Circular"
     bl_options = {"REGISTER", "UNDO"}
+
+    composite: BoolProperty(
+        name="Composite Edges",
+        description="Process multiple edge loops as a single group",
+    )
 
     def invoke(self, context, event):
         self.objects = self.get_selected_objects(context)
@@ -30,9 +35,22 @@ class MIO3UV_OT_circle(Mio3UVOperator):
         else:
             node_manager = UVNodeManager(self.objects, mode="EDGE")
 
-        for group in node_manager.groups:
-            self.make_circular(group)
-            group.update_uvs()
+        if not node_manager.groups:
+            return {"CANCELLED"}
+
+        if self.composite:
+            base_group = node_manager.groups[0]
+            all_nodes = {node for group in node_manager.groups for node in group.nodes}
+            composite_group = UVNodeGroup(
+                nodes=all_nodes, obj=base_group.obj, bm=base_group.bm, uv_layer=base_group.uv_layer
+            )
+            self.make_circular(composite_group)
+            composite_group.update_uvs()
+        else:
+            for group in node_manager.groups:
+                self.make_circular(group)
+                group.update_uvs()
+
         node_manager.update_uvmeshes()
 
         if use_uv_select_sync:
@@ -58,8 +76,8 @@ class MIO3UV_OT_adjust_edge(Mio3UVOperator):
     method: EnumProperty(
         name="Method",
         items=[
-            ('GEOMETRY', "Geometry", ""),
-            ('EVENLY', "Even", ""),
+            ("GEOMETRY", "Geometry", ""),
+            ("EVENLY", "Even", ""),
         ],
     )
     iteration: IntProperty(
@@ -96,7 +114,7 @@ class MIO3UV_OT_adjust_edge(Mio3UVOperator):
         for group in node_manager.groups:
             selected_nodes = list(group.nodes)
             if selected_nodes:
-                if self.method == 'GEOMETRY':
+                if self.method == "GEOMETRY":
                     self.mode_geometry(selected_nodes, group.uv_layer)
                 else:
                     self.mode_evenly(selected_nodes, group.uv_layer)
@@ -236,10 +254,7 @@ class MIO3UV_OT_adjust_edge(Mio3UVOperator):
             node.update_uv(uv_layer)
 
 
-classes = [
-    MIO3UV_OT_circle,
-    MIO3UV_OT_adjust_edge
-]
+classes = [MIO3UV_OT_circle, MIO3UV_OT_adjust_edge]
 
 
 def register():
