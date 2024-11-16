@@ -12,7 +12,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
     bl_label = "Distribute"
     bl_description = "Distribute islands evenly"
     bl_options = {"REGISTER", "UNDO"}
-    method: EnumProperty(name="Method", items=[("DISTRIBUTE", "Distribute", ""), ("ALIGN", "Align", "")])
+    method: EnumProperty(name="Method", items=[("DISTRIBUTE", "Distribute", ""), ("FREE", "Free", "")])
     axis: EnumProperty(name="Direction", items=[("AUTO", "Auto", ""), ("X", "Align H", ""), ("Y", "Align V", "")])
     spacing: FloatProperty(name="Margin", default=0.01, min=0.0, step=0.1, precision=3)
 
@@ -111,7 +111,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
 
         row = layout.row()
         row.prop(self, "spacing", text="Spacing")
-        row.active = self.method == "ALIGN"
+        row.active = self.method == "FREE"
 
         layout.use_property_split = False
 
