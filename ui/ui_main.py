@@ -90,24 +90,24 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
         row = col_right.row(align=True)
         row.scale_x = 3
-        row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
         row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_Y_CENTER"].icon_id).type = "ALIGN_Y"
+        row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
         row = col_right.row(align=True)
         row.scale_x = 3
-        row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
         row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_X"].icon_id).axis = "X"
+        row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
 
         row = col_right.row(align=True)
         row.scale_x = 3
         row.operator_context = "EXEC_REGION_WIN"
-        row.operator("transform.mirror", text="", icon_value=icons["FLIP_X"].icon_id).constraint_axis = (
-            True,
-            False,
-            False,
-        )
         row.operator("transform.mirror", text="", icon_value=icons["FLIP_Y"].icon_id).constraint_axis = (
             False,
             True,
+            False,
+        )
+        row.operator("transform.mirror", text="", icon_value=icons["FLIP_X"].icon_id).constraint_axis = (
+            True,
+            False,
             False,
         )
         row.operator_context = "INVOKE_DEFAULT"
@@ -249,11 +249,11 @@ class MIO3UV_PT_select(Mio3UVPanel):
         row = col.row(align=True)
 
         row.operator(
-            "uv.mio3_select_edge_direction", text=tt_iface("Vertical"), icon_value=icons["EDGE_Y"].icon_id
-        ).axis = "Y"
-        row.operator(
             "uv.mio3_select_edge_direction", text=tt_iface("Horizontal"), icon_value=icons["EDGE_X"].icon_id
         ).axis = "X"
+        row.operator(
+            "uv.mio3_select_edge_direction", text=tt_iface("Vertical"), icon_value=icons["EDGE_Y"].icon_id
+        ).axis = "Y"
 
         row = layout.row(align=True)
         row.label(text=tt_iface("Odd UVs"))
