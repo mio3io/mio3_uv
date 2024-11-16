@@ -95,6 +95,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         if use_uv_select_sync:
             island_manager.restore_vertex_selection()
             context.tool_settings.use_uv_select_sync = True
+        
+        island_manager.update_uvmeshes()
 
         self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
