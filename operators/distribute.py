@@ -12,15 +12,27 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
     bl_label = "Distribute"
     bl_description = "Distribute islands evenly"
     bl_options = {"REGISTER", "UNDO"}
-    method: EnumProperty(name="Method", items=[("DISTRIBUTE", "Distribute", ""), ("FREE", "Free", "")])
-    axis: EnumProperty(name="Axis", items=[("AUTO", "Auto", ""), ("X", "X", ""), ("Y", "Y", "")])
-    spacing: FloatProperty(name="Margin", default=0.01, min=0.0, step=0.1, precision=3)
+    method: EnumProperty(
+        name="Method",
+        items=[("DISTRIBUTE", "Distribute", ""), ("FREE", "Free", "")],
+    )
+    axis: EnumProperty(
+        name="Axis",
+        items=[("AUTO", "Auto", ""), ("X", "X", ""), ("Y", "Y", "")],
+    )
+    spacing: FloatProperty(
+        name="Margin",
+        default=0.01,
+        min=0.0,
+        step=0.1,
+        precision=3,
+    )
 
     def execute(self, context):
         self.start_time = time.time()
         self.objects = self.get_selected_objects(context)
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
@@ -78,28 +90,18 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
                     island.move(offset)
                     current_pos -= island.height + space
         else:
-            all_bounds_min = Vector((float("inf"), float("inf")))
-            all_bounds_max = Vector((float("-inf"), float("-inf")))
-            for island in islands:
-                all_bounds_min.x = min(all_bounds_min.x, island.min_uv.x)
-                all_bounds_min.y = min(all_bounds_min.y, island.min_uv.y)
-                all_bounds_max.x = max(all_bounds_max.x, island.max_uv.x)
-                all_bounds_max.y = max(all_bounds_max.y, island.max_uv.y)
-
             if axis == "X":
-                current_pos = all_bounds_min.x
-            else:
-                current_pos = all_bounds_max.y
-
-            for island in islands:
-                if axis == "X":
+                current_pos = min(island.min_uv.x for island in islands)
+                for island in islands:
                     offset = Vector((current_pos - island.min_uv.x, 0))
                     current_pos += island.width + self.spacing
-                else:
+                    island.move(offset)
+            else:
+                current_pos = max(island.max_uv.y for island in islands)
+                for island in islands:
                     offset = Vector((0, current_pos - island.max_uv.y))
                     current_pos -= island.height + self.spacing
-
-                island.move(offset)
+                    island.move(offset)
 
     def draw(self, context):
         layout = self.layout
@@ -111,7 +113,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
 
         row = layout.row()
         row.prop(self, "spacing", text="Spacing")
-        row.active = self.method == "FREE"
+        row.enabled = self.method == "FREE"
         row = layout.row()
         row.prop(self, "axis", expand=True)
 
