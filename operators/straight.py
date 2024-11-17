@@ -54,12 +54,13 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         bpy.ops.uv.pin(clear=False)
         bpy.ops.uv.select_linked()
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
-        bpy.ops.uv.pin(clear=True)
 
         bpy.ops.uv.select_all(action="DESELECT")
 
         for group in node_manager.groups:
             group.restore_selection()
+
+        bpy.ops.uv.pin(clear=True)
 
         node_manager.update_uvmeshes()
 
