@@ -8,14 +8,18 @@ from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
+
 class MIO3UV_OT_body_preset(Mio3UVOperator):
     bl_idname = "uv.mio3_body_preset"
     bl_label = "Align Body Parts"
-    bl_description = "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"
+    bl_description = (
+        "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"
+    )
     bl_options = {"REGISTER", "UNDO"}
 
     type: EnumProperty(
         name="Axis",
+        default="AUTO",
         items=[
             ("AUTO", "Auto", ""),
             ("HAND_R", "Hand R", ""),
@@ -27,10 +31,9 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
             ("BUTTON", "Button", ""),
             ("BODY", "Body", ""),
         ],
-        default="AUTO",
     )
 
-    align_uv: EnumProperty(name="Align", items=[("X", "Align H", ""), ("Y", "Align V", "")], default="X")
+    align_uv: EnumProperty(name="Align", default="X", items=[("X", "Align H", ""), ("Y", "Align V", "")])
 
     def execute(self, context):
         self.start_time = time.time()
@@ -38,12 +41,12 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-        original_pivot = context.space_data.pivot_point
+        # original_pivot = context.space_data.pivot_point
 
         island_manager = UVIslandManager(self.objects)
         if not island_manager.islands:
             return {"CANCELLED"}
-        
+
         all_centers = np.array([island.center_3d for island in island_manager.islands])
         avg_center = Vector(np.mean(all_centers, axis=0))
 
@@ -54,21 +57,47 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         if self.type == "AUTO":
             parts_type = self.find_humanoid_parts(avg_center, max_co, min_co)
             if parts_type == "HEAD":
-                self.type = "HAIR_F"
-            else:
-                self.type = parts_type
+                parts_type = "HAIR_F"
+        else:
+            parts_type = self.type
 
-        if self.type == "BODY":
+        if parts_type == "BODY":
             self.find_groups(context, island_manager, max_co, min_co)
             island_manager.update_uvmeshes()
         else:
+            if parts_type in {"HAND_R", "HAND_L"}:
+                bpy.ops.uv.align_rotation(method="GEOMETRY", axis="X")
+                bpy.ops.uv.align_rotation(method="AUTO")
+            elif parts_type in {"FOOT_R", "FOOT_L"}:
+                bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Y")
+                bpy.ops.uv.align_rotation(method="AUTO")
+            elif parts_type in {"HAIR_F", "HAIR_B"}:
+                bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
+            else:
+                bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
+
+            if parts_type in {"HAND_R", "FOOT_R", "FOOT_L"}:
+                self.rotate_uv_islands(island_manager)
+
+            if parts_type == "BUTTON":
+                self.sort_axis(island_manager, "Z", reverse=False)
+            elif parts_type == "HAIR_F":
+                self.sort_axis(island_manager, "X", reverse=False)
+            elif parts_type == "HAIR_B":
+                self.sort_axis(island_manager, "X", reverse=True)
+            elif parts_type == "HAND_R":
+                self.sort_axis(island_manager, "Y", reverse=False)
+            elif parts_type == "HAND_L":
+                self.sort_axis(island_manager, "Y", reverse=True)
+            else:
+                self.sort_axis(island_manager, "X", reverse=True)
+
+            self.align_islands(island_manager)
+
             island_manager.update_uvmeshes()
-            self.sort_parts(context)
 
-
-        context.space_data.pivot_point = original_pivot
         self.print_time(time.time() - self.start_time)
-        self.report({"INFO"}, "Match as {}".format(self.type))
+        self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 
     def find_humanoid_parts(self, avg_center, max_co, min_co):
@@ -92,7 +121,6 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
             return "HEAD"
         else:
             return "BODY"
-
 
     def find_groups(self, context, island_manager, max_co, min_co):
         anchor_positions = {
@@ -123,34 +151,57 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                     island.move(offset)
                     current_position += direction * (island.width)
 
-    def sort_parts(self, context):
-        if self.type in {"HAND_R", "HAND_L"}:
-            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="X")
-            bpy.ops.uv.align_rotation(method="AUTO")
-        elif self.type in {"FOOT_R", "FOOT_L"}:
-            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Y")
-            bpy.ops.uv.align_rotation(method="AUTO")
-        elif self.type in {"HAIR_F", "HAIR_B"}:
-            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
-        else:
-            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
+    def sort_axis(self, island_manager, axis, reverse=False):
+        axis_orders = {
+            "X": ["+X", "+Y", "-Z"],
+            "Y": ["+Y", "+X", "-Z"],
+            "Z": ["-Z", "+X", "+Y"],
+        }
+        sort_order = axis_orders[axis]
 
-        if self.type in {"HAND_R", "FOOT_R", "FOOT_L"}:
-            context.space_data.pivot_point = "INDIVIDUAL_ORIGINS"
-            bpy.ops.transform.rotate(value=math.pi, orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        def sort_func(island):
+            return tuple(
+                island.center_3d["XYZ".index(axis[-1])] * (-1 if axis.startswith("-") else 1) for axis in sort_order
+            )
 
-        if self.type == "BUTTON":
-            bpy.ops.uv.mio3_sort(axis="Z", align_uv=self.align_uv, reverse=False)
-        elif self.type == "HAND_R":
-            bpy.ops.uv.mio3_sort(axis="Y", align_uv=self.align_uv, reverse=False)
-        elif self.type == "HAND_L":
-            bpy.ops.uv.mio3_sort(axis="Y", align_uv=self.align_uv, reverse=True)
-        elif self.type == "HAIR_F":
-            bpy.ops.uv.mio3_sort(axis="X", align_uv=self.align_uv, reverse=False)
-        elif self.type == "HAIR_B":
-            bpy.ops.uv.mio3_sort(axis="X", align_uv=self.align_uv, reverse=True)
+        island_manager.islands.sort(key=sort_func, reverse=reverse)
+
+    def align_islands(self, island_manager):
+        island_bounds = []
+        for island in island_manager.islands:
+            island_bounds.append((island, island.min_uv, island.max_uv))
+
+        all_min = np.min([bounds[1] for bounds in island_bounds], axis=0)
+        all_max = np.max([bounds[2] for bounds in island_bounds], axis=0)
+
+        if self.align_uv == "X":
+            offset = Vector((all_min[0], all_max[1]))
         else:
-            bpy.ops.uv.mio3_sort(axis="X", align_uv=self.align_uv, reverse=False)
+            offset = Vector((all_max[0], all_max[1]))
+
+        for island, min_uv, max_uv in island_bounds:
+            if self.align_uv == "X":
+                island_offset = Vector((offset.x - min_uv[0], offset.y - max_uv[1]))
+                island.move(island_offset)
+                offset.x += island.width + 0.01
+            else:
+                island_offset = Vector((offset.x - max_uv[0], offset.y - max_uv[1]))
+                island.move(island_offset)
+                offset.y -= island.height + 0.01
+
+    def rotate_uv_islands(self, island_manager):
+        for island in island_manager.islands:
+            uv_layer = island.uv_layer
+            pivot = Vector(((island.min_uv.x + island.max_uv.x) / 2, (island.min_uv.y + island.max_uv.y) / 2))
+            for face in island.faces:
+                for loop in face.loops:
+                    uv = loop[uv_layer].uv
+                    dx = uv.x - pivot.x
+                    dy = uv.y - pivot.y
+                    uv.x = pivot.x - dx
+                    uv.y = pivot.y - dy
+
+            island.update_bounds()
 
     def draw(self, context):
         layout = self.layout
