@@ -62,9 +62,12 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
             original_uvs[island] = {}
             if axis != "BOTH":
+                original_uvs_island = original_uvs[island]
+                uv_layer = island.uv_layer
                 for face in island.faces:
                     for loop in face.loops:
-                        original_uvs[island][loop] = loop[island.uv_layer].uv.copy()
+                        if loop[uv_layer].select:
+                            original_uvs_island[loop] = loop[uv_layer].uv.copy()
 
             if island.ajast:
                 island.update_bounds()
@@ -76,14 +79,17 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
         for island in island_manager.islands:
             if axis != "BOTH":
+                original_uvs_island = original_uvs[island]
+                uv_layer = island.uv_layer
                 for face in island.faces:
                     for loop in face.loops:
-                        current_uv = loop[island.uv_layer].uv
-                        original_uv = original_uvs[island][loop]
-                        if axis == "X":
-                            loop[island.uv_layer].uv = Vector((original_uv.x, current_uv.y))
-                        elif axis == "Y":
-                            loop[island.uv_layer].uv = Vector((current_uv.x, original_uv.y))
+                        if loop in original_uvs_island:
+                            current_uv = loop[uv_layer].uv
+                            original_uv = original_uvs_island[loop]
+                            if axis == "X":
+                                loop[uv_layer].uv = Vector((original_uv.x, current_uv.y))
+                            elif axis == "Y":
+                                loop[uv_layer].uv = Vector((current_uv.x, original_uv.y))
             if island.ajast:
                 island.update_bounds()
                 offset = island.original_center - island.center
