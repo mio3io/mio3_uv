@@ -13,17 +13,52 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
     bl_description = "Unwrap boundary to rectangle using four corners or a range as reference"
     bl_options = {"REGISTER", "UNDO"}
 
+    def unwrap_method_items(self, context):
+        items = [
+            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
+            ("CONFORMAL", "Conformal", "Conformal mapping method"),
+        ]
+        if bpy.app.version >= (4, 3, 0):
+            items.append(("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"))
+        return items
+
+    bbox_type: EnumProperty(
+        name="Scale",
+        items=[("AVERAGE", "Average", ""), ("BBOX", "Max", "")],
+    )
     distribute: EnumProperty(
-        name="Align",
+        name="Align UVs",
         items=[("GEOMETRY", "Geometry", ""), ("EVEN", "Even", ""), ("NONE", "None", "")],
     )
-    pin: BoolProperty(name="Pinned", default=False)
+    pin: BoolProperty(name="Pinned", default=True)
     unwrap: BoolProperty(name="Unwrap", default=True)
+    method: bpy.props.EnumProperty(name="Unwrap Method", items=unwrap_method_items)
     stretch: BoolProperty(name="Stretch", default=False)
-    bbox_type: EnumProperty(
-        name="Size",
-        items=[("AVERAGE", "Average", ""), ("BBOX", "Bounding Box", "")],
-    )
+
+    def draw(self, context):
+        layout = self.layout
+
+        split = layout.split(factor=0.4)
+        split.label(text="Scale")
+        sub = split.row()
+        sub.prop(self, "bbox_type", expand=True)
+
+        split = layout.split(factor=0.4)
+        split.label(text="Align UVs")
+        split.prop(self, "distribute", text="")
+
+        split = layout.split(factor=0.4)
+        split.use_property_split = False
+        split.prop(self, "unwrap")
+        sub = split.row()
+
+        sub.prop(self, "method", text="")
+        sub.enabled = self.unwrap
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        layout.prop(self, "stretch", expand=True)
+        layout.prop(self, "pin")
 
     def execute(self, context):
         self.start_time = time.time()
@@ -110,6 +145,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
             island.deselect_all_uv()
 
             num_uvs = len(bbox_uv)
+            all_loops = set()
             for i in range(num_uvs):
                 uv1 = bbox_uv[i]
                 uv2 = bbox_uv[(i + 1) % len(bbox_uv)]
@@ -130,6 +166,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                     for node in group.nodes:
                         for loop in node.loops:
                             loop[uv_layer].pin_uv = True
+                            all_loops.add(loop)
 
                     straight_uv_nodes(group, self.distribute)
                     for node in group.nodes:
@@ -137,17 +174,19 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                         for loop in node.loops:
                             loop[uv_layer].select = False
 
-            self.adjust_aspect_ratio(island, bbox_uv, adjustbox)
+            self.adjust_aspect_ratio(island, bbox_uv, adjustbox, all_loops)
 
             # 隣接しているUVがshortest_path_selectで選択解除されるため
             for _, _, _, loops in corner_mapping:
                 for loop in loops:
                     loop[uv_layer].pin_uv = True
 
+            # end island_manager.islands:
+
         if self.unwrap:
             for island in island_manager.islands:
                 island.select_all_uv()
-            bpy.ops.uv.unwrap(method="ANGLE_BASED")
+            bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         if self.stretch and self.unwrap:
             for island in island_manager.islands:
@@ -192,7 +231,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         ]
         return adjustbox
 
-    def adjust_aspect_ratio(self, island, bbox_uv, adjustbox):
+    def adjust_aspect_ratio(self, island, bbox_uv, adjustbox, all_loops):
         uv_layer = island.uv_layer
 
         bbox_width = bbox_uv[1].x - bbox_uv[0].x
@@ -210,13 +249,12 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         adjust_center = (adjustbox[0] + adjustbox[2]) / 2
         translation = adjust_center - bbox_center
 
-        for face in island.faces:
-            for loop in face.loops:
-                uv = loop[uv_layer].uv
-                scaled_uv = Vector(
-                    ((uv.x - bbox_center.x) * scale_x + bbox_center.x, (uv.y - bbox_center.y) * scale_y + bbox_center.y)
-                )
-                loop[uv_layer].uv = scaled_uv + translation
+        for loop in all_loops:
+            uv = loop[uv_layer].uv
+            scaled_uv = Vector(
+                ((uv.x - bbox_center.x) * scale_x + bbox_center.x, (uv.y - bbox_center.y) * scale_y + bbox_center.y)
+            )
+            loop[uv_layer].uv = scaled_uv + translation
 
 
 classes = [

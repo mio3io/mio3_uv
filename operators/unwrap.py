@@ -1,9 +1,7 @@
 import bpy
-import bmesh
 import time
-from bpy.props import BoolProperty, EnumProperty
-from mathutils import Vector, Matrix
-from ..icons import preview_collections
+from bpy.props import EnumProperty
+from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
@@ -14,13 +12,18 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
     bl_description = "UV Unwrap"
     bl_options = {"REGISTER", "UNDO"}
 
-    method: bpy.props.EnumProperty(
-        name="Method",
-        items=[
+    def unwrap_method_items(self, context):
+        items = [
             ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
             ("CONFORMAL", "Conformal", "Conformal mapping method"),
-        ],
-        default="ANGLE_BASED",
+        ]
+        if bpy.app.version >= (4, 3, 0):
+            items.append(("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"))
+        return items
+
+    method: bpy.props.EnumProperty(
+        name="Method",
+        items=unwrap_method_items,
     )
     axis: EnumProperty(
         name="Direction",
@@ -29,7 +32,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             ("Y", "Vertical", ""),
             ("X", "Horizontal", ""),
         ],
-        default="BOTH",
     )
 
     @classmethod
@@ -54,11 +56,14 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             island_manager = UVIslandManager(self.objects)
 
         axis = self.axis
-        
+
         original_uvs = {}
         for island in island_manager.islands:
             island.store_selection()
-            island.ajast = self.init_select_uvs(island)
+            if self.method == "MINIMUM_STRETCH":
+                island.ajast = True
+            else:
+                island.ajast = self.init_select_uvs(island)
 
             original_uvs[island] = {}
             if axis != "BOTH":
@@ -95,13 +100,14 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 offset = island.original_center - island.center
                 original_size = Vector((island.original_width, island.original_height))
                 self.transform_island(island, offset, original_size)
-                for uv in island.tmp_uv_list:
-                    uv.select = True
+                if hasattr(island, "tmp_uv_list"):
+                    for uv in island.tmp_uv_list:
+                        uv.select = True
 
         if use_uv_select_sync:
             island_manager.restore_vertex_selection()
             context.tool_settings.use_uv_select_sync = True
-        
+
         island_manager.update_uvmeshes()
 
         self.print_time(time.time() - self.start_time)
@@ -177,6 +183,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         layout.label(text="Direction")
         row = layout.row()
         row.prop(self, "axis", expand=True)
+
 
 classes = [MIO3UV_OT_unwrap]
 
