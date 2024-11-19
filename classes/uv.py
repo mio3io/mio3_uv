@@ -469,14 +469,17 @@ class UVNodeManager:
     def get_uv_nodes(self, bm, uv_layer, selected=None):
         uv_nodes = {}
 
+        def round_uv(uv):
+            return (round(uv.x, 6), round(uv.y, 6))
+
         def add_uv_node(loop):
-            uv = Vector((round(loop[uv_layer].uv.x, 6), round(loop[uv_layer].uv.y, 6)))
-            key = tuple(uv)
+            key = round_uv(loop[uv_layer].uv)
             if key not in uv_nodes:
-                uv_nodes[key] = UVNode(uv=uv, vert=loop.vert)
+                uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert)
             uv_nodes[key].loops.append(loop)
 
-        def get_loops_from_edges(edges):
+        if self.mode == "EDGE":  # Edge Mode
+            edges = selected if selected else bm.edges
             for edge in edges:
                 if edge.select:
                     selected_faces = [face for face in edge.link_faces if face.select]
@@ -486,26 +489,20 @@ class UVNodeManager:
                             if loop[uv_layer].select:
                                 add_uv_node(loop)
 
-        def get_loops_from_verts(verts):
+        elif self.mode == "VERT":  # Sync Mode
+            verts = selected if selected else bm.verts
             for vert in verts:
                 if vert.select:
                     for loop in vert.link_loops:
                         if loop[uv_layer].select:
                             add_uv_node(loop)
-
-        def get_loops_from_faces(faces):
+        else:  # fast
+            faces =  selected if selected else bm.faces
             for face in faces:
                 if face.select:
                     for loop in face.loops:
                         if loop[uv_layer].select:
                             add_uv_node(loop)
-
-        if self.mode == "EDGE":  # Edge Mode
-            get_loops_from_edges(selected if selected else bm.edges)
-        elif self.mode == "VERT":  # Sync Mode
-            get_loops_from_verts(selected if selected else bm.verts)
-        else:  # fast
-            get_loops_from_faces(selected if selected else bm.faces)
 
         if self.mode == "EDGE":
             for key, node in uv_nodes.items():
@@ -514,23 +511,16 @@ class UVNodeManager:
                     if not any(loop[uv_layer].select_edge for loop in edge.link_loops):
                         continue
                     for loop in edge.link_loops:
-                        current_uv = Vector((round(loop[uv_layer].uv.x, 6), round(loop[uv_layer].uv.y, 6)))
-                        next_loop = loop.link_loop_next
-                        next_uv = Vector((round(next_loop[uv_layer].uv.x, 6), round(next_loop[uv_layer].uv.y, 6)))
-                        current_key, next_key = tuple(current_uv), tuple(next_uv)
+                        current_key = round_uv(loop[uv_layer].uv)
+                        next_key = round_uv(loop.link_loop_next[uv_layer].uv)
                         if current_key in uv_nodes and next_key in uv_nodes:
                             uv_nodes[current_key].neighbors.add(uv_nodes[next_key])
                             uv_nodes[next_key].neighbors.add(uv_nodes[current_key])
         else:
             for key, node in uv_nodes.items():
                 for loop in node.loops:
-                    prev_uv = Vector(
-                        (round(loop.link_loop_prev[uv_layer].uv.x, 6), round(loop.link_loop_prev[uv_layer].uv.y, 6))
-                    )
-                    next_uv = Vector(
-                        (round(loop.link_loop_next[uv_layer].uv.x, 6), round(loop.link_loop_next[uv_layer].uv.y, 6))
-                    )
-                    prev_key, next_key = tuple(prev_uv), tuple(next_uv)
+                    prev_key = round_uv(loop.link_loop_prev[uv_layer].uv)
+                    next_key = round_uv(loop.link_loop_next[uv_layer].uv)
                     if prev_key in uv_nodes:
                         node.neighbors.add(uv_nodes[prev_key])
                     if next_key in uv_nodes:
@@ -552,7 +542,6 @@ class UVNodeManager:
                         visited.add(node)
                         island.add(node)
                         stack.extend(node.neighbors - visited)
-
                 islands.append(island)
         return islands
 
