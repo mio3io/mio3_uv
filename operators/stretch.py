@@ -126,34 +126,42 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
             else:
                 axis = self.axis
 
-            min_coord = float("inf")
-            max_coord = float("-inf")
+            min_coord_x = min(group.min_uv.x for group in nm.groups)
+            max_coord_x = max(group.max_uv.x for group in nm.groups)
+            min_coord_y = min(group.min_uv.y for group in nm.groups)
+            max_coord_y = max(group.max_uv.y for group in nm.groups)
 
-            for group in nm.groups:
-                if axis == "X":
-                    min_coord = min(min_coord, group.min_uv.x)
-                    max_coord = max(max_coord, group.max_uv.x)
-                else:
-                    min_coord = min(min_coord, group.min_uv.y)
-                    max_coord = max(max_coord, group.max_uv.y)
-
-            for group in nm.groups:
-                if axis == "X":
+            if axis == "BOTH":
+                for group in nm.groups:
                     group_width = group.max_uv.x - group.min_uv.x
+                    group_height = group.max_uv.y - group.min_uv.y
                     if group_width > 0:
-                        scale = (max_coord - min_coord) / group_width
+                        scale_x = (max_coord_x - min_coord_x) / group_width
+                        scale_y = (max_coord_y - min_coord_y) / group_height
                         for node in group.nodes:
                             local_x = node.uv.x - group.min_uv.x
-                            node.uv.x = min_coord + (local_x * scale)
-                else:
+                            node.uv.x = min_coord_x + (local_x * scale_x)
+                            local_y = node.uv.y - group.min_uv.y
+                            node.uv.y = min_coord_y + (local_y * scale_y)
+                    group.update_uvs()
+            elif axis == "X":
+                for group in nm.groups:
+                    group_width = group.max_uv.x - group.min_uv.x
+                    if group_width > 0:
+                        scale_x = (max_coord_x - min_coord_x) / group_width
+                        for node in group.nodes:
+                            local_x = node.uv.x - group.min_uv.x
+                            node.uv.x = min_coord_x + (local_x * scale_x)
+                    group.update_uvs()
+            else:
+                for group in nm.groups:
                     group_height = group.max_uv.y - group.min_uv.y
                     if group_height > 0:
-                        scale = (max_coord - min_coord) / group_height
+                        scale_y = (max_coord_y - min_coord_y) / group_height
                         for node in group.nodes:
                             local_y = node.uv.y - group.min_uv.y
-                            node.uv.y = min_coord + (local_y * scale)
-
-                group.update_uvs()
+                            node.uv.y = min_coord_y + (local_y * scale_y)
+                    group.update_uvs()
 
             nm.update_uvmeshes()
 
@@ -171,7 +179,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
         layout.prop(self, "island")
         row = layout.row()
         row.prop(self, "keep_aspect")
-        row.active = self.axis != "BOTH"
+        row.enabled = self.axis != "BOTH"
 
 
 classes = [
