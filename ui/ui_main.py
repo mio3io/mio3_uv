@@ -44,9 +44,8 @@ class MIO3UV_PT_main(Mio3UVPanel):
         col_unwrap = layout.column(align=True)
 
         row = col_unwrap.row(align=True)
-        op = row.operator("uv.mio3_straight", text=tt_iface("Straight"), icon_value=icons["STRAIGHT"].icon_id)
         row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
-
+        op = row.operator("uv.mio3_straight", text=tt_iface("Straight"), icon_value=icons["STRAIGHT"].icon_id)
         op.distribute = "GEOMETRY"
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_gridify", text=tt_iface("Gridify"), icon_value=icons["GRID"].icon_id)
