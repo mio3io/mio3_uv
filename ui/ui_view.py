@@ -5,9 +5,9 @@ from ..operators.view_padding import MIO3UV_OT_view_padding
 from ..icons import preview_collections
 
 
-class MIO3UV_PT_View(Panel):
-    bl_label = "Display"
-    bl_idname = "MIO3UV_PT_View"
+class MIO3UV_PT_Utility(Panel):
+    bl_label = "Utility"
+    bl_idname = "MIO3UV_PT_Utility"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -46,7 +46,7 @@ class MIO3UV_PT_UVMesh(Panel):
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
-    bl_parent_id = "MIO3UV_PT_View"
+    bl_parent_id = "MIO3UV_PT_Utility"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
@@ -97,7 +97,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
-    bl_parent_id = "MIO3UV_PT_View"
+    bl_parent_id = "MIO3UV_PT_Utility"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
@@ -128,7 +128,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row.prop(props_object, "realtime")
 
 
-classes = [MIO3UV_PT_View, MIO3UV_PT_UVMesh, MIO3UV_PT_SubGuidePadding]
+classes = [MIO3UV_PT_Utility, MIO3UV_PT_UVMesh, MIO3UV_PT_SubGuidePadding]
 
 
 def register():
