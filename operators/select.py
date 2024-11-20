@@ -494,12 +494,14 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
                 else:
                     area = 0.0
 
-                if area < 1e-7:
+                if area < 1e-8:
                     for loop in face.loops:
                         loop[uv_layer].select = True
+                        loop[uv_layer].select_edge = True
                 else:
                     for loop in face.loops:
                         loop[uv_layer].select = False
+                        loop[uv_layer].select_edge = False
 
             bmesh.update_edit_mesh(obj.data)
 
