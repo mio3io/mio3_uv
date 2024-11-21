@@ -16,7 +16,7 @@ from .operators import select
 
 from .operators import align
 from .operators import align_seam
-from .operators import edge_loop
+from .operators import circle
 from .operators import stretch
 from .operators import relax
 from .operators import offset
@@ -66,7 +66,7 @@ modules = [
     select,
     align,
     align_seam,
-    edge_loop,
+    circle,
     stretch,
     relax,
     offset,
