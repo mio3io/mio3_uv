@@ -87,12 +87,11 @@ def register():
     icons.load("SYMM_N_Y", os.path.join(ICON_DIR, "symm_n_y.png"), "IMAGE")
     icons.load("SYMM_P_Y", os.path.join(ICON_DIR, "symm_p_y.png"), "IMAGE")
 
-
     icons.load("BOUND", os.path.join(ICON_DIR, "boundary.png"), "IMAGE")
     icons.load("SHUFFLE", os.path.join(ICON_DIR, "shuffle.png"), "IMAGE")
     icons.load("SHAPE", os.path.join(ICON_DIR, "shape.png"), "IMAGE")
     icons.load("CIRCLE", os.path.join(ICON_DIR, "circle.png"), "IMAGE")
-    icons.load("LENGTH", os.path.join(ICON_DIR, "length.png"), "IMAGE")
+    icons.load("DIST_UVS", os.path.join(ICON_DIR, "dist_uvs.png"), "IMAGE")
     icons.load("OFFSET", os.path.join(ICON_DIR, "offset.png"), "IMAGE")
     icons.load("STITCH", os.path.join(ICON_DIR, "stitch.png"), "IMAGE")
     icons.load("STRATCH", os.path.join(ICON_DIR, "stretch.png"), "IMAGE")

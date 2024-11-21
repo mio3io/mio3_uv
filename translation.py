@@ -52,7 +52,7 @@ translation_dict = {
         ("*", "Distribute"): "分布",
         ("*", "Distribute islands evenly"): "アイランドを等間隔に分布する",
 
-        ("*", "Distribute UV"): "UVを分布",
+        ("*", "Distribute UVs"): "UVを分布",
         ("*", "Distribute UVs evenly or based on geometry"): "UVを等間隔またはジオメトリに基づくように分布する",
         ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("*", "Offset Boundary"): "オフセット",
