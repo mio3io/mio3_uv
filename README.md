@@ -42,7 +42,7 @@ UV Image Editor > Sidebar > Mio3
 ### Vertex Operations
 
 -   **Relax**: Smooth selected vertices
--   **Adjust Edge Length**: Adjust length based on geometry/equalize length
+-   **Distribute UVs**: Distribute UVs based on geometry/equalize edge length
 -   **Circle**: Adjust to form a clean circle
 -   **Offset Boundary**: Expand or shrink the boundary UVs of the island
 
