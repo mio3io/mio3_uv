@@ -55,12 +55,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
             if not im.islands:
                 return {"CANCELLED"}
 
-            if self.axis == "AUTO":
-                all_centers = np.array([island.center for island in im.islands])
-                mesh_size = np.ptp(all_centers, axis=0)
-                axis = ["Y", "X"][np.argmax(mesh_size)]
-            else:
-                axis = self.axis
+            axis = im.get_axis_uv() if self.axis == "AUTO" else self.axis
 
             min_coord_x = min(island.min_uv.x for island in im.islands)
             max_coord_x = max(island.max_uv.x for island in im.islands)
@@ -86,18 +81,6 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
                             uv.x = min_coord_x + (local_x * scale_x)
                             uv.y = min_coord_y + (local_y * scale_y)
                 elif axis == "X":
-                    scale_x = total_range_x / island.width
-                    scale_y = scale_x if self.keep_aspect else 1.0
-
-                    for face in island.faces:
-                        for loop in face.loops:
-                            uv = loop[island.uv_layer].uv
-                            local_x = uv.x - island.min_uv.x
-                            uv.x = min_coord_x + (local_x * scale_x)
-                            if self.keep_aspect:
-                                local_y = uv.y - center_y
-                                uv.y = center_y + (local_y * scale_y)
-                else:
                     scale_y = total_range_y / island.height
                     scale_x = scale_y if self.keep_aspect else 1.0
 
@@ -109,6 +92,18 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
                             if self.keep_aspect:
                                 local_x = uv.x - center_x
                                 uv.x = center_x + (local_x * scale_x)
+                else:
+                    scale_x = total_range_x / island.width
+                    scale_y = scale_x if self.keep_aspect else 1.0
+
+                    for face in island.faces:
+                        for loop in face.loops:
+                            uv = loop[island.uv_layer].uv
+                            local_x = uv.x - island.min_uv.x
+                            uv.x = min_coord_x + (local_x * scale_x)
+                            if self.keep_aspect:
+                                local_y = uv.y - center_y
+                                uv.y = center_y + (local_y * scale_y)
 
             im.update_uvmeshes()
         else:
@@ -122,7 +117,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
             if self.axis == "AUTO":
                 all_centers = np.array([group.center for group in nm.groups])
                 mesh_size = np.ptp(all_centers, axis=0)
-                axis = ["Y", "X"][np.argmax(mesh_size)]
+                axis = ["X", "Y"][np.argmax(mesh_size)]
             else:
                 axis = self.axis
 
@@ -146,21 +141,21 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
                     group.update_uvs()
             elif axis == "X":
                 for group in nm.groups:
-                    group_width = group.max_uv.x - group.min_uv.x
-                    if group_width > 0:
-                        scale_x = (max_coord_x - min_coord_x) / group_width
-                        for node in group.nodes:
-                            local_x = node.uv.x - group.min_uv.x
-                            node.uv.x = min_coord_x + (local_x * scale_x)
-                    group.update_uvs()
-            else:
-                for group in nm.groups:
                     group_height = group.max_uv.y - group.min_uv.y
                     if group_height > 0:
                         scale_y = (max_coord_y - min_coord_y) / group_height
                         for node in group.nodes:
                             local_y = node.uv.y - group.min_uv.y
                             node.uv.y = min_coord_y + (local_y * scale_y)
+                    group.update_uvs()
+            else:
+                for group in nm.groups:
+                    group_width = group.max_uv.x - group.min_uv.x
+                    if group_width > 0:
+                        scale_x = (max_coord_x - min_coord_x) / group_width
+                        for node in group.nodes:
+                            local_x = node.uv.x - group.min_uv.x
+                            node.uv.x = min_coord_x + (local_x * scale_x)
                     group.update_uvs()
 
             nm.update_uvmeshes()

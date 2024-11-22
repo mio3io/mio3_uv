@@ -51,12 +51,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         if not islands:
             return
 
-        if self.axis == "AUTO":
-            all_centers = np.array([island.center for island in island_manager.islands])
-            mesh_size = np.ptp(all_centers, axis=0)
-            axis = ["X", "Y"][np.argmax(mesh_size)]
-        else:
-            axis = self.axis
+        axis = self.axis if self.axis != "AUTO" else island_manager.get_axis_uv()
 
         if axis == "X":
             island_manager.islands.sort(key=lambda island: island.center[0], reverse=False)

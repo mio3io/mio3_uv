@@ -213,27 +213,25 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         return groups
 
     def sort_uv_space(self, island_manager):
-        all_centers = np.array([island.center for island in island_manager.islands])
-        mesh_size = np.ptp(all_centers, axis=0)
-        axis = ["X", "Y"][np.argmax(mesh_size)]
+        axis = self.axis if self.axis in {"X", "Y"} else island_manager.get_axis_uv()
 
         def sort_func(island):
             axis_index = {"X": 0, "Y": 1}[axis]
             return island.center[axis_index]
 
-        island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
+        if axis == "Y":
+            island_manager.sort_all_islands(key=sort_func, reverse=not self.reverse)
+        else:
+            island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
 
     def sort_axis(self, island_manager):
-        if self.axis == "AUTO":
-            primary_axis = island_manager.islands_axis
-        else:
-            primary_axis = self.axis
+        axis = self.axis if self.axis != "AUTO" else island_manager.get_axis_3d()
         axis_orders = {
             "X": ["+X", "+Y", "-Z"],
             "Y": ["+Y", "+X", "-Z"],
             "Z": ["-Z", "+X", "+Y"],
         }
-        sort_order = axis_orders[primary_axis]
+        sort_order = axis_orders[axis]
 
         def sort_func(island):
             return tuple(
@@ -243,7 +241,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
 
     def sort_cylinder(self, island_manager):
-        all_centers = [Vector(island.center_3d) for island in island_manager.islands]
+        all_centers = [island.center_3d for island in island_manager.islands]
         min_coords = [min(center[i] for center in all_centers) for i in range(3)]
         max_coords = [max(center[i] for center in all_centers) for i in range(3)]
         axis_widths = [max_coords[i] - min_coords[i] for i in range(3)]
@@ -252,7 +250,6 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
             axis = ["X", "Y", "Z"][narrowest_axis_index]
         else:
             axis = self.axis
-        print(axis)
 
         center_3d = sum(all_centers, Vector()) / len(all_centers)
 

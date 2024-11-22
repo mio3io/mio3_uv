@@ -158,12 +158,6 @@ class UVIslandManager:
 
     original_selected_verts: Dict[Object, Dict[BMVert, bool]] = field(default_factory=dict, init=False)
 
-    @cached_property
-    def islands_axis(self):
-        all_centers = np.array([island.center_3d for island in self.islands])
-        mesh_size = np.ptp(all_centers, axis=0)
-        return ["X", "Y", "Z"][np.argmax(mesh_size)]
-
     def __post_init__(self):
         self.find_all_islands()
 
@@ -326,6 +320,21 @@ class UVIslandManager:
             for vert, was_selected in original_selection.items():
                 vert.select = was_selected
             bm.select_flush(False)
+
+    def get_axis_3d(self):
+        centers = [island.center_3d for island in self.islands]
+        x_range = max(c.x for c in centers) - min(c.x for c in centers)
+        y_range = max(c.y for c in centers) - min(c.y for c in centers)
+        z_range = max(c.z for c in centers) - min(c.z for c in centers)
+        ranges = [x_range, y_range, z_range]
+        return ["X", "Y", "Z"][ranges.index(max(ranges))]
+
+    def get_axis_uv(self):
+        centers = [island.center for island in self.islands]
+        x_range = max(c.x for c in centers) - min(c.x for c in centers)
+        y_range = max(c.y for c in centers) - min(c.y for c in centers)
+        ranges = [x_range, y_range]
+        return ["X", "Y"][ranges.index(max(ranges))]
 
     def sort_all_islands(self, key, reverse=False):
         self.islands.sort(key=key, reverse=reverse)

@@ -209,8 +209,8 @@ class MIO3UV_OT_align(Mio3UVOperator):
                 island.move(Vector((avg_center.x - island.center.x, 0)))
 
         elif align_type in ["ALIGN_X", "ALIGN_Y", "CENTER"]:
-            all_min = Vector((min(island.min_uv.x for island in islands), min(island.min_uv.y for island in islands)))
-            all_max = Vector((max(island.max_uv.x for island in islands), max(island.max_uv.y for island in islands)))
+            all_min = Vector(min(island.min_uv for island in islands))
+            all_max = Vector(max(island.max_uv for island in islands))
             center = (all_min + all_max) / 2
 
             for island in islands:
