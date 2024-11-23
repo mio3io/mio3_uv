@@ -29,8 +29,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         name="Direction",
         items=[
             ("BOTH", "Both", ""),
-            ("Y", "Vertical", ""),
             ("X", "Horizontal", ""),
+            ("Y", "Vertical", ""),
         ],
     )
 
@@ -92,9 +92,10 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                             current_uv = loop[uv_layer].uv
                             original_uv = original_uvs_island[loop]
                             if axis == "X":
-                                loop[uv_layer].uv = Vector((original_uv.x, current_uv.y))
-                            elif axis == "Y":
                                 loop[uv_layer].uv = Vector((current_uv.x, original_uv.y))
+                            elif axis == "Y":
+                                loop[uv_layer].uv = Vector((original_uv.x, current_uv.y))
+
             if island.ajast:
                 island.update_bounds()
                 offset = island.original_center - island.center
