@@ -44,7 +44,7 @@ from .ui import ui_menu
 bl_info = {
     "name": "Mio3 UV",
     "author": "mio",
-    "version": (1, 3, 0),
+    "version": (1, 3, 1),
     "blender": (4, 2, 0),
     "location": "UV Image Editor > Sidebar > Mio3",
     "description": "UV Edit Assistant Tools",
