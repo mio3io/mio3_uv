@@ -45,6 +45,7 @@ translation_dict = {
         ("*", "Clear Original Seam"): "元のシームをクリア",
 
         ("Operator", "Align UVs"): "UVを整列",
+        ("*", "Align UVs"): "UVを整列",
         ("*", "Align UVs of vertices, edge loops and islands"): "頂点・辺ループ・アイランドのUVを整列させる",
         ("*", "Align Edge Loops"): "辺ループを整列",
         ("Operator", "Orient Edge"): "辺で整列",
@@ -56,6 +57,7 @@ translation_dict = {
         ("*", "Align the width of islands or UV groups"): "アイランドやUVグループの幅を揃える",
         ("Operator", "Distribute"): "分布",
         ("*", "Distribute islands evenly"): "アイランドを等間隔に分布する",
+        ("*", "Distribute"): "分布",
         ("Operator", "Stretch Island"): "ストレッチ",
 
         ("Operator", "Relax"): "リラックス",
@@ -104,6 +106,7 @@ translation_dict = {
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
         ("*", "Based on Active"): "アクティブをベースに",
+        ("*", "Orient World"): "ワールド方向",
 
         ("Operator", "Auto Body Parts"): "パーツを自動で整列",
         ("*", "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"): "髪の房や指をまとめて選択して自動的に回転と順序を揃えます.\n全身を選択している場合はパーツで分類します",
