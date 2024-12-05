@@ -1,6 +1,6 @@
 import bpy
 import time
-from bpy.props import EnumProperty
+from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
@@ -33,6 +33,15 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             ("Y", "Vertical", ""),
         ],
     )
+    keep: EnumProperty(
+        name="Keep",
+        description="Keep Position, Scale, Angle",
+        items=[
+            ("ALL", "All", ""),
+            ("INPLACE", "Position and Scale", ""),
+            ("NONE", "None", ""),
+        ],
+    )
 
     @classmethod
     def poll(cls, context):
@@ -60,7 +69,9 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         original_uvs = {}
         for island in island_manager.islands:
             island.store_selection()
-            if self.method == "MINIMUM_STRETCH":
+            if self.keep == "NONE":
+                island.ajast = False
+            elif self.method == "MINIMUM_STRETCH":
                 island.ajast = True
             else:
                 island.ajast = self.init_select_uvs(island)
@@ -171,7 +182,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         additional_deselect_needed = 2 - deselect_count
         for uvs in nodes_to_process:
             for uv in uvs:
-                uv.select = False
+                if self.keep == "ALL":
+                    uv.select = False
                 island.tmp_uv_list.append(uv)
             additional_deselect_needed -= 1
             if additional_deselect_needed == 0:
@@ -181,9 +193,12 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "method")
-        layout.label(text="Direction")
         row = layout.row()
+        row.label(text="Direction")
         row.prop(self, "axis", expand=True)
+        row = layout.row()
+        row.label(text="Keep")
+        row.prop(self, "keep", text="")
 
 
 classes = [MIO3UV_OT_unwrap]
