@@ -2,20 +2,21 @@ import bpy
 
 translation_dict = {
     "ja_JP": {
-        ("Operator", "UV Unwrap"): "UV展開",
-
+        # Common
         ("Operator", "Horizontal"): "水平",
         ("Operator", "Vertical"): "垂直",
-
-        ("*", "Fixed Mode"): "モード固定",
-        ("*", "Island Mode"): "アイランドモード",
-        ("*", "Edge Mode"): "辺モード",
-        ("*", "Process each edge loops"): "エッジループ毎に処理する",
-        ("*", "Composite Edges"): "複合エッジ",
-        ("*", "Process multiple edge loops as a single group"): "複数のエッジループをひとつのグループとして処理する",
-
         ("*", "UV Space"): "UV空間",
         ("*", "Arrange"): "調整",
+        ("*", "Composite Edges"): "複合エッジ",
+        ("*", "Padding"): "パディング",
+        ("*", "Base Axis"): "基準軸",
+        ("*", "Align H"): "横に並べる",
+        ("*", "Align V"): "縦に並べる",
+        ("*", "Top Align"): "上揃え",
+        ("*", "Middle Align"): "中央",
+        ("*", "Bottom Align"): "下揃え",
+        ("*", "Wrap Count"): "折り返し",
+        ("*", "Reverse Order"): "順番を反転",
         ("*", "Keep Aspect Ratio"): "アスペクト比を維持",
         ("*", "Keep Position"): "位置を維持",
         ("*", "Keep Angle"): "角度を維持",
@@ -24,6 +25,10 @@ translation_dict = {
         ("*", "Keep Seam"): "シームを維持",
         ("*", "Keep Boundary"): "境界を維持",
 
+        # Unwrap
+        ("Operator", "UV Unwrap"): "UV展開",
+        ("*", "Position and Scale"): "位置とサイズ",
+        ("*", "Keep Position, Scale, Angle"): "位置・サイズ・角度の維持",
         ("Operator", "Unwrap Horizontal(X) Only"): "水平(X軸)のみを展開",
         ("Operator", "Unwrap Vertical(Y) Only"): "垂直(Y軸)のみを展開",
         ("Operator", "Straight"): "ストレート",
@@ -44,6 +49,13 @@ translation_dict = {
         ("*", "Celar Seam"): "シームをクリア",
         ("*", "Clear Original Seam"): "元のシームをクリア",
 
+        # Align
+        ("*", "Fixed Mode"): "モード固定",
+        ("*", "Island Mode"): "アイランドモード",
+        ("*", "Edge Mode"): "辺モード",
+        ("*", "Process each edge loops"): "エッジループ毎に処理する",
+        ("*", "Process multiple edge loops as a single group"): "複数のエッジループをひとつのグループとして処理する",
+
         ("Operator", "Align UVs"): "UVを整列",
         ("*", "Align UVs"): "UVを整列",
         ("*", "Align UVs of vertices, edge loops and islands"): "頂点・辺ループ・アイランドのUVを整列させる",
@@ -60,6 +72,7 @@ translation_dict = {
         ("*", "Distribute"): "分布",
         ("Operator", "Stretch Island"): "ストレッチ",
 
+        # Vertex
         ("Operator", "Relax"): "リラックス",
         ("Operator", "Distribute UVs"): "UVを分布",
         ("*", "Distribute UVs evenly or based on geometry"): "UVを等間隔またはジオメトリに基づくように分布する",
@@ -68,41 +81,31 @@ translation_dict = {
         ("Operator", "Offset"): "オフセット",
         ("*", "Expand/Shrink UV Borders"): "境界のUVを拡大/縮小する",
 
-        ("*", "Base Axis"): "基準軸",
+        # Island
+        ("Operator", "Sort"): "アイランドをソート",
+        ("*", "Reorder islands based on coordinates in 3D space"): "3D空間の座標を基準にアイランドを並び替え",
+        ("*", "Sort Method"): "ソート方式",
+        ("*", "Start Angle (Clock)"): "開始角度（時計）",
+        ("Operator", "Island Margin"): "アイランドの間隔",
 
-        ("Operator", "Unify Shapes"): "UVの形状を揃える",
         ("Operator", "Stack"): "重ねる",
         ("*", "Overlap similar UV shapes"): "類似した形状のUVシェイプを重ねます",
-        ("*", "Align the shape based on the first island"): "類似した形状のUVシェイプを重ねます",
-
         ("Operator", "Shuffle"): "シャッフル",
+        ("Operator", "Unify Shapes"): "UVの形状を揃える",
         ("Operator", "Average Island Scales"): "3Dに基づく大きさ",
 
-        ("*", "Sort Method"): "ソート方式",
-        ("*", "Top Align"): "上揃え",
-        ("*", "Middle Align"): "中央",
-        ("*", "Bottom Align"): "下揃え",
-        ("*", "Reorder islands based on coordinates in 3D space"): "3D空間の座標を基準にアイランドを並び替え",
-        ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標を基準にアイランドをグリッド状に並び替え",
-        ("*", "Align H"): "横に並べる",
-        ("*", "Align V"): "縦に並べる",
-        ("*", "Orient"): "向き",
-        ("*", "Start Angle (Clock)"): "開始角度（時計）",
-
+        # Group
         ("Operator", "Grid Sort"): "グリッド",
+        ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標を基準にアイランドをグリッド状に並び替え",
         ("*", "Grid Threshold"): "グリッドのしきい値",
         ("*", "UV Distance"): "UV空間での距離",
         ("*", "UV Similar"): "UVの類似性",
         ("*", "Grid Size"): "グリッド幅",
         ("*", "Align Type"): "整列タイプ",
         ("*", "Align by group"): "グループごとに整列",
-        ("sort", "Island Margin"): "アイランドの間隔",
         ("*", "Group Margin"): "グループの間隔",
-        ("*", "Wrap Count"): "折り返し",
-        ("*", "Reverse Order"): "順番を反転",
 
         ("Operator", "Unfoldify"): "展開図",
-        ("*", "Rearrange"): "アイランドを並べる",
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
         ("*", "Based on Active"): "アクティブをベースに",
@@ -118,32 +121,37 @@ translation_dict = {
         ("Operator", "Front Hair"): "前髪",
         ("Operator", "Back Hair"): "後髪",
 
+        # Symmetrize
+        ("Operator", "Symmetrize"): "対称化",
         ("*", "Symmetrize based on 3D space"): "3D空間の対称性に基づいてUVを対称化します",
         ("Operator", "Snap"): "スナップ",
         ("*", "Symmetrize based on UV space"): "UV空間での対称位置にスナップします",
 
+        # Select
         ("Operator", "Select Half"): "半分",
         ("Operator", "Shared"): "同じ頂点",
         ("Operator", "Similar"): "類似",
         ("*", "Odd UVs"): "特殊UV",
-        ("Operator", "No region"): "領域なし",
+        ("Operator", "No Region"): "領域なし",
         ("Operator", "Flipped"): "反転した面",
         ("*", "Select Flipped UV Faces"): "反転したUV面を選択します",
         ("*", "Select Zero Area UV Faces"): "領域がゼロのUVを選択",
+        ("Operator", "Boundary"): "境界",
         ("*", "Select Boundary"): "境界を選択",
         ("*", "UV Space Boundary"): "UV上の境界",
         ("*", "Select UVs on one side of the axis in 3D space"): "3D空間で片方の面を選択",
         ("*", "Select only vertical or horizontal edges"): "垂直または水平のエッジのみを選択",
 
+        # Utils
         ("Operator", "Checker Map"): "チェッカーマップ",
         ("Operator", "Clear Checker Map"): "チェッカーマップをクリア",
         ("*", "Set the checker map (using Geometry Nodes)"): "チェッカーマップを設定します（ジオメトリノードを使用）",
-        ("*", "Padding"): "パディング",
         ("Operator", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
+        ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
+        ("Operator", "UV Mesh"): "UV Mesh",
         ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
 
-        ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
     }
 }  # fmt: skip
 

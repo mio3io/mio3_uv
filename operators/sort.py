@@ -460,7 +460,7 @@ class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
         row_aling_mode.prop(self, "alignment", expand=True)
 
         row = layout.row()
-        row.label(text="Island Margin", text_ctxt="sort")
+        row.label(text="Island Margin", text_ctxt="Operator")
         row.prop(self, "item_spacing", text="")
 
         wrap_box = layout.box()

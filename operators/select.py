@@ -456,7 +456,7 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
 
 class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
     bl_idname = "uv.mio3_select_zero"
-    bl_label = "No region"
+    bl_label = "No Region"
     bl_description = "Select Zero Area UV Faces"
     bl_options = {"REGISTER", "UNDO"}
 
