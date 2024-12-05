@@ -46,7 +46,7 @@ class MIO3UV_OT_paste(Mio3UVOperator):
 
 class MIO3UV_OT_stack(Mio3UVOperator):
     bl_idname = "uv.mio3_stack"
-    bl_label = "Stack Island"
+    bl_label = "Stack"
     bl_description = "Overlap similar UV shapes"
     bl_options = {"REGISTER", "UNDO"}
 

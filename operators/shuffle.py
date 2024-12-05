@@ -7,7 +7,7 @@ from ..classes.operator import Mio3UVOperator
 
 class MIO3UV_OT_shuffle_island(Mio3UVOperator):
     bl_idname = "uv.mio3_shuffle_island"
-    bl_label = "Shuffle Island"
+    bl_label = "Shuffle"
     bl_description = "Shuffle Island"
     bl_options = {"REGISTER", "UNDO"}
 

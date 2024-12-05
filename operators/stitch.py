@@ -8,7 +8,7 @@ from ..classes.operator import Mio3UVOperator
 
 class MIO3UV_OT_stitch(Mio3UVOperator):
     bl_idname = "uv.mio3_stitch"
-    bl_label = "Stitch Island"
+    bl_label = "Stitch"
     bl_description = "Stitch Island"
     bl_options = {"REGISTER", "UNDO"}
 

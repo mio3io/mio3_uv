@@ -237,7 +237,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
 class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
     bl_idname = "uv.mio3_symmetry_snap"
-    bl_label = "Snap to Symmetry"
+    bl_label = "Snap"
     bl_description = "Symmetrize based on UV space"
     bl_options = {"REGISTER", "UNDO"}
 

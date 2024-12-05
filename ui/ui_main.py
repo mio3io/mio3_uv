@@ -36,18 +36,17 @@ class MIO3UV_PT_main(Mio3UVPanel):
         col_unwrap.scale_y = 1.1
 
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons["UNWRAP"].icon_id).axis="BOTH"
-        row.menu("MIO3UV_MT_unwrap", text="", icon="TRIA_DOWN")
+        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons["UNWRAP"].icon_id).axis = "BOTH"
+        row.menu("MIO3UV_MT_unwrap", text="", icon="DOWNARROW_HLT")
 
         col_unwrap = layout.column(align=True)
 
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
-        op = row.operator("uv.mio3_straight", text=tt_iface("Straight"), icon_value=icons["STRAIGHT"].icon_id)
-        op.distribute = "GEOMETRY"
+        row.operator("uv.mio3_normalize", icon_value=icons["NORMALIZE"].icon_id)
+        row.operator("uv.mio3_straight", icon_value=icons["STRAIGHT"].icon_id).distribute = "GEOMETRY"
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_gridify", text=tt_iface("Gridify"), icon_value=icons["GRID"].icon_id)
-        row.operator("uv.mio3_rectify", text=tt_iface("Rectify"), icon_value=icons["RECTIFY"].icon_id)
+        row.operator("uv.mio3_gridify", icon_value=icons["GRID"].icon_id)
+        row.operator("uv.mio3_rectify", icon_value=icons["RECTIFY"].icon_id)
 
 
 class MIO3UV_PT_align(Mio3UVPanel):
@@ -109,30 +108,26 @@ class MIO3UV_PT_align(Mio3UVPanel):
         col_rotate.scale_y = 1.1
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_rotate", text=tt_iface("90"), icon_value=icons["P90"].icon_id).angle = -1.5708
-        row.operator("uv.mio3_rotate", text=tt_iface("180"), icon_value=icons["P180"].icon_id).angle = 3.14159
-        row.operator("uv.mio3_rotate", text=tt_iface("90"), icon_value=icons["N90"].icon_id).angle = 1.5708
+        row.operator("uv.mio3_rotate", text="90", icon_value=icons["P90"].icon_id).angle = -1.5708
+        row.operator("uv.mio3_rotate", text="180", icon_value=icons["P180"].icon_id).angle = 3.14159
+        row.operator("uv.mio3_rotate", text="90", icon_value=icons["N90"].icon_id).angle = 1.5708
 
         row = col_rotate.row(align=True)
-        row.operator("uv.align_rotation", text=tt_iface("Align Axis"), icon_value=icons["ROTATE"].icon_id).method = (
-            "AUTO"
-        )
-        op = row.operator("uv.align_rotation", text=tt_iface("Orient World"), icon_value=icons["Z"].icon_id)
+        row.operator("uv.align_rotation", text="Align Axis", icon_value=icons["ROTATE"].icon_id).method = "AUTO"
+        op = row.operator("uv.align_rotation", text="Orient World", icon_value=icons["Z"].icon_id)
         op.method = "GEOMETRY"
         op.axis = "Z"
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_orient_edge", text=tt_iface("Orient Edge"), icon_value=icons["ALIGN_EDGE"].icon_id)
-        # row.operator("uv.mio3_normalize", text=tt_iface("Normalize"), icon_value=icons["NORMALIZE"].icon_id)
-        row.operator("uv.mio3_align_seam", text=tt_iface("Align Seam"), icon_value=icons["ALIGN_SEAM_Y"].icon_id)
+        row.operator("uv.mio3_orient_edge", icon_value=icons["ALIGN_EDGE"].icon_id)
+        row.operator("uv.mio3_align_seam", icon_value=icons["ALIGN_SEAM_Y"].icon_id)
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_stretch", text=tt_iface("Stretch"), icon_value=icons["STRATCH"].icon_id)
-        row.operator("uv.mio3_distribute", text=tt_iface("Distribute"), icon_value=icons["DIST_X"].icon_id)
-
+        row.operator("uv.mio3_stretch", icon_value=icons["STRATCH"].icon_id)
+        row.operator("uv.mio3_distribute", icon_value=icons["DIST_X"].icon_id)
 
         row = layout.row(align=True)
-        row.label(text=tt_iface("Fixed Mode"))
+        row.label(text="Fixed Mode")
         row.scale_x = 0.7
         row.prop(context.scene.mio3uv, "edge_mode", text="Edge", toggle=True)
         row.scale_x = 1.1
@@ -151,41 +146,52 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         layout = self.layout
 
         # Vertex
-
         layout.label(text="Vertex", icon_value=icons["VERT"].icon_id)
 
         col_vert = layout.column(align=True)
         col_vert.scale_y = 1.2
         row = col_vert.row(align=True)
-        row.operator("uv.mio3_relax", text=tt_iface("Relax"), icon_value=icons["RELAX"].icon_id)
-        row.operator("uv.mio3_distribute_uvs", text=tt_iface("Distribute UVs"), icon_value=icons["DIST_UVS"].icon_id)
+        row.operator("uv.mio3_relax", icon_value=icons["RELAX"].icon_id)
+        row.operator("uv.mio3_distribute_uvs", icon_value=icons["DIST_UVS"].icon_id)
 
         row = col_vert.row(align=True)
-        row.operator("uv.mio3_circle", text=tt_iface("Circle"), icon_value=icons["CIRCLE"].icon_id)
-        row.operator("uv.mio3_offset", text=tt_iface("Offset"), icon_value=icons["OFFSET"].icon_id)
+        row.operator("uv.mio3_circle", icon_value=icons["CIRCLE"].icon_id)
+        row.operator("uv.mio3_offset", icon_value=icons["OFFSET"].icon_id)
 
+        # Island
         layout.label(text="Island", icon_value=icons["ISLAND"].icon_id)
 
         col_iisland = layout.column(align=True)
         col_iisland.scale_y = 1.2
 
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stack", text=tt_iface("Stack"), icon_value=icons["STACK"].icon_id)
-        row.operator("uv.mio3_sort", text=tt_iface("Sort"), icon_value=icons["ALIGN_X"].icon_id)
+        row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
+        row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
 
         row = col_iisland.row(align=True)
-        row.operator("uv.copy", text=tt_iface("Copy"), icon_value=icons["COPY"].icon_id)
-        row.operator("uv.mio3_paste", text=tt_iface("Paste"), icon_value=icons["PASTE"].icon_id).mode = "PASTE"
+        row.operator("uv.copy", icon_value=icons["COPY"].icon_id)
+        row.operator("uv.mio3_paste", icon_value=icons["PASTE"].icon_id).mode = "PASTE"
 
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stitch", text=tt_iface("Stitch"), icon_value=icons["STITCH"].icon_id)
-        row.operator("uv.mio3_shuffle_island", text=tt_iface("Shuffle"), icon_value=icons["SHUFFLE"].icon_id)
+        row.operator("uv.mio3_stitch", icon_value=icons["STITCH"].icon_id)
+        row.operator("uv.mio3_shuffle_island", icon_value=icons["SHUFFLE"].icon_id)
 
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_paste", text=tt_iface("Unify Shapes"), icon_value=icons["SHAPE"].icon_id).mode = "AUTO"
+        row.operator("uv.mio3_paste", text="Unify Shapes", icon_value=icons["SHAPE"].icon_id).mode = "AUTO"
         row = col_iisland.row(align=True)
-        row.operator("uv.average_islands_scale", text=tt_iface("Average Island Scales"), icon_value=icons["CUBE"].icon_id)
+        row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons["CUBE"].icon_id)
 
+        # Group
+        layout.label(text="Group Rearrange", icon_value=icons["DIST_X"].icon_id)
+
+        col = layout.column(align=True)
+        col.scale_y = 1.1
+        row = col.row(align=True)
+        row.operator("uv.mio3_sort_grid", icon_value=icons["GRID_SORT"].icon_id)
+        row.operator("uv.mio3_unfoldify", icon_value=icons["UNFOLDIFY"].icon_id)
+        row = col.row(align=True)
+        row.operator("uv.mio3_body_preset", icon_value=icons["BODY"].icon_id).type = "AUTO"
+        row.popover("MIO3UV_PT_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
 
 class MIO3UV_PT_symmetry(Mio3UVPanel):
     bl_label = "Symmetrize"
@@ -202,8 +208,8 @@ class MIO3UV_PT_symmetry(Mio3UVPanel):
         row.prop(context.scene.mio3uv, "symmetry_center", expand=True)
         row = layout.row(align=True)
         row.scale_y = 1.2
-        row.operator("uv.mio3_symmetrize", text=tt_iface("Symmetrize"), icon_value=icons["SYMMETRIZE"].icon_id)
-        row.operator("uv.mio3_symmetry_snap", text=tt_iface("Snap"), icon_value=icons["SNAP"].icon_id)
+        row.operator("uv.mio3_symmetrize", icon_value=icons["SYMMETRIZE"].icon_id)
+        row.operator("uv.mio3_symmetry_snap", icon_value=icons["SNAP"].icon_id)
         row_option = layout.row()
         row_option.scale_y = 1.1
         row = row_option.row(align=True)
@@ -234,72 +240,20 @@ class MIO3UV_PT_select(Mio3UVPanel):
         row.operator("uv.mio3_select_half", text="-X", icon_value=icons["X_N"].icon_id).direction = "NEGATIVE_X"
         row.operator("uv.mio3_select_half", text="+X", icon_value=icons["X_P"].icon_id).direction = "POSITIVE_X"
         row.scale_x = 1.3
-        row.operator("uv.mio3_select_mirror3d", text=tt_iface("Mirror"), icon_value=icons["MIRROR_UV"].icon_id)
+        row.operator("uv.mio3_select_mirror3d", icon_value=icons["MIRROR_UV"].icon_id)
 
         row = col.row(align=True)
-        row.operator("uv.mio3_select_similar", text=tt_iface("Similar"), icon_value=icons["SIMILAR"].icon_id)
-        row.operator("uv.mio3_select_boundary", text=tt_iface("Boundary"), icon_value=icons["BOUND"].icon_id)
+        row.operator("uv.mio3_select_similar", icon_value=icons["SIMILAR"].icon_id)
+        row.operator("uv.mio3_select_boundary", icon_value=icons["BOUND"].icon_id)
         row = col.row(align=True)
 
-        row.operator(
-            "uv.mio3_select_edge_direction", text=tt_iface("Horizontal"), icon_value=icons["EDGE_X"].icon_id
-        ).axis = "X"
-        row.operator(
-            "uv.mio3_select_edge_direction", text=tt_iface("Vertical"), icon_value=icons["EDGE_Y"].icon_id
-        ).axis = "Y"
+        row.operator("uv.mio3_select_edge_direction", text="Horizontal", icon_value=icons["EDGE_X"].icon_id).axis = "X"
+        row.operator("uv.mio3_select_edge_direction", text="Vertical", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
 
         row = layout.row(align=True)
-        row.label(text=tt_iface("Odd UVs"))
-        row.operator("uv.mio3_select_zero", text=tt_iface("No region"))
-        row.operator("uv.mio3_select_flipped_faces", text=tt_iface("Flipped"))
-
-
-class MIO3UV_PT_rearrange(Mio3UVPanel):
-    bl_label = "Rearrange"
-    bl_idname = "MIO3UV_PT_rearrange"
-    bl_space_type = "IMAGE_EDITOR"
-    bl_region_type = "UI"
-    bl_category = "Mio3"
-    bl_options = {"DEFAULT_CLOSED"}
-    bl_parent_id = "MIO3UV_PT_arrange"
-
-    def draw(self, context):
-        icons = preview_collections["icons"]
-        layout = self.layout
-
-        layout.label(text="Group Rearrange", icon_value=icons["DIST_X"].icon_id)
-        col = layout.column(align=True)
-        col.scale_y = 1.1
-
-        row = col.row(align=True)
-        row.operator("uv.mio3_sort_grid", text=tt_iface("Grid Sort"), icon_value=icons["GRID_SORT"].icon_id)
-
-        row = col.row(align=True)
-        row.operator("uv.mio3_unfoldify", text=tt_iface("Unfoldify"), icon_value=icons["UNFOLDIFY"].icon_id)
-
-        layout.label(text="Body Preset", icon_value=icons["ROTATE"].icon_id)
-        layout = self.layout
-        row = layout.row(align=True)
-        row.operator("uv.mio3_body_preset", text=tt_iface("Auto Body Parts"), icon_value=icons["BODY"].icon_id).type = (
-            "AUTO"
-        )
-
-        col = layout.column(align=True)
-
-        row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text=tt_iface("Front Hair")).type = "HAIR_F"
-        row.operator("uv.mio3_body_preset", text=tt_iface("Back Hair")).type = "HAIR_B"
-
-        row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text=tt_iface("Hand R"), icon_value=icons["HAND_R"].icon_id).type = "HAND_R"
-        row.operator("uv.mio3_body_preset", text=tt_iface("Hand L"), icon_value=icons["HAND_L"].icon_id).type = "HAND_L"
-
-        row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text=tt_iface("Foot R"), icon_value=icons["FOOT_R"].icon_id).type = "FOOT_R"
-        row.operator("uv.mio3_body_preset", text=tt_iface("Foot L"), icon_value=icons["FOOT_L"].icon_id).type = "FOOT_L"
-
-        row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text=tt_iface("Button")).type = "BUTTON"
+        row.label(text="Odd UVs")
+        row.operator("uv.mio3_select_zero")
+        row.operator("uv.mio3_select_flipped_faces")
 
 
 classes = [
@@ -308,8 +262,6 @@ classes = [
     MIO3UV_PT_arrange,
     MIO3UV_PT_symmetry,
     MIO3UV_PT_select,
-    MIO3UV_PT_rearrange,
-    # MIO3UV_PT_body_preset,
 ]
 
 

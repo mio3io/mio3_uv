@@ -34,8 +34,8 @@ class MIO3UV_PT_Utility(Panel):
 
         col = layout.column(align=True)
         row = col.row(align=True)
-        row.operator("mio3uv.checker_map", text=tt_iface("Checker Map"), icon_value=icons["COLOR_GRID"].icon_id)
-        row.operator("mio3uv.checker_map_clear", text=tt_iface(""), icon="CANCEL")
+        row.operator("mio3uv.checker_map", icon_value=icons["COLOR_GRID"].icon_id)
+        row.operator("mio3uv.checker_map_clear", text="", icon="CANCEL")
         row = layout.row()
         row.prop(props_object, "image_size")
 
@@ -83,9 +83,9 @@ class MIO3UV_PT_UVMesh(Panel):
             row1.prop(modifier, "show_viewport", icon_only=True)
 
             row2 = row.row(align=True)
-            row2.operator("mesh.mio3_uvmesh_clear", text=tt_iface("Remove"), icon="CANCEL")
+            row2.operator("mesh.mio3_uvmesh_clear", text="Remove", icon="CANCEL")
         else:
-            layout.operator("mesh.mio3_uvmesh", text=tt_iface("UV Mesh"))
+            layout.operator("mesh.mio3_uvmesh")
             row = layout.row()
             row.alignment = "CENTER"
             row.label(text="Add Modifier")
@@ -107,7 +107,6 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row = layout.row(align=True)
         row.operator(
             "uv.mio3_guide_padding",
-            text=tt_iface("Preview Padding"),
             icon_value=icons["OFFSET"].icon_id,
             depress=True if MIO3UV_OT_view_padding.is_running() else False,
         )

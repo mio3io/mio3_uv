@@ -423,7 +423,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
 class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
     bl_idname = "uv.mio3_sort"
-    bl_label = "Sort Islands"
+    bl_label = "Sort"
     bl_description = "Reorder islands based on coordinates in 3D space"
 
     def draw(self, context):
@@ -497,7 +497,7 @@ class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
 
 class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
     bl_idname = "uv.mio3_sort_grid"
-    bl_label = "Gridding"
+    bl_label = "Grid Sort"
     bl_description = "Gridding island based on coordinates in 3D space"
 
     aling_mode: EnumProperty(items=[("FIXED", "Grid Size", "")])

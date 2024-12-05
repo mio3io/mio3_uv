@@ -11,7 +11,7 @@ from ..classes.operator import Mio3UVOperator
 
 class MIO3UV_OT_body_preset(Mio3UVOperator):
     bl_idname = "uv.mio3_body_preset"
-    bl_label = "Align Body Parts"
+    bl_label = "Auto Body Parts"
     bl_description = (
         "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"
     )
