@@ -177,7 +177,7 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         row.operator("uv.mio3_shuffle_island", icon_value=icons["SHUFFLE"].icon_id)
 
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_paste", text="Unify Shapes", icon_value=icons["SHAPE"].icon_id).mode = "AUTO"
+        row.operator("uv.mio3_paste", text="Unify UV Shapes", icon_value=icons["SHAPE"].icon_id).mode = "AUTO"
         row = col_iisland.row(align=True)
         row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons["CUBE"].icon_id)
 

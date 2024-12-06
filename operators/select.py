@@ -145,8 +145,8 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
 
 class MIO3UV_OT_select_shared(Mio3UVOperator):
     bl_idname = "uv.mio3_select_shared"
-    bl_label = "Shared"
-    bl_description = "Select Shared"
+    bl_label = "Shared Vert"
+    bl_description = "Select Shared Vert"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):

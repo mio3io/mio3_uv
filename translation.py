@@ -9,7 +9,7 @@ translation_dict = {
         ("*", "Arrange"): "調整",
         ("*", "Composite Edges"): "複合エッジ",
         ("*", "Padding"): "パディング",
-        ("*", "Base Axis"): "基準軸",
+        ("*", "Base Axis"): "基準の軸",
         ("*", "Align H"): "横に並べる",
         ("*", "Align V"): "縦に並べる",
         ("*", "Top Align"): "上揃え",
@@ -73,7 +73,6 @@ translation_dict = {
         ("Operator", "Stretch Island"): "ストレッチ",
 
         # Vertex
-        ("Operator", "Relax"): "リラックス",
         ("Operator", "Distribute UVs"): "UVを分布",
         ("*", "Distribute UVs evenly or based on geometry"): "UVを等間隔またはジオメトリに基づくように分布する",
         ("Operator", "Circular"): "円形",
@@ -82,7 +81,7 @@ translation_dict = {
         ("*", "Expand/Shrink UV Borders"): "境界のUVを拡大/縮小する",
 
         # Island
-        ("Operator", "Sort"): "アイランドをソート",
+        ("Operator", "Sort Islands"): "アイランドをソート",
         ("*", "Reorder islands based on coordinates in 3D space"): "3D空間の座標を基準にアイランドを並び替え",
         ("*", "Sort Method"): "ソート方式",
         ("*", "Start Angle (Clock)"): "開始角度（時計）",
@@ -91,7 +90,7 @@ translation_dict = {
         ("Operator", "Stack"): "重ねる",
         ("*", "Overlap similar UV shapes"): "類似した形状のUVシェイプを重ねます",
         ("Operator", "Shuffle"): "シャッフル",
-        ("Operator", "Unify Shapes"): "UVの形状を揃える",
+        ("Operator", "Unify UV Shapes"): "UVの形状を揃える",
         ("Operator", "Average Island Scales"): "3Dに基づく大きさ",
 
         # Group
@@ -122,24 +121,24 @@ translation_dict = {
         ("Operator", "Back Hair"): "後髪",
 
         # Symmetrize
-        ("Operator", "Symmetrize"): "対称化",
         ("*", "Symmetrize based on 3D space"): "3D空間の対称性に基づいてUVを対称化します",
         ("Operator", "Snap"): "スナップ",
         ("*", "Symmetrize based on UV space"): "UV空間での対称位置にスナップします",
 
         # Select
-        ("Operator", "Select Half"): "半分",
-        ("Operator", "Shared"): "同じ頂点",
+        ("Operator", "Select Half"): "半分を選択",
+        ("*", "Select UVs on one side of the axis in 3D space"): "3D空間で片方の面を選択",
+        ("Operator", "Shared Vert"): "同じ頂点",
         ("Operator", "Similar"): "類似",
         ("*", "Odd UVs"): "特殊UV",
         ("Operator", "No Region"): "領域なし",
-        ("Operator", "Flipped"): "反転した面",
+        ("Operator", "Flipped"): "反転",
         ("*", "Select Flipped UV Faces"): "反転したUV面を選択します",
         ("*", "Select Zero Area UV Faces"): "領域がゼロのUVを選択",
         ("Operator", "Boundary"): "境界",
         ("*", "Select Boundary"): "境界を選択",
         ("*", "UV Space Boundary"): "UV上の境界",
-        ("*", "Select UVs on one side of the axis in 3D space"): "3D空間で片方の面を選択",
+        ("Operator", "Select Edge Loops"): "エッジループを選択",
         ("*", "Select only vertical or horizontal edges"): "垂直または水平のエッジのみを選択",
 
         # Utils
