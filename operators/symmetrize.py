@@ -77,7 +77,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
-            bpy.ops.mesh.select_linked(delimit={"UV"})
+            # bpy.ops.mesh.select_linked(delimit={"UV"})
 
         obj = context.active_object
 
@@ -90,23 +90,25 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
         original_selected_verts = {v.index for v in bm.verts if v.select}
 
-        selected_uv_loops = []
+        min_u = float("inf")
+        min_v = float("inf")
+        selected_loop_varts = set()
         for face in bm.faces:
             if face.select:
                 for loop in face.loops:
                     if loop[uv_layer].select:
-                        selected_uv_loops.append(loop)
+                        uv = loop[uv_layer].uv
+                        min_u = min(min_u, uv.x)
+                        min_v = min(min_v, uv.y)
+                        if use_uv_select_sync:
+                            selected_loop_varts.add(loop.vert)
+                            continue
+                        for connected_face in loop.vert.link_faces:
+                            for fv in connected_face.verts:
+                                if fv not in selected_loop_varts:
+                                    selected_loop_varts.add(fv)
 
-        bpy.ops.mesh.select_all(action="DESELECT")
-        for loop in selected_uv_loops:
-            loop.vert.select = True
-        bpy.ops.mesh.select_mirror(extend=True)
-        bpy.ops.mesh.select_more()
-
-        for vert in bm.verts:
-            if vert.index not in original_selected_verts:
-                vert.select = False
-        bm.select_flush(False)
+        self.select_symmetric_verts(bm, selected_loop_varts)
 
         if self.axis_3d == "AUTO":
             self.axis_3d = {"X": "X", "Y": "Z"}.get(self.axis_uv, self.axis_uv)
@@ -134,14 +136,16 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 kd.insert(face_center, i)
         kd.balance()
 
-        sym_center_uv = self.get_symmetry_center(context, uv_layer, selected_uv_loops)
+        sym_center_uv = self.get_symmetry_center(context, min_u, min_v)
         direction_3d = self.check_uv_3d_direction(uv_layer, sym_center_uv, face_centers, uv_selection)
         self.symmetrize(bm, uv_layer, kd, sym_center_uv, face_centers, uv_selection, direction_3d)
 
         bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
+        for v in bm.verts:
+            v.select = False
         for i in original_selected_verts:
             bm.verts[i].select = True
-        bm.select_flush(True)
+        bm.select_flush_mode()
 
         bmesh.update_edit_mesh(obj.data)
 
@@ -208,7 +212,14 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     return pot_face
         return None
 
-    def get_symmetry_center(self, context, uv_layer, loops):
+    def get_symmetry_center(self, context, min_u, min_v):
+        def get_tile_co(offset_vector, min_x, min_y):
+            tile_u = int(min_x)
+            tile_v = int(min_y)
+            udim_x = tile_u + offset_vector.x
+            udim_y = tile_v + offset_vector.y
+            return Vector((udim_x, udim_y))
+
         if self.center == "SELECT":
             original = context.space_data.cursor_location.copy()
             bpy.ops.uv.snap_cursor(target="SELECTED")
@@ -219,9 +230,33 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             return context.space_data.cursor_location.copy()
         else:
             if context.scene.mio3uv.udim:
-                return get_tile_co(Vector((0.5, 0.5)), uv_layer, loops)
+                return get_tile_co(Vector((0.5, 0.5)), min_u, min_v)
             else:
                 return Vector((0.5, 0.5))
+
+    # 3Dの対称頂点を選択
+    def select_symmetric_verts(self, bm, selected_verts):
+        symm_co = Vector()
+        size = len(bm.verts)
+        kd = KDTree(size)
+        for v in bm.verts:
+            kd.insert(v.co, v.index)
+        kd.balance()
+
+        for face in bm.faces:
+            face.select = False
+
+        for v in selected_verts:
+            co = v.co
+            symm_co.x = -co.x
+            symm_co.y = co.y
+            symm_co.z = co.z
+            co_find = kd.find(symm_co)
+            if co_find[2] < 0.0001:
+                symm_vert = bm.verts[co_find[1]]
+                symm_vert.select = True
+            v.select = True
+        bm.select_flush_mode()
 
     def draw(self, context):
         layout = self.layout
@@ -384,7 +419,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
             if self.axis_uv == "X":
                 mirrored_value = 2 * center.x - uv.x
                 mirrored_pos = Vector((mirrored_value, uv.y, 0))
-            else:  # Y axis
+            else:
                 mirrored_value = 2 * center.y - uv.y
                 mirrored_pos = Vector((uv.x, mirrored_value, 0))
 
@@ -394,7 +429,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
                 if self.axis_uv == "X":
                     new_value = 2 * center.x - closest_uv.x
                     loop[uv_layer].uv = Vector((new_value, closest_uv.y))
-                else:  # Y axis
+                else:
                     new_value = 2 * center.y - closest_uv.y
                     loop[uv_layer].uv = Vector((closest_uv.x, new_value))
 
