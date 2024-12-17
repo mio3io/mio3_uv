@@ -1,7 +1,7 @@
 import bpy
 import time
 import math
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
@@ -15,6 +15,14 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
     normalize: BoolProperty(name="Normalize", default=False)
     keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
+    even: BoolProperty(name="Even", default=False)
+    mode: EnumProperty(
+        name="Mode",
+        items=[
+            ("LENGTH_AVERAGE", "Standard", ""),
+            ("EVEN", "Even", ""),
+        ],
+    )
 
     def execute(self, context):
         self.start_time = time.time()
@@ -56,7 +64,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                             loop[uv_layer].pin_uv = False
 
                 try:
-                    bpy.ops.uv.follow_active_quads(mode="LENGTH_AVERAGE")
+                    bpy.ops.uv.follow_active_quads(mode=self.mode)
                 except:
                     pass
 
@@ -155,7 +163,10 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_decorate = False
         layout.use_property_split = True
+        row = layout.row()
+        row.prop(self, "mode", expand=True)
         layout.prop(self, "normalize")
 
         row = layout.row()
