@@ -197,6 +197,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
+            bm.verts.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
             self.sselect_mirror(bm, uv_layer)
@@ -206,6 +207,10 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         return {"FINISHED"}
 
     def sselect_mirror(self, bm, uv_layer):
+        original_selected_verts = {v.index for v in bm.verts if v.select}
+        
+        self.select_symmetric_verts(bm, uv_layer)
+
         sym_positions = {v: Vector((-v.co.x, v.co.y, v.co.z)) for v in bm.verts}
 
         kd = KDTree(len(bm.faces))
@@ -229,6 +234,12 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                 if sym_face:
                     self.select_symmetric_uvs(face, sym_face, uv_layer, sym_positions)
 
+        for v in bm.verts:
+            v.select = False
+        for i in original_selected_verts:
+            bm.verts[i].select = True
+        bm.select_flush_mode()
+
     def find_symmetric_face(self, face, potential_faces, threshold, face_sym_verts):
         face_vert_count = len(face.verts)
         sym_verts = face_sym_verts[face]
@@ -250,6 +261,40 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                         sym_loop[uv_layer].select = True
                         sym_loop[uv_layer].select_edge = True
                         break
+
+    # 3Dの対称頂点を選択
+    def select_symmetric_verts(self, bm, uv_layer):
+        symm_co = Vector()
+        size = len(bm.verts)
+        kd = KDTree(size)
+        for v in bm.verts:
+            kd.insert(v.co, v.index)
+        kd.balance()
+
+        selected_verts = set()
+        for face in bm.faces:
+            if face.select:
+                for loop in face.loops:
+                    if loop[uv_layer].select:
+                        # selected_verts.add(loop.vert)
+                        for connected_face in loop.vert.link_faces:
+                            for v in connected_face.verts:
+                                selected_verts.add(v)
+
+        for face in bm.faces:
+            face.select = False
+
+        for v in selected_verts:
+            co = v.co
+            symm_co.x = -co.x
+            symm_co.y = co.y
+            symm_co.z = co.z
+            co_find = kd.find(symm_co)
+            if co_find[2] < 0.0001:
+                symm_vert = bm.verts[co_find[1]]
+                symm_vert.select = True
+            v.select = True
+        bm.select_flush_mode()
 
 
 class MIO3UV_OT_select_boundary(Mio3UVOperator):
