@@ -187,6 +187,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
     def execute(self, context):
         self.start_time = time.time()
         self.objects = self.get_selected_objects(context)
+        self.threshold_sq = self.threshold * self.threshold
 
         if context.tool_settings.use_uv_select_sync:
             try:
@@ -230,7 +231,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             if uv_selection[face]:
                 sym_center = Vector((-center.x, center.y, center.z))
                 potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 10)]
-                sym_face = self.find_symmetric_face(face, potential_sym_faces, self.threshold, face_sym_verts)
+                sym_face = self.find_symmetric_face(face, potential_sym_faces, self.threshold_sq, face_sym_verts)
                 if sym_face:
                     self.select_symmetric_uvs(face, sym_face, uv_layer, sym_positions)
 
@@ -240,12 +241,12 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             bm.verts[i].select = True
         bm.select_flush_mode()
 
-    def find_symmetric_face(self, face, potential_faces, threshold, face_sym_verts):
+    def find_symmetric_face(self, face, potential_faces, threshold_sq, face_sym_verts):
         face_vert_count = len(face.verts)
         sym_verts = face_sym_verts[face]
         for pot_face in potential_faces:
             if len(pot_face.verts) == face_vert_count:
-                if all(any((v.co - sv).length < threshold for sv in sym_verts) for v in pot_face.verts):
+                if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
                     return pot_face
         return None
 
@@ -254,7 +255,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             if loop[uv_layer].select:
                 sym_vert = min(
                     sym_face.verts,
-                    key=lambda v: (v.co - sym_positions[loop.vert]).length,
+                    key=lambda v: (v.co - sym_positions[loop.vert]).length_squared,
                 )
                 for sym_loop in sym_face.loops:
                     if sym_loop.vert == sym_vert:

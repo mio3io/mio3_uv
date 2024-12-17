@@ -69,6 +69,8 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
     def execute(self, context):
         start_time = time.time()
         self.objects = self.get_selected_objects(context)
+        self.threshold_sq = self.threshold * self.threshold
+
         if not self.objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
@@ -180,14 +182,14 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             if uv_selection[face] and self.should_symmetrize(center, direction_3d):
                 sym_center = self.get_symmetric_3d_point(center)
                 potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
-                sym_face = self.find_symmetric_face(face, potential_sym_faces, self.threshold)
+                sym_face = self.find_symmetric_face(face, potential_sym_faces, self.threshold_sq)
                 if not sym_face:
                     continue
                 for loop in face.loops:
                     if loop[uv_layer].select:
                         sym_vert = min(
                             sym_face.verts,
-                            key=lambda v: (v.co - self.get_symmetric_3d_point(loop.vert.co)).length,
+                            key=lambda v: (v.co - self.get_symmetric_3d_point(loop.vert.co)).length_squared,
                         )
                         for sym_loop in sym_face.loops:
                             if sym_loop.vert == sym_vert:
@@ -203,12 +205,12 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         )
 
     # 対称的な面を見つける
-    def find_symmetric_face(self, face, potential_faces, epsilon):
+    def find_symmetric_face(self, face, potential_faces, threshold_sq):
         sym_verts = [self.get_symmetric_3d_point(v.co) for v in face.verts]
         face_vert_count = len(face.verts)
         for pot_face in potential_faces:
             if len(pot_face.verts) == face_vert_count:
-                if all(any((v.co - sv).length < epsilon for sv in sym_verts) for v in pot_face.verts):
+                if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
                     return pot_face
         return None
 
@@ -257,6 +259,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 symm_vert.select = True
             v.select = True
         bm.select_flush_mode()
+
 
     def draw(self, context):
         layout = self.layout
