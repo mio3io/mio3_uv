@@ -47,7 +47,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         name="Threshold",
         default=0.001,
         min=0.0001,
-        max=1,
+        max=0.1,
         precision=4,
         step=0.01,
     )
@@ -254,7 +254,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             symm_co.y = co.y
             symm_co.z = co.z
             co_find = kd.find(symm_co)
-            if co_find[2] < 0.0001:
+            if co_find[2] < self.threshold:
                 symm_vert = bm.verts[co_find[1]]
                 symm_vert.select = True
             v.select = True
