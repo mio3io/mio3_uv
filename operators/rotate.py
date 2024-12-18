@@ -102,19 +102,10 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         return {"FINISHED"}
 
     def get_median_point(self, islands):
-        sum_x = sum_y = 0.0
-        count = 0
-        for island in islands:
-            for face in island.faces:
-                for loop in face.loops:
-                    if loop[island.uv_layer].select:
-                        uv = loop[island.uv_layer].uv
-                        sum_x += uv.x
-                        sum_y += uv.y
-                        count += 1
-        if count > 0:
-            return Vector((sum_x / count, sum_y / count))
-        return Vector((0, 0))
+        sum_x = sum(island.center.x for island in islands)
+        sum_y = sum(island.center.y for island in islands)
+        count = len(islands)
+        return Vector((sum_x / count, sum_y / count))
 
     def get_islands_bounds(self, islands):
         min_x = min(island.min_uv.x for island in islands)
