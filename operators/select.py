@@ -198,6 +198,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
+            bm.select_mode = {"VERT"}
             bm.verts.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
