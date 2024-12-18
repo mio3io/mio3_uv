@@ -92,6 +92,21 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
         original_selected_verts = {v.index for v in bm.verts if v.select}
 
+        if self.axis_3d == "AUTO":
+            self.axis_3d = {"X": "X", "Y": "Z"}.get(self.axis_uv, self.axis_uv)
+
+        if self.axis_3d == "X":
+            self.get_symmetric_3d_point = lambda co: Vector((-co.x, co.y, co.z))
+        elif self.axis_3d == "Y":
+            self.get_symmetric_3d_point = lambda co: Vector((co.x, -co.y, co.z))
+        else:
+            self.get_symmetric_3d_point = lambda co: Vector((co.x, co.y, -co.z))
+
+        if self.axis_uv == "X":
+            self.get_symmetric_uv_point = lambda uv, center: Vector((2 * center.x - uv.x, uv.y))
+        else:
+            self.get_symmetric_uv_point = lambda uv, center: Vector((uv.x, 2 * center.y - uv.y))
+
         min_u = float("inf")
         min_v = float("inf")
         selected_loop_varts = set()
@@ -111,21 +126,6 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                                     selected_loop_varts.add(fv)
 
         self.select_symmetric_verts(bm, selected_loop_varts)
-
-        if self.axis_3d == "AUTO":
-            self.axis_3d = {"X": "X", "Y": "Z"}.get(self.axis_uv, self.axis_uv)
-
-        if self.axis_3d == "X":
-            self.get_symmetric_3d_point = lambda point: Vector((-point.x, point.y, point.z))
-        elif self.axis_3d == "Y":
-            self.get_symmetric_3d_point = lambda point: Vector((point.x, -point.y, point.z))
-        else:
-            self.get_symmetric_3d_point = lambda point: Vector((point.x, point.y, -point.z))
-
-        if self.axis_uv == "X":
-            self.get_symmetric_uv_point = lambda uv, center: Vector((2 * center.x - uv.x, uv.y))
-        else:
-            self.get_symmetric_uv_point = lambda uv, center: Vector((uv.x, 2 * center.y - uv.y))
 
         kd = KDTree(len(bm.faces))
         face_centers = {}
@@ -178,18 +178,22 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         return self.direction
 
     def symmetrize(self, bm, uv_layer, kd, sym_center_uv, face_centers, uv_selection, direction_3d):
+
+        sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in bm.verts if v.select}
+        face_sym_verts = {face: [sym_positions[v] for v in face.verts] for face in bm.faces if face.select}
+
         for face, center in face_centers.items():
             if uv_selection[face] and self.should_symmetrize(center, direction_3d):
                 sym_center = self.get_symmetric_3d_point(center)
-                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
-                sym_face = self.find_symmetric_face(face, potential_sym_faces, self.threshold_sq)
+                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 3)]
+                sym_face = self.find_symmetric_face(face, potential_sym_faces, face_sym_verts)
                 if not sym_face:
                     continue
                 for loop in face.loops:
                     if loop[uv_layer].select:
                         sym_vert = min(
                             sym_face.verts,
-                            key=lambda v: (v.co - self.get_symmetric_3d_point(loop.vert.co)).length_squared,
+                            key=lambda v: (v.co - sym_positions[loop.vert]).length_squared,
                         )
                         for sym_loop in sym_face.loops:
                             if sym_loop.vert == sym_vert:
@@ -205,12 +209,12 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         )
 
     # 対称的な面を見つける
-    def find_symmetric_face(self, face, potential_faces, threshold_sq):
-        sym_verts = [self.get_symmetric_3d_point(v.co) for v in face.verts]
+    def find_symmetric_face(self, face, potential_faces, face_sym_verts):
         face_vert_count = len(face.verts)
+        sym_verts = face_sym_verts[face]
         for pot_face in potential_faces:
             if len(pot_face.verts) == face_vert_count:
-                if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
+                if all(any((v.co - sv).length_squared < self.threshold_sq for sv in sym_verts) for v in pot_face.verts):
                     return pot_face
         return None
 
@@ -249,10 +253,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             face.select = False
 
         for v in selected_verts:
-            co = v.co
-            symm_co.x = -co.x
-            symm_co.y = co.y
-            symm_co.z = co.z
+            symm_co = self.get_symmetric_3d_point(v.co)
             co_find = kd.find(symm_co)
             if co_find[2] < self.threshold:
                 symm_vert = bm.verts[co_find[1]]
@@ -351,7 +352,6 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
     def execute(self, context):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if context.tool_settings.use_uv_select_sync:
-            # bpy.ops.mesh.select_mirror(extend=True)
             self.sync_uv_from_mesh(context, self.objects)
 
         for obj in self.objects:

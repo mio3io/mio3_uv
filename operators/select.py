@@ -210,10 +210,8 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
     def sselect_mirror(self, bm, uv_layer):
         original_selected_verts = {v.index for v in bm.verts if v.select}
-        
-        self.select_symmetric_verts(bm, uv_layer)
 
-        sym_positions = {v: Vector((-v.co.x, v.co.y, v.co.z)) for v in bm.verts}
+        self.select_symmetric_verts(bm, uv_layer)
 
         kd = KDTree(len(bm.faces))
         face_centers = {}
@@ -226,15 +224,27 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                 uv_selection[face] = any(l[uv_layer].select for l in face.loops)
         kd.balance()
 
+        sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in bm.verts if v.select}
         face_sym_verts = {face: [sym_positions[v] for v in face.verts] for face in bm.faces if face.select}
 
         for face, center in face_centers.items():
             if uv_selection[face]:
-                sym_center = Vector((-center.x, center.y, center.z))
-                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 10)]
-                sym_face = self.find_symmetric_face(face, potential_sym_faces, self.threshold_sq, face_sym_verts)
-                if sym_face:
-                    self.select_symmetric_uvs(face, sym_face, uv_layer, sym_positions)
+                sym_center = self.get_symmetric_3d_point(center)
+                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 3)]
+                sym_face = self.find_symmetric_face(face, potential_sym_faces, face_sym_verts)
+                if not sym_face:
+                    continue
+                for loop in face.loops:
+                    if loop[uv_layer].select:
+                        sym_vert = min(
+                            sym_face.verts,
+                            key=lambda v: (v.co - sym_positions[loop.vert]).length_squared,
+                        )
+                        for sym_loop in sym_face.loops:
+                            if sym_loop.vert == sym_vert:
+                                sym_loop[uv_layer].select = True
+                                sym_loop[uv_layer].select_edge = True
+                                break
 
         for v in bm.verts:
             v.select = False
@@ -242,27 +252,17 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             bm.verts[i].select = True
         bm.select_flush_mode()
 
-    def find_symmetric_face(self, face, potential_faces, threshold_sq, face_sym_verts):
+    def get_symmetric_3d_point(self, co):
+        return Vector((-co.x, co.y, co.z))
+
+    def find_symmetric_face(self, face, potential_faces, face_sym_verts):
         face_vert_count = len(face.verts)
         sym_verts = face_sym_verts[face]
         for pot_face in potential_faces:
             if len(pot_face.verts) == face_vert_count:
-                if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
+                if all(any((v.co - sv).length_squared < self.threshold_sq for sv in sym_verts) for v in pot_face.verts):
                     return pot_face
         return None
-
-    def select_symmetric_uvs(self, face, sym_face, uv_layer, sym_positions):
-        for loop in face.loops:
-            if loop[uv_layer].select:
-                sym_vert = min(
-                    sym_face.verts,
-                    key=lambda v: (v.co - sym_positions[loop.vert]).length_squared,
-                )
-                for sym_loop in sym_face.loops:
-                    if sym_loop.vert == sym_vert:
-                        sym_loop[uv_layer].select = True
-                        sym_loop[uv_layer].select_edge = True
-                        break
 
     # 3Dの対称頂点を選択
     def select_symmetric_verts(self, bm, uv_layer):
