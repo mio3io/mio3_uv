@@ -1,11 +1,8 @@
 import bpy
-import bmesh
 import time
 import math
-import numpy as np
-from math import sqrt, pi
-from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
 from mathutils import Vector
+from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
 from ..icons import preview_collections
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
@@ -70,7 +67,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
     def start_angle_radian(self):
         hour = self.start_angle
         adjusted_hour = (hour - 3) % 12
-        angle = -adjusted_hour * (pi / 6)
+        angle = -adjusted_hour * (math.pi / 6)
         return angle
 
     def execute(self, context):
@@ -119,7 +116,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         elif self.group_type == "DISTANCE":
 
             def distance(point1, point2=(0, 0)):
-                return sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
+                return math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
             sorted_islands = sorted(island_manager.islands, key=lambda island: distance(island.center))
             groups = []

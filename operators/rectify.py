@@ -1,7 +1,7 @@
 import bpy
 import time
-from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector
+from bpy.props import BoolProperty, EnumProperty
 from ..utils import straight_uv_nodes
 from ..classes.uv import UVIslandManager, UVNodeManager
 from ..classes.operator import Mio3UVOperator

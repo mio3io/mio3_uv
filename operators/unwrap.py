@@ -106,12 +106,10 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                                 loop[uv_layer].uv = Vector((current_uv.x, original_uv.y))
                             elif axis == "Y":
                                 loop[uv_layer].uv = Vector((original_uv.x, current_uv.y))
-
             if island.ajast:
                 island.update_bounds()
                 offset = island.original_center - island.center
-                original_size = Vector((island.original_width, island.original_height))
-                self.transform_island(island, offset, original_size)
+                self.transform_island(island, offset)
                 if hasattr(island, "tmp_uv_list"):
                     for uv in island.tmp_uv_list:
                         uv.select = True
@@ -125,7 +123,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
 
-    def transform_island(self, island, offset, original_size):
+    def transform_island(self, island, offset):
+        original_size = Vector((island.original_width, island.original_height))
         current_size = Vector((island.width, island.height))
         original_center = island.center
 

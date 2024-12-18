@@ -1,7 +1,6 @@
 import bpy
 import time
 from bpy.props import BoolProperty, EnumProperty
-from ..icons import preview_collections
 from ..utils import straight_uv_nodes
 from ..classes.uv import UVNodeManager
 from ..classes.operator import Mio3UVOperator

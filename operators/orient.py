@@ -1,9 +1,8 @@
 import bpy
 import time
 import math
-from bpy.props import BoolProperty
 from mathutils import Vector
-from ..icons import preview_collections
+from bpy.props import BoolProperty
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 

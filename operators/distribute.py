@@ -1,8 +1,7 @@
 import bpy
 import time
-import numpy as np
-from bpy.props import FloatProperty, IntProperty, EnumProperty
 from mathutils import Vector
+from bpy.props import FloatProperty, IntProperty, EnumProperty
 from ..classes.uv import UVIslandManager, UVNodeManager
 from ..classes.operator import Mio3UVOperator
 

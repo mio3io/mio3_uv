@@ -1,7 +1,6 @@
 import bpy
 import time
-from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..icons import preview_collections
+from bpy.props import BoolProperty, EnumProperty
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
