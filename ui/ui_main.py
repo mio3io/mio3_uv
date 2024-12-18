@@ -146,7 +146,7 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         layout = self.layout
 
         # Vertex
-        layout.label(text="Vertex", icon_value=icons["VERT"].icon_id)
+        # layout.label(text="Vertex", icon_value=icons["VERT"].icon_id)
 
         col_vert = layout.column(align=True)
         col_vert.scale_y = 1.2
