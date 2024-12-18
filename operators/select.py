@@ -2,10 +2,8 @@ import bpy
 import bmesh
 import time
 import math
+from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from mathutils.kdtree import KDTree
-from mathutils import Vector
-from bpy.app.translations import pgettext_iface as tt_iface
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
@@ -202,26 +200,26 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             bm.verts.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
-            self.sselect_mirror(bm, uv_layer)
+            self.select_mirror(bm, uv_layer)
             bmesh.update_edit_mesh(obj.data)
 
         self.print_time(time.time() - self.start_time)
         return {"FINISHED"}
 
-    def sselect_mirror(self, bm, uv_layer):
+    def select_mirror(self, bm, uv_layer):
         original_selected_verts = {v.index for v in bm.verts if v.select}
 
         self.select_symmetric_verts(bm, uv_layer)
 
-        kd = KDTree(len(bm.faces))
+        kd = kdtree.KDTree(len(bm.faces))
         face_centers = {}
         uv_selection = {}
         for i, face in enumerate(bm.faces):
             if face.select:
-                center = face.calc_center_median()
-                kd.insert(center, i)
-                face_centers[face] = center
+                face_center = face.calc_center_median()
+                face_centers[face] = face_center
                 uv_selection[face] = any(l[uv_layer].select for l in face.loops)
+                kd.insert(face_center, i)
         kd.balance()
 
         sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in bm.verts if v.select}
@@ -266,19 +264,18 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
     # 3Dの対称頂点を選択
     def select_symmetric_verts(self, bm, uv_layer):
-        symm_co = Vector()
-        size = len(bm.verts)
-        kd = KDTree(size)
+        kd = kdtree.KDTree(len(bm.verts))
         for v in bm.verts:
             kd.insert(v.co, v.index)
         kd.balance()
 
         selected_verts = set()
+        selected_loops = set()
         for face in bm.faces:
             if face.select:
                 for loop in face.loops:
                     if loop[uv_layer].select:
-                        # selected_verts.add(loop.vert)
+                        selected_loops.add(loop)
                         for connected_face in loop.vert.link_faces:
                             for v in connected_face.verts:
                                 selected_verts.add(v)
@@ -287,10 +284,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             face.select = False
 
         for v in selected_verts:
-            co = v.co
-            symm_co.x = -co.x
-            symm_co.y = co.y
-            symm_co.z = co.z
+            symm_co = self.get_symmetric_3d_point(v.co)
             co_find = kd.find(symm_co)
             if co_find[2] < self.threshold:
                 symm_vert = bm.verts[co_find[1]]

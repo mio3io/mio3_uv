@@ -1,12 +1,11 @@
 import bpy
 import bmesh
 import time
+from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from mathutils import Vector
-from mathutils.kdtree import KDTree
-from ..icons import preview_collections
 from ..classes.operator import Mio3UVOperator
 from ..utils import get_tile_co
+from ..icons import preview_collections
 
 
 class MIO3UV_OT_symmetrize(Mio3UVOperator):
@@ -39,7 +38,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         default="GLOBAL",
     )
     direction: EnumProperty(
-        name="UV Direction",
+        name="Direction",
         items=symmetry_direction_items,
         default=1,
     )
@@ -51,7 +50,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         precision=4,
         step=0.01,
     )
-    merge: BoolProperty(name="Center Merge", default=True)
+    merge: BoolProperty(name="Merge by Distance", description="Merge by Distance", default=True)
     threshold_uv = 0.00001
 
     def invoke(self, context, event):
@@ -107,27 +106,23 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         else:
             self.get_symmetric_uv_point = lambda uv, center: Vector((uv.x, 2 * center.y - uv.y))
 
-        min_u = float("inf")
-        min_v = float("inf")
-        selected_loop_varts = set()
+        selected_verts = set()
+        selected_loops = set()
         for face in bm.faces:
             if face.select:
                 for loop in face.loops:
                     if loop[uv_layer].select:
-                        uv = loop[uv_layer].uv
-                        min_u = min(min_u, uv.x)
-                        min_v = min(min_v, uv.y)
+                        selected_loops.add(loop)
                         if use_uv_select_sync:
-                            selected_loop_varts.add(loop.vert)
+                            selected_verts.add(loop.vert)
                             continue
                         for connected_face in loop.vert.link_faces:
                             for fv in connected_face.verts:
-                                if fv not in selected_loop_varts:
-                                    selected_loop_varts.add(fv)
+                                selected_verts.add(fv)
 
-        self.select_symmetric_verts(bm, selected_loop_varts)
+        self.select_symmetric_verts(bm, selected_verts)
 
-        kd = KDTree(len(bm.faces))
+        kd = kdtree.KDTree(len(bm.faces))
         face_centers = {}
         uv_selection = {}
         for i, face in enumerate(bm.faces):
@@ -138,11 +133,13 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 kd.insert(face_center, i)
         kd.balance()
 
-        sym_center_uv = self.get_symmetry_center(context, min_u, min_v)
+        sym_center_uv = self.get_symmetry_center(context, uv_layer, selected_loops)
         direction_3d = self.check_uv_3d_direction(uv_layer, sym_center_uv, face_centers, uv_selection)
         self.symmetrize(bm, uv_layer, kd, sym_center_uv, face_centers, uv_selection, direction_3d)
 
-        bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
+        if self.merge:
+            bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
+
         for v in bm.verts:
             v.select = False
         for i in original_selected_verts:
@@ -178,7 +175,6 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         return self.direction
 
     def symmetrize(self, bm, uv_layer, kd, sym_center_uv, face_centers, uv_selection, direction_3d):
-
         sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in bm.verts if v.select}
         face_sym_verts = {face: [sym_positions[v] for v in face.verts] for face in bm.faces if face.select}
 
@@ -218,14 +214,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     return pot_face
         return None
 
-    def get_symmetry_center(self, context, min_u, min_v):
-        def get_tile_co(offset_vector, min_x, min_y):
-            tile_u = int(min_x)
-            tile_v = int(min_y)
-            udim_x = tile_u + offset_vector.x
-            udim_y = tile_v + offset_vector.y
-            return Vector((udim_x, udim_y))
-
+    def get_symmetry_center(self, context, uv_layer, loops):
         if self.center == "SELECT":
             original = context.space_data.cursor_location.copy()
             bpy.ops.uv.snap_cursor(target="SELECTED")
@@ -236,15 +225,13 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             return context.space_data.cursor_location.copy()
         else:
             if context.scene.mio3uv.udim:
-                return get_tile_co(Vector((0.5, 0.5)), min_u, min_v)
+                return get_tile_co(Vector((0.5, 0.5)), uv_layer, loops)
             else:
                 return Vector((0.5, 0.5))
 
     # 3Dの対称頂点を選択
     def select_symmetric_verts(self, bm, selected_verts):
-        symm_co = Vector()
-        size = len(bm.verts)
-        kd = KDTree(size)
+        kd = kdtree.KDTree(len(bm.verts))
         for v in bm.verts:
             kd.insert(v.co, v.index)
         kd.balance()
@@ -261,17 +248,19 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             v.select = True
         bm.select_flush_mode()
 
-
     def draw(self, context):
         layout = self.layout
         row = layout.row()
         row.prop(self, "center", expand=True)
-        row = layout.row()
-        row.label(text="Direction")
+        split = layout.split(factor=0.35)
+        split.alignment ="RIGHT"
+        split.label(text="Direction")
+        row = split.row()
         row.prop(self, "direction", expand=True)
-        row = layout.row()
-        row.label(text="Threshold")
-        row.prop(self, "threshold", text="")
+        split = layout.split(factor=0.35)
+        split.alignment ="RIGHT"
+        split.label(text="Threshold")
+        split.prop(self, "threshold", text="")
 
 
 class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
@@ -304,7 +293,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         default="SELECT",
     )
     direction: EnumProperty(
-        name="Method",
+        name="Direction",
         items=symmetry_direction_items,
         default=1,
     )
@@ -371,12 +360,12 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         bm.faces.ensure_lookup_table()
         uv_layer = bm.loops.layers.uv.verify()
 
-        selected_loops = []
+        selected_loops = set()
         for face in bm.faces:
             if face.select:
                 for loop in face.loops:
                     if loop[uv_layer].select:
-                        selected_loops.append(loop)
+                        selected_loops.add(loop)
 
         center = self.get_symmetry_center(context, uv_layer, selected_loops)
 
@@ -410,7 +399,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         else:
             source_uvs, target_uvs = negative_uvs, positive_uvs
 
-        kd_tree = KDTree(len(source_uvs))
+        kd_tree = kdtree.KDTree(len(source_uvs))
         for i, (_, uv) in enumerate(source_uvs):
             kd_tree.insert(Vector((uv.x, uv.y, 0)), i)
         kd_tree.balance()
@@ -458,12 +447,15 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         layout = self.layout
         row = layout.row()
         row.prop(self, "center", expand=True)
-        row = layout.row()
-        row.label(text="Direction")
+        split = layout.split(factor=0.35)
+        split.alignment ="RIGHT"
+        split.label(text="Direction")
+        row = split.row()
         row.prop(self, "direction", expand=True)
-        row = layout.row()
-        row.label(text="Threshold")
-        row.prop(self, "threshold", text="")
+        split = layout.split(factor=0.35)
+        split.alignment ="RIGHT"
+        split.label(text="Threshold")
+        split.prop(self, "threshold", text="")
 
 
 classes = [MIO3UV_OT_symmetrize, MIO3UV_OT_symmetry_snap]
