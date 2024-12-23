@@ -44,9 +44,9 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
         self.start_time = time.time()
 
         self.objects = self.get_selected_objects(context)
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         if self.island:
-            use_uv_select_sync = context.tool_settings.use_uv_select_sync
             if use_uv_select_sync:
                 im = UVIslandManager(self.objects, mesh_link_uv=True, mesh_keep=True)
             else:
@@ -107,7 +107,11 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
             im.update_uvmeshes()
         else:
-            nm = UVNodeManager(self.objects, mode="VERT")
+            if use_uv_select_sync:
+                nm = UVNodeManager(self.objects, mode="VERT")
+            else:
+                nm = UVNodeManager(self.objects, mode="EDGE")
+            
             if not nm.groups:
                 return {"CANCELLED"}
 
