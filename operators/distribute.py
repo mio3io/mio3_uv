@@ -1,9 +1,10 @@
 import bpy
 import time
 from mathutils import Vector
-from bpy.props import FloatProperty, IntProperty, EnumProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty
 from ..classes.uv import UVIslandManager, UVNodeManager
 from ..classes.operator import Mio3UVOperator
+from ..utils import straight_uv_nodes
 
 
 class MIO3UV_OT_distribute(Mio3UVOperator):
@@ -122,7 +123,7 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
         name="Method",
         items=[
             ("GEOMETRY", "Geometry", ""),
-            ("EVENLY", "Even", ""),
+            ("EVEN", "Even", ""),
         ],
     )
     iteration: IntProperty(
@@ -138,7 +139,8 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
         min=0.0,
         max=1.0,
     )
-
+    straight: BoolProperty(name="Straight", default=True)
+    
     def invoke(self, context, event):
         self.objects = self.get_selected_objects(context)
         if not self.objects:
@@ -162,7 +164,10 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
             return {"CANCELLED"}
 
         for group in node_manager.groups:
-            self.adjust_edges(group)
+            if self.straight:
+                straight_uv_nodes(group, mode=self.method, keep_length=False, center=True)
+            else:
+                self.adjust_edges(group)
             group.update_uvs()
 
         node_manager.update_uvmeshes()
