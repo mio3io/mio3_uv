@@ -75,7 +75,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
     bl_description = "Select Similar"
     bl_options = {"REGISTER", "UNDO"}
 
-    check_edges: bpy.props.BoolProperty(name="Check Edges", description="", default=True)
+    check_edges: BoolProperty(name="Check Edges", description="", default=True)
 
     def execute(self, context):
         self.start_time()

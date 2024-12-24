@@ -21,7 +21,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             items.append(("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"))
         return items
 
-    method: bpy.props.EnumProperty(
+    method: EnumProperty(
         name="Method",
         items=unwrap_method_items,
     )

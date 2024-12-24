@@ -32,7 +32,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
     )
     pin: BoolProperty(name="Pinned", default=True)
     unwrap: BoolProperty(name="Unwrap", default=True)
-    method: bpy.props.EnumProperty(name="Unwrap Method", items=unwrap_method_items)
+    method: EnumProperty(name="Unwrap Method", items=unwrap_method_items)
     stretch: BoolProperty(name="Stretch", default=False)
 
     def draw(self, context):
