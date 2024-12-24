@@ -17,7 +17,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
     keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
     even: BoolProperty(name="Even", default=False)
     mode: EnumProperty(
-        name="Mode",
+        name="Method",
         items=[
             ("LENGTH_AVERAGE", "Standard", ""),
             ("EVEN", "Even", ""),

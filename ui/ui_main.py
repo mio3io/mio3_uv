@@ -1,5 +1,4 @@
 import bpy
-from bpy.app.translations import pgettext_iface as tt_iface
 from ..icons import preview_collections
 from ..classes.operator import Mio3UVPanel
 
@@ -43,7 +42,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
 
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_normalize", icon_value=icons["NORMALIZE"].icon_id)
-        row.operator("uv.mio3_straight", icon_value=icons["STRAIGHT"].icon_id).distribute = "GEOMETRY"
+        row.operator("uv.mio3_straight", icon_value=icons["STRAIGHT"].icon_id).type = "GEOMETRY"
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_gridify", icon_value=icons["GRID"].icon_id)
         row.operator("uv.mio3_rectify", icon_value=icons["RECTIFY"].icon_id)
@@ -159,7 +158,9 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         row.operator("uv.mio3_offset", icon_value=icons["OFFSET"].icon_id)
 
         # Island
-        layout.label(text="Island", icon_value=icons["ISLAND"].icon_id)
+        row = layout.row()
+        row.label(text="Island", icon_value=icons["ISLAND"].icon_id)
+        row.menu("MIO3UV_MT_arrange", text="", icon="DOWNARROW_HLT")
 
         col_iisland = layout.column(align=True)
         col_iisland.scale_y = 1.2
@@ -167,31 +168,19 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         row = col_iisland.row(align=True)
         row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
         row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
-
         row = col_iisland.row(align=True)
-        row.operator("uv.copy", icon_value=icons["COPY"].icon_id)
+        row.operator("uv.copy", text="Copy", icon_value=icons["COPY"].icon_id)
         row.operator("uv.mio3_paste", icon_value=icons["PASTE"].icon_id).mode = "PASTE"
-
         row = col_iisland.row(align=True)
         row.operator("uv.mio3_stitch", icon_value=icons["STITCH"].icon_id)
         row.operator("uv.mio3_shuffle_island", icon_value=icons["SHUFFLE"].icon_id)
-
-        row = col_iisland.row(align=True)
-        row.operator("uv.mio3_paste", text="Unify UV Shapes", icon_value=icons["SHAPE"].icon_id).mode = "AUTO"
         row = col_iisland.row(align=True)
         row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons["CUBE"].icon_id)
-
-        # Group
-        layout.label(text="Group Rearrange", icon_value=icons["DIST_X"].icon_id)
-
         col = layout.column(align=True)
-        col.scale_y = 1.1
-        row = col.row(align=True)
-        row.operator("uv.mio3_sort_grid", icon_value=icons["GRID_SORT"].icon_id)
-        row.operator("uv.mio3_unfoldify", icon_value=icons["UNFOLDIFY"].icon_id)
         row = col.row(align=True)
         row.operator("uv.mio3_body_preset", icon_value=icons["BODY"].icon_id).type = "AUTO"
         row.popover("MIO3UV_PT_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
+
 
 class MIO3UV_PT_symmetry(Mio3UVPanel):
     bl_label = "Symmetrize"

@@ -191,14 +191,13 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_decorate = False
+        layout.use_property_split = True
         layout.prop(self, "method")
+        layout.prop(self, "keep", text="Keep")
+        layout.use_property_split = False
         row = layout.row()
-        row.label(text="Direction")
         row.prop(self, "axis", expand=True)
-        row = layout.row()
-        row.label(text="Keep")
-        row.prop(self, "keep", text="")
-
 
 classes = [MIO3UV_OT_unwrap]
 

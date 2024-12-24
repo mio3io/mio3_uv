@@ -12,14 +12,13 @@ class MIO3UV_OT_straight(Mio3UVOperator):
     bl_description = "Unwrap selected edge loop to a straight line"
     bl_options = {"REGISTER", "UNDO"}
 
-    distribute: EnumProperty(
+    type: EnumProperty(
+        name="Align",
         items=[
             ("GEOMETRY", "Geometry", ""),
             ("EVEN", "Even", ""),
             ("NONE", "None", ""),
         ],
-        name="Type",
-        default="GEOMETRY",
     )
 
     keep_length: BoolProperty(name="Preserve Length", default=True)
@@ -46,7 +45,7 @@ class MIO3UV_OT_straight(Mio3UVOperator):
             group.store_selection()
 
         for group in node_manager.groups:
-            straight_uv_nodes(group, self.distribute, self.keep_length, center=True)
+            straight_uv_nodes(group, self.type, self.keep_length, center=True)
             for node in group.nodes:
                 node.update_uv(group.uv_layer)
 

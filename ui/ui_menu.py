@@ -45,8 +45,22 @@ class MIO3UV_PT_auto_body_parts_popover(Panel):
         row.operator("uv.mio3_body_preset", text="Button").type = "BUTTON"
 
 
+class MIO3UV_MT_arrange(Menu):
+    bl_idname = "MIO3UV_MT_arrange"
+    bl_label = "Arrange Menu"
+
+    def draw(self, context):
+        icons = preview_collections["icons"]
+        layout = self.layout
+        layout.operator("uv.mio3_paste", text="Unify UV Shapes", icon_value=icons["SHAPE"].icon_id).mode = "AUTO"
+        layout.separator()
+        layout.operator("uv.mio3_sort_grid", icon_value=icons["GRID_SORT"].icon_id)
+        layout.operator("uv.mio3_unfoldify", icon_value=icons["UNFOLDIFY"].icon_id)
+
+
 classes = [
     MIO3UV_MT_unwrap,
+    MIO3UV_MT_arrange,
     MIO3UV_PT_auto_body_parts_popover
 ]
 

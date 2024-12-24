@@ -120,7 +120,7 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     method: EnumProperty(
-        name="Method",
+        name="Align",
         items=[
             ("GEOMETRY", "Geometry", ""),
             ("EVEN", "Even", ""),

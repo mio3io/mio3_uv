@@ -94,7 +94,7 @@ translation_dict = {
         ("Operator", "Average Island Scales"): "3Dに基づく大きさ",
 
         # Group
-        ("Operator", "Grid Sort"): "グリッド",
+        ("Operator", "Grid Sort"): "グリッド状にソート",
         ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標を基準にアイランドをグリッド状に並び替え",
         ("*", "Grid Threshold"): "グリッドのしきい値",
         ("*", "UV Distance"): "UV空間での距離",
@@ -104,7 +104,7 @@ translation_dict = {
         ("*", "Align by group"): "グループごとに整列",
         ("*", "Group Margin"): "グループの間隔",
 
-        ("Operator", "Unfoldify"): "展開図",
+        ("Operator", "Unfoldify"): "展開図レイアウト",
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
         ("*", "Based on Active"): "アクティブをベースに",
