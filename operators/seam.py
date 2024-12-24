@@ -60,7 +60,7 @@ class MIO3UV_OT_seam(Mio3UVOperator):
     )
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         obj = context.active_object
@@ -186,7 +186,7 @@ class MIO3UV_OT_seam(Mio3UVOperator):
             bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
 
         bmesh.update_edit_mesh(obj.data)
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def draw(self, context):

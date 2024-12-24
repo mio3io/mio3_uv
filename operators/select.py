@@ -78,7 +78,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
     check_edges: bpy.props.BoolProperty(name="Check Edges", description="", default=True)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -115,7 +115,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_mesh_from_uv(context, self.objects)
             context.tool_settings.use_uv_select_sync = True
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def cancel_operator(self, context, use_uv_select_sync, island_manager):
@@ -183,7 +183,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
     )
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
 
@@ -203,7 +203,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
             self.select_mirror(bm, uv_layer)
             bmesh.update_edit_mesh(obj.data)
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def select_mirror(self, bm, uv_layer):
@@ -228,7 +228,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         for face, center in face_centers.items():
             if uv_selection[face]:
                 sym_center = self.get_symmetric_3d_point(center)
-                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 3)]
+                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
                 sym_face = self.find_symmetric_face(face, potential_sym_faces, face_sym_verts)
                 if not sym_face:
                     continue
@@ -304,7 +304,7 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
     use_uv_boundary: BoolProperty(name="UV Space Boundary", default=True, options={"HIDDEN"})
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -352,7 +352,7 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
         context.tool_settings.uv_select_mode = uv_select_mode
         if use_uv_select_sync:
             self.sync_mesh_from_uv(context, self.objects)
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def use_uv_select_sync_process(self):
@@ -441,7 +441,7 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
@@ -491,7 +491,7 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
             context.tool_settings.use_uv_select_sync = True
             self.sync_mesh_from_uv(context, self.objects)
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
 
@@ -502,7 +502,7 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
@@ -550,7 +550,7 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
             self.sync_mesh_from_uv(context, self.objects)
             context.tool_settings.use_uv_select_sync = True
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
 

@@ -71,7 +71,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         return angle
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
@@ -102,7 +102,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
         island_manager.update_uvmeshes()
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def find_groups(self, island_manager):

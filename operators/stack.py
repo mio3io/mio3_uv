@@ -52,7 +52,7 @@ class MIO3UV_OT_stack(Mio3UVOperator):
     selected: BoolProperty(name="Selected Only", default=False)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
 
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -90,7 +90,7 @@ class MIO3UV_OT_stack(Mio3UVOperator):
             context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def get_island_uv_count(self, island):

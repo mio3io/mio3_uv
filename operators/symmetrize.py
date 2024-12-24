@@ -66,7 +66,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         return True
 
     def execute(self, context):
-        start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
 
@@ -152,7 +152,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         if use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
 
-        self.print_time(time.time() - start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, uv_selection):
@@ -181,7 +181,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         for face, center in face_centers.items():
             if uv_selection[face] and self.should_symmetrize(center, direction_3d):
                 sym_center = self.get_symmetric_3d_point(center)
-                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 3)]
+                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
                 sym_face = self.find_symmetric_face(face, potential_sym_faces, face_sym_verts)
                 if not sym_face:
                     continue

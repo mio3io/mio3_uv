@@ -43,7 +43,7 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         return True
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
 
         if not self.island:
             bpy.ops.transform.rotate(
@@ -99,6 +99,8 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
 
         if use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
+        
+        self.print_time()
         return {"FINISHED"}
 
     def get_median_point(self, islands):

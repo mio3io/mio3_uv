@@ -40,7 +40,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
         return self.execute(context)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         if self.method == "MINIMIZE":
@@ -59,7 +59,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
                 self.smooth_selected_uv(node_manager)
             node_manager.update_uvmeshes()
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def prepare_cache_data(self, node_manager):

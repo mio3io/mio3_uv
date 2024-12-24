@@ -20,7 +20,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
     scale_factor: FloatProperty(name="Scale Factor", default=0.1, min=0.01, max=1, step=0.1)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         if not self.objects:
@@ -61,7 +61,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
             self.align_islands(island_manager.islands)
             island_manager.update_uvmeshes()
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def align_islands(self, islands):

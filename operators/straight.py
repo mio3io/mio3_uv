@@ -24,7 +24,7 @@ class MIO3UV_OT_straight(Mio3UVOperator):
     keep_length: BoolProperty(name="Preserve Length", default=True)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -65,7 +65,7 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         if use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
 

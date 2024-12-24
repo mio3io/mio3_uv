@@ -48,7 +48,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         return cls.is_valid_object(context.active_object)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         for obj in self.objects:
@@ -120,7 +120,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
         island_manager.update_uvmeshes()
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def transform_island(self, island, offset):

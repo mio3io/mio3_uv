@@ -20,7 +20,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
     offset_group: FloatProperty(name="Group Margin", default=0.02, min=0.001, max=0.1, step=0.1)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         if self.align_rotation:
@@ -82,7 +82,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             island_manager.restore_vertex_selection()
             context.tool_settings.use_uv_select_sync = True
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def get_connected_face_groups(self, bm):

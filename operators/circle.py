@@ -25,7 +25,7 @@ class MIO3UV_OT_circle(Mio3UVOperator):
         return self.execute(context)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
@@ -54,7 +54,7 @@ class MIO3UV_OT_circle(Mio3UVOperator):
 
         if use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def make_circular(self, group):

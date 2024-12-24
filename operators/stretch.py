@@ -41,7 +41,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
         return True
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
 
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -164,7 +164,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
             nm.update_uvmeshes()
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def draw(self, context):

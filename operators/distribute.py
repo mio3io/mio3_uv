@@ -29,7 +29,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
     )
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -43,7 +43,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         self.align_islands(island_manager)
 
         island_manager.update_uvmeshes()
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def align_islands(self, island_manager):
@@ -149,7 +149,7 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
         return self.execute(context)
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
@@ -174,7 +174,7 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
 
         if use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def adjust_edges(self, group):

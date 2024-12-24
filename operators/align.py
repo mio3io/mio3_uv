@@ -61,7 +61,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
         return True
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
@@ -88,7 +88,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
         if use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def align_group(self, group, alignment_type):
@@ -245,7 +245,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
     )
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
 
         self.objects = self.get_selected_objects(context)
 
@@ -284,7 +284,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         if self.use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def restore_selection_state(self, objests_state):

@@ -1,5 +1,6 @@
 import bpy
 import bmesh
+import time
 from bpy.types import Operator, Panel
 
 
@@ -12,7 +13,18 @@ class Mio3UVPanel(Panel):
         # return obj is not None and obj.type == "MESH"
 
 
-class Mio3UVOperator(Operator):
+class Mio3UVDebug:
+    _start_time = 0
+
+    def start_time(self):
+        self._start_time = time.time()
+
+    def print_time(self):
+        # print("Time: {}".format(time.time() - self._start_time))
+        pass
+
+
+class Mio3UVOperator(Operator, Mio3UVDebug):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
@@ -21,10 +33,6 @@ class Mio3UVOperator(Operator):
     @staticmethod
     def is_valid_object(obj):
         return obj is not None and obj.type == "MESH" and obj.mode == "EDIT"
-
-    def print_time(self, time):
-        # print("Time: {}".format(time))
-        pass
 
     def get_selected_objects(self, context):
         return [obj for obj in context.objects_in_mode if obj.type == "MESH"]

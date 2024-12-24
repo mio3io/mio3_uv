@@ -36,7 +36,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
     align_uv: EnumProperty(name="Align", default="X", items=[("X", "Align H", ""), ("Y", "Align V", "")])
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
@@ -96,7 +96,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
 
             island_manager.update_uvmeshes()
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 

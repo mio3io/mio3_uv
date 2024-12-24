@@ -34,7 +34,7 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
     )
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
         obj = context.active_object
 
         self.use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -125,7 +125,7 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
         if self.use_uv_select_sync:
             context.tool_settings.use_uv_select_sync = True
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def cancel_operator(self, context):

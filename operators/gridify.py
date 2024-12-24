@@ -25,7 +25,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
     )
 
     def execute(self, context):
-        self.start_time = time.time()
+        self.start_time()
 
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -80,7 +80,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         if self.normalize:
             bpy.ops.uv.mio3_normalize(keep_aspect=self.keep_aspect)
 
-        self.print_time(time.time() - self.start_time)
+        self.print_time()
         return {"FINISHED"}
 
     def find_anchor_face(self, uv_layer, selected_faces):
