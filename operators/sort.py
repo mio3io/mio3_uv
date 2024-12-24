@@ -8,23 +8,40 @@ from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
 
 
+def get_alignment_items(self, context):
+    if self.align_uv == "X":
+        return [
+            ("TOP", "Top Align", "Top Align"),
+            ("MIDDLE", "Middle Align", "Middle Align"),
+            ("BOTTOM", "Bottom Align", "Bottom Align"),
+        ]
+    else:
+        return [
+            ("TOP", "Left Align", "Left Align"),
+            ("MIDDLE", "Middle Align", "Middle Align"),
+            ("BOTTOM", "Right Align", "Right Align"),
+        ]
+
+
 class MIO3UV_OT_sort_common(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     method: EnumProperty(
         name="Sort Method",
-        items=[("AXIS", "Single Axis", "Single Axis"), ("RADIAL", "Radial", "Radial"), ("GRID", "Grid", "Grid"), ("UV", "UV Space", "UV Space")],
+        items=[
+            ("AXIS", "Single Axis", "Single Axis"),
+            ("RADIAL", "Radial", "Radial"),
+            ("GRID", "Grid", "Grid"),
+            ("UV", "UV Space", "UV Space"),
+        ],
     )
     aling_mode: EnumProperty(items=[("DEFAULT", "Space", "")])
     align_uv: EnumProperty(name="Align", items=[("X", "Align H", ""), ("Y", "Align V", "")], default="X")
-    alignment: EnumProperty(
-        name="Alignment",
-        items=[("TOP", "Top Align", "Top Align"), ("MIDDLE", "Middle Align", "Middle Align"), ("BOTTOM", "Bottom Align", "Bottom Align")],
-        default="TOP",
-    )
-
+    alignment: EnumProperty(name="Alignment", items=get_alignment_items, default=0)
     reverse: BoolProperty(name="Reverse Order", description="Reverse Order", default=False)
-    axis: EnumProperty(name="3D Axis", items=[("AUTO", "Auto", "Auto"), ("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z")])
+    axis: EnumProperty(
+        name="3D Axis", items=[("AUTO", "Auto", "Auto"), ("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z")]
+    )
     group_spacing: FloatProperty(name="Margin", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
     item_spacing: FloatProperty(name="Margin", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
     line_spacing: FloatProperty(name="Line Spacing", default=0.0, min=-0.5, max=0.5, step=0.1, precision=3)
@@ -357,7 +374,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
             # Wrap check
             if self.use_wrap and items_in_row >= self.wrap_count:
-                self._align_row(row_islands, row_start, row_size)
+                self.align_row(row_islands, row_start, row_size)
                 row_islands = []
 
                 if self.align_uv == "X":
@@ -386,7 +403,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
             items_in_row += 1
 
         if row_islands:
-            self._align_row(row_islands, row_start, row_size)
+            self.align_row(row_islands, row_start, row_size)
 
         if self.align_uv == "X":
             max_size.y = max(max_size.y, row_start.y - offset.y + row_size.y)
@@ -395,7 +412,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
         return offset, max_size
 
-    def _align_row(self, row_islands, row_start, row_size):
+    def align_row(self, row_islands, row_start, row_size):
         max_height = max(original_size.y for _, _, original_size in row_islands)
 
         for island, island_size, original_size in row_islands:
@@ -407,7 +424,12 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
                 else:
                     island_offset = Vector((row_start.x, row_start.y))
             else:
-                island_offset = Vector((row_start.x, row_start.y))
+                if self.alignment == "BOTTOM":
+                    island_offset = Vector((row_start.x + row_size.x - original_size.x, row_start.y))
+                elif self.alignment == "MIDDLE":
+                    island_offset = Vector((row_start.x + (row_size.x - original_size.x) / 2, row_start.y))
+                else:
+                    island_offset = Vector((row_start.x, row_start.y))
 
             island_offset -= Vector((island.min_uv[0], island.max_uv[1]))
             island.move(island_offset)
@@ -491,6 +513,7 @@ class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
 
         row_reverse = layout.row()
         row_reverse.prop(self, "reverse")
+
 
 class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
     bl_idname = "uv.mio3_sort_grid"
