@@ -15,6 +15,8 @@ translation_dict = {
         ("*", "Top Align"): "上揃え",
         ("*", "Middle Align"): "中央",
         ("*", "Bottom Align"): "下揃え",
+        ("*", "Left Align"): "左揃え",
+        ("*", "Right Align"): "右揃え",
         ("*", "Wrap Count"): "折り返し",
         ("*", "Reverse Order"): "順番を反転",
         ("*", "Keep Aspect Ratio"): "アスペクト比を維持",
