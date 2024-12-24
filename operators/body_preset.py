@@ -177,7 +177,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         if self.align_uv == "X":
             offset = Vector((all_min[0], all_max[1]))
         else:
-            offset = Vector((all_max[0], all_max[1]))
+            offset = Vector((all_min[0] + island_bounds[0][0].width, all_max[1]))
 
         for island, min_uv, max_uv in island_bounds:
             if self.align_uv == "X":
