@@ -181,11 +181,14 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         precision=4,
         step=0.01,
     )
+    expand: BoolProperty(name="Expand", default=True)
 
     def execute(self, context):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
+        if context.tool_settings.uv_select_mode == "EDGE":
+            context.tool_settings.uv_select_mode = "VERTEX"
 
         if context.tool_settings.use_uv_select_sync:
             try:
@@ -243,6 +246,9 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                                 sym_loop[uv_layer].select = True
                                 sym_loop[uv_layer].select_edge = True
                                 break
+                        if not self.expand:
+                            loop[uv_layer].select = False
+                            loop[uv_layer].select_edge = False
 
         for v in bm.verts:
             v.select = False
