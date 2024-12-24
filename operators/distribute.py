@@ -165,7 +165,7 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
 
         for group in node_manager.groups:
             if self.straight:
-                straight_uv_nodes(group, mode=self.method, keep_length=False, center=True)
+                straight_uv_nodes(group, mode=self.method, keep_length=False, center=False)
             else:
                 self.adjust_edges(group)
             group.update_uvs()
