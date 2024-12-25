@@ -356,8 +356,6 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
         island_manager.update_uvmeshes()
 
         context.tool_settings.uv_select_mode = uv_select_mode
-        if use_uv_select_sync:
-            self.sync_mesh_from_uv(context, self.objects)
         self.print_time()
         return {"FINISHED"}
 
