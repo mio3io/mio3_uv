@@ -35,8 +35,8 @@ class MIO3_UVProperties(PropertyGroup):
         name="Center",
         items=[
             ("GLOBAL", "Center", "Center"),
-            ("CURSOR", "Cursor", "Cursor"),
-            ("SELECT", "Selection", "Selection"),
+            ("CURSOR", "Cursor", "2D Cursor"),
+            ("SELECT", "Selection", "Bounding Box Center"),
         ],
         default="GLOBAL",
     )

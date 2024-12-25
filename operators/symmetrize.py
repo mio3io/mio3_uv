@@ -33,7 +33,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         items=[
             ("GLOBAL", "Center", "Use UV space center"),
             ("CURSOR", "Cursor", "Use 2D cursor position"),
-            ("SELECT", "Selection", "Selection"),
+            ("SELECT", "Selection", "Bounding Box Center"),
         ],
         default="GLOBAL",
     )
