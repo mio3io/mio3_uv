@@ -8,7 +8,7 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_paste(Mio3UVOperator):
     bl_idname = "uv.mio3_paste"
     bl_label = "Paste"
-    bl_description = "Paste UV shapes"
+    bl_description = "Paste selected UV vertices"
     bl_options = {"REGISTER", "UNDO"}
 
     mode: EnumProperty(

@@ -85,7 +85,7 @@ translation_dict = {
 
         # Island
         ("Operator", "Sort Islands"): "アイランドをソート",
-        ("*", "Reorder islands based on coordinates in 3D space"): "3D空間の座標を基準にアイランドを並び替え",
+        ("*", "Rearrange islands based on coordinates in 3D space"): "3D空間の座標に基づきアイランドを並び替え",
         ("*", "Sort Method"): "ソート方式",
         ("*", "Start Angle (Clock)"): "開始角度（時計）",
         ("Operator", "Island Margin"): "アイランドの間隔",
@@ -98,7 +98,8 @@ translation_dict = {
 
         # Group
         ("Operator", "Grid Sort"): "グリッド状にソート",
-        ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標を基準にアイランドをグリッド状に並び替え",
+        ("*", "Gridding island based on coordinates in 3D space"):
+            "3D空間の座標に基づきアイランドをグリッド状に並び替え",
         ("*", "Grid Threshold"): "グリッドのしきい値",
         ("*", "UV Distance"): "UV空間での距離",
         ("*", "UV Similar"): "UVの類似性",
@@ -108,13 +109,16 @@ translation_dict = {
         ("*", "Group Margin"): "グループの間隔",
 
         ("Operator", "Unfoldify"): "展開図レイアウト",
+        ("*", "Arrange islands vertically and horizontally based on their positional relationships in 3D space"):
+            "3D空間の位置関係に基づきアイランドを配置します",
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
         ("*", "Based on Active"): "アクティブをベースに",
         ("*", "Orient World"): "ワールド方向",
 
         ("Operator", "Auto Body Parts"): "パーツを自動で整列",
-        ("*", "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"): "髪の房や指をまとめて選択して自動的に回転と順序を揃えます.\n全身を選択している場合はパーツで分類します",
+        ("*", "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"):
+            "髪の房や指をまとめて選択して自動的に回転と順序を揃えます.\n全身を選択している場合はパーツで分類します",
         ("Operator", "Hand L"): "左手L",
         ("Operator", "Hand R"): "右手R",
         ("Operator", "Foot L"): "左足L",
@@ -124,7 +128,7 @@ translation_dict = {
         ("Operator", "Back Hair"): "後髪",
 
         # Symmetrize
-        ("*", "Symmetrize based on 3D space"): "3D空間の対称性に基づいてUVを対称化します",
+        ("*", "Symmetrize based on 3D space"): "3D空間の対称性に基づきUVを対称化します",
         ("Operator", "Snap"): "スナップ",
         ("*", "Symmetrize based on UV space"): "UV空間での対称位置にスナップします",
 
@@ -150,9 +154,11 @@ translation_dict = {
         ("*", "Set the checker map (using Geometry Nodes)"): "チェッカーマップを設定します（ジオメトリノードを使用）",
         ("Operator", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
-        ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
+        ("*", "Warning: This option may poor performance"):
+            "警告: このオプションはパフォーマンスが低下する可能性があります",
         ("Operator", "UV Mesh"): "UV Mesh",
-        ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
+        ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"):
+            "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
 
     }
 }  # fmt: skip

@@ -443,7 +443,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
     bl_idname = "uv.mio3_sort"
     bl_label = "Sort"
-    bl_description = "Reorder islands based on coordinates in 3D space"
+    bl_description = "Rearrange islands based on coordinates in 3D space"
 
     def draw(self, context):
         icons = preview_collections["icons"]
