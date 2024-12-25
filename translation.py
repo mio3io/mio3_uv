@@ -76,7 +76,8 @@ translation_dict = {
 
         # Vertex
         ("Operator", "Distribute UVs"): "UVを分布",
-        ("*", "Distribute UVs evenly or based on geometry"): "UVを等間隔またはジオメトリに基づくように分布する",
+        ("*", "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"):
+            "アイランド:等間隔に分布\nUVグループ:等間隔またはジオメトリに基づくように分布",
         ("Operator", "Circular"): "円形",
         ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("Operator", "Offset"): "オフセット",

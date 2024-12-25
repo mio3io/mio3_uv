@@ -10,8 +10,10 @@ from ..utils import straight_uv_nodes
 class MIO3UV_OT_distribute(Mio3UVOperator):
     bl_idname = "uv.mio3_distribute"
     bl_label = "Distribute"
-    bl_description = "Distribute islands evenly"
+    bl_description = "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"
     bl_options = {"REGISTER", "UNDO"}
+
+    island: BoolProperty(name="Island Mode", default=False)
     method: EnumProperty(
         name="Method",
         items=[("DISTRIBUTE", "Distribute", ""), ("FREE", "Free", "")],
@@ -27,6 +29,48 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         step=0.1,
         precision=3,
     )
+    align_uvs: EnumProperty(
+        name="Align",
+        items=[
+            ("GEOMETRY", "Geometry", ""),
+            ("EVEN", "Even", ""),
+        ],
+    )
+    iteration: IntProperty(
+        name="Iterations",
+        default=20,
+        min=1,
+        max=100,
+    )
+    smooth_factor: FloatProperty(
+        name="Smooth",
+        description="",
+        default=0.01,
+        min=0.0,
+        max=1.0,
+    )
+    straight: BoolProperty(name="Straight", default=True)
+
+    def invoke(self, context, event):
+        self.objects = self.get_selected_objects(context)
+        if not self.objects:
+            self.report({"WARNING"}, "Object is not selected")
+            return {"CANCELLED"}
+
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        if use_uv_select_sync:
+            self.sync_uv_from_mesh(context, self.objects)
+        selected_face = self.check_selected_face_objects(self.objects)
+
+        self.island = True if context.scene.mio3uv.island_mode else selected_face
+
+        return self.execute(context)
+
+    def check(self, context):
+        self.objects = self.get_selected_objects(context)
+        if context.tool_settings.use_uv_select_sync:
+            self.sync_uv_from_mesh(context, self.objects)
+        return True
 
     def execute(self, context):
         self.start_time()
@@ -36,13 +80,31 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        island_manager = UVIslandManager(self.objects)
-        if not island_manager.islands:
-            return {"CANCELLED"}
+        if self.island:
+            island_manager = UVIslandManager(self.objects)
+            if not island_manager.islands:
+                return {"CANCELLED"}
+            self.align_islands(island_manager)
+            island_manager.update_uvmeshes()
+        else:
+            if use_uv_select_sync:
+                node_manager = UVNodeManager(self.objects, mode="VERT")
+            else:
+                node_manager = UVNodeManager(self.objects, mode="EDGE")
 
-        self.align_islands(island_manager)
+            count = sum(len(group.nodes) for group in node_manager.groups)
+            if count > 1000:
+                self.report({"WARNING"}, "Too many vertices")
+                return {"CANCELLED"}
 
-        island_manager.update_uvmeshes()
+            for group in node_manager.groups:
+                if self.straight:
+                    straight_uv_nodes(group, mode=self.align_uvs, keep_length=False, center=False)
+                else:
+                    self.adjust_edges(group)
+                group.update_uvs()
+            node_manager.update_uvmeshes()
+
         self.print_time()
         return {"FINISHED"}
 
@@ -98,87 +160,8 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
                     current_pos -= island.height + self.spacing
                     island.move(offset)
 
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        row = layout.row()
-        row.prop(self, "method", expand=True)
-
-        row = layout.row()
-        row.prop(self, "spacing", text="Spacing")
-        row.enabled = self.method == "FREE"
-        row = layout.row()
-        row.prop(self, "axis", expand=True)
-
-
-class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
-    bl_idname = "uv.mio3_distribute_uvs"
-    bl_label = "Distribute UVs"
-    bl_description = "Distribute UVs evenly or based on geometry"
-    bl_options = {"REGISTER", "UNDO"}
-
-    method: EnumProperty(
-        name="Align",
-        items=[
-            ("GEOMETRY", "Geometry", ""),
-            ("EVEN", "Even", ""),
-        ],
-    )
-    iteration: IntProperty(
-        name="Iterations",
-        default=20,
-        min=1,
-        max=100,
-    )
-    smooth_factor: FloatProperty(
-        name="Smooth",
-        description="",
-        default=0.01,
-        min=0.0,
-        max=1.0,
-    )
-    straight: BoolProperty(name="Straight", default=True)
-    
-    def invoke(self, context, event):
-        self.objects = self.get_selected_objects(context)
-        if not self.objects:
-            self.report({"WARNING"}, "No object selected")
-            return {"CANCELLED"}
-        return self.execute(context)
-
-    def execute(self, context):
-        self.start_time()
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-            context.tool_settings.use_uv_select_sync = False
-            node_manager = UVNodeManager(self.objects, mode="VERT")
-        else:
-            node_manager = UVNodeManager(self.objects, mode="EDGE")
-
-        count = sum(len(group.nodes) for group in node_manager.groups)
-        if count > 1000:
-            self.report({"WARNING"}, "Too many vertices")
-            return {"CANCELLED"}
-
-        for group in node_manager.groups:
-            if self.straight:
-                straight_uv_nodes(group, mode=self.method, keep_length=False, center=False)
-            else:
-                self.adjust_edges(group)
-            group.update_uvs()
-
-        node_manager.update_uvmeshes()
-
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
-        self.print_time()
-        return {"FINISHED"}
-
     def adjust_edges(self, group):
-        method = self.method
+        align_uvs = self.align_uvs
         nodes = list(group.nodes)
         node_indices = {node: i for i, node in enumerate(group.nodes)}
         edges = []
@@ -192,7 +175,7 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
 
         endpoints = [node for node in nodes if sum(1 for neighbor in node.neighbors if neighbor in nodes) == 1]
 
-        if method == "GEOMETRY":
+        if align_uvs == "GEOMETRY":
             total_3d_length = sum((nodes[edge[0]].vert.co - nodes[edge[1]].vert.co).length for edge in edges)
             total_uv_length = sum((nodes[edge[0]].uv - nodes[edge[1]].uv).length for edge in edges)
             scale = total_uv_length / total_3d_length if total_3d_length > 0 else 1
@@ -205,13 +188,13 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
 
             for edge in edges:
                 node1, node2 = nodes[edge[0]], nodes[edge[1]]
-                target_length = (node1.vert.co - node2.vert.co).length * scale if method == "GEOMETRY" else scale
+                target_length = (node1.vert.co - node2.vert.co).length * scale if align_uvs == "GEOMETRY" else scale
 
                 uv_edge = node2.uv - node1.uv
                 current_length = uv_edge.length
 
                 if current_length > 0:
-                    movement = (target_length - current_length) / 4 # の割合だけ動かす
+                    movement = (target_length - current_length) / 4  # の割合だけ動かす
                     direction = uv_edge.normalized()
 
                     if node1 not in endpoints:
@@ -242,8 +225,29 @@ class MIO3UV_OT_distribute_uvs(Mio3UVOperator):
                     relative_pos = neighbor.uv - node.uv
                     neighbor.uv = node.uv + relative_pos
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
-classes = [MIO3UV_OT_distribute, MIO3UV_OT_distribute_uvs]
+        if self.island:
+            row = layout.row()
+            row.prop(self, "method", expand=True)
+            row = layout.row()
+            row.prop(self, "spacing", text="Spacing")
+            row.enabled = self.method == "FREE"
+            row = layout.row()
+            row.prop(self, "axis", expand=True)
+        else:
+            layout.prop(self, "align_uvs")
+            layout.prop(self, "smooth_factor")
+            layout.prop(self, "iteration")
+            layout.prop(self, "straight")
+
+        layout.prop(self, "island")
+
+
+classes = [MIO3UV_OT_distribute]
 
 
 def register():

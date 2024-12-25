@@ -21,6 +21,7 @@ from .operators import stretch
 from .operators import relax
 from .operators import offset
 from .operators import stitch
+from .operators import merge
 
 from .operators import sort
 from .operators import distribute
@@ -71,6 +72,7 @@ modules = [
     relax,
     offset,
     stitch,
+    merge,
     sort,
     distribute,
     stack,

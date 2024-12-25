@@ -151,7 +151,7 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         col_vert.scale_y = 1.2
         row = col_vert.row(align=True)
         row.operator("uv.mio3_relax", icon_value=icons["RELAX"].icon_id)
-        row.operator("uv.mio3_distribute_uvs", icon_value=icons["DIST_UVS"].icon_id)
+        row.operator("uv.mio3_merge", icon_value=icons["VERT"].icon_id)
 
         row = col_vert.row(align=True)
         row.operator("uv.mio3_circle", icon_value=icons["CIRCLE"].icon_id)
