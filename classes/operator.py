@@ -64,10 +64,7 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
 
             for vert in bm.verts:
                 vert.select = False
-            for edge in bm.edges:
-                edge.select = False
-            for face in bm.faces:
-                face.select = False
+            bm.select_flush(False)
 
             for vert in bm.verts:
                 vert.select = all(loop[uv_layer].select for loop in vert.link_loops)
@@ -77,7 +74,7 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
             for face in bm.faces:
                 if all(loop[uv_layer].select for loop in face.loops):
                     face.select = True
-            bm.select_flush(False)
+            bm.select_flush(True)
             bmesh.update_edit_mesh(obj.data)
             obj.data.update()
 
