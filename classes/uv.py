@@ -1,22 +1,21 @@
 import bpy
 import bmesh
-import numpy as np
 from mathutils import Vector
 from dataclasses import dataclass, field
-from typing import List, Set, Dict, Optional, Literal
-from bpy.types import Operator, Panel, Object
+from typing import Literal
+from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
 from collections import defaultdict
 from functools import cached_property
 
 @dataclass
 class UVIsland:
-    faces: Set[BMFace]
+    faces: set[BMFace]
     bm: BMesh
     uv_layer: BMLayerItem
     obj: Object
     extend: bool = True
-    boundary_edge: Set[BMEdge] = field(default_factory=set)
+    boundary_edge: set[BMEdge] = field(default_factory=set)
 
     face_count: int = field(init=False, default=0)
     uv_count: int = field(init=False, default=0)
@@ -34,7 +33,7 @@ class UVIsland:
     height: float = field(init=False)
     center: Vector = field(init=False)
 
-    selection_loops: Dict[int, bool] = field(default_factory=dict)
+    selection_loops: dict[int, bool] = field(default_factory=dict)
     selection_uv_count: int = field(init=False, default=0)
     all_uv_count: int = field(init=False, default=0)
 
@@ -140,10 +139,10 @@ class UVIsland:
 
 @dataclass
 class UVIslandManager:
-    objects: List[Object]
-    islands: List[UVIsland] = field(default_factory=list, init=False)
-    bmesh_dict: Dict[Object, BMesh] = field(default_factory=dict, init=False)
-    uv_layer_dict: Dict[Object, BMLayerItem] = field(default_factory=dict, init=False)
+    objects: list[Object]
+    islands: list[UVIsland] = field(default_factory=list, init=False)
+    bmesh_dict: dict[Object, BMesh] = field(default_factory=dict, init=False)
+    uv_layer_dict: dict[Object, BMLayerItem] = field(default_factory=dict, init=False)
 
     extend: bool = True # 選択しているUVを境界まで拡張する
     uv_select: bool = True # UVを選択しているもののみ
@@ -153,10 +152,10 @@ class UVIslandManager:
     find_all: bool = False # すべてのアイランドを対象にする
     mesh_all: bool = False # すべてのメッシュを対象にする
 
-    islands_by_object: Dict[Object, List[UVIsland]] = field(default_factory=lambda: defaultdict(list), init=False)
+    islands_by_object: dict[Object, list[UVIsland]] = field(default_factory=lambda: defaultdict(list), init=False)
     orientation_mode: Literal["WORLD", "LOCAL"] = "WORLD"
 
-    original_selected_verts: Dict[Object, Dict[BMVert, bool]] = field(default_factory=dict, init=False)
+    original_selected_verts: dict[Object, dict[BMVert, bool]] = field(default_factory=dict, init=False)
 
     def __post_init__(self):
         self.find_all_islands()
@@ -221,7 +220,7 @@ class UVIslandManager:
                     vert.select = select
                 bm.select_flush(False)
 
-    def find_islands(self, bm: BMesh, uv_layer: BMLayerItem, obj: Object) -> List[UVIsland]:
+    def find_islands(self, bm: BMesh, uv_layer: BMLayerItem, obj: Object) -> list[UVIsland]:
         target_faces = set()
 
         if self.mesh_select:
@@ -366,8 +365,8 @@ class UVIslandManager:
 class UVNode:
     uv: Vector
     vert: BMVert
-    loops: List[BMLoop] = field(default_factory=list)
-    neighbors: Set["UVNode"] = field(default_factory=set, repr=False, compare=False)
+    loops: list[BMLoop] = field(default_factory=list)
+    neighbors: set["UVNode"] = field(default_factory=set, repr=False, compare=False)
 
     def __hash__(self):
         return hash((tuple(self.uv), self.vert))
@@ -389,7 +388,7 @@ class UVNode:
 
 @dataclass
 class UVNodeGroup:
-    nodes: Set["UVNode"] = field(default_factory=set)
+    nodes: set["UVNode"] = field(default_factory=set)
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
@@ -398,7 +397,7 @@ class UVNodeGroup:
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
     center: Vector = field(init=False)
 
-    selection_states: Dict[int, bool] = field(default_factory=dict)
+    selection_states: dict[int, bool] = field(default_factory=dict)
 
     def __hash__(self):
         return hash((self.obj, id(self.bm), id(self.uv_layer)))
@@ -448,11 +447,11 @@ class UVNodeGroup:
 
 @dataclass
 class UVNodeManager:
-    objects: List[Object]
+    objects: list[Object]
     mode: Literal["VERT", "EDGE", "FACE"] = "FACE"
-    island_manager: Optional["UVIslandManager"] = None
+    island_manager: UVIslandManager | None = None
 
-    groups: List[UVNodeGroup] = field(default_factory=list)
+    groups: list[UVNodeGroup] = field(default_factory=list)
 
     def __post_init__(self):
         self.find_all_groups()

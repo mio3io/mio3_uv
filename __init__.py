@@ -101,7 +101,3 @@ def unregister():
     for module in reversed(modules):
         module.unregister()
     translation.unregister(__name__)
-
-
-if __name__ == "__main__":
-    register()
