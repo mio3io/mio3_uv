@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Menu, Panel
 from ..icons import preview_collections
+from bpy.app.translations import pgettext_iface as tt_iface
 
 
 class MIO3UV_MT_unwrap(Menu):
@@ -13,12 +14,12 @@ class MIO3UV_MT_unwrap(Menu):
         layout = self.layout
         layout.operator(
             "uv.mio3_unwrap",
-            text="Unwrap Horizontal(X) Only",
+            text=tt_iface("Unwrap Horizontal(X) Only"),
             icon_value=icons["EDGE_X"].icon_id,
         ).axis = "X"
         layout.operator(
             "uv.mio3_unwrap",
-            text="Unwrap Vertical(Y) Only",
+            text=tt_iface("Unwrap Vertical(Y) Only"),
             icon_value=icons["EDGE_Y"].icon_id,
         ).axis = "Y"
 

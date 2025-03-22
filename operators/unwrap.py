@@ -1,6 +1,7 @@
 import bpy
 import time
 from bpy.props import BoolProperty, EnumProperty
+from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
@@ -11,6 +12,14 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
     bl_label = "UV Unwrap"
     bl_description = "UV Unwrap"
     bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def description(cls, context, properties):
+        if properties.axis == "X":
+            return tt_iface("Unwrap Horizontal(X) Only")
+        elif properties.axis == "Y":
+            return tt_iface("Unwrap Vertical(Y) Only")
+        return tt_iface("UV Unwrap")
 
     def unwrap_method_items(self, context):
         items = [

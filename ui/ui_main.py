@@ -36,6 +36,10 @@ class MIO3UV_PT_main(Mio3UVPanel):
 
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons["UNWRAP"].icon_id).axis = "BOTH"
+        row.scale_x=0.14
+        row.operator("uv.mio3_unwrap", text="X").axis = "X"
+        row.operator("uv.mio3_unwrap", text="Y").axis = "Y"
+        row.scale_x=1
         row.menu("MIO3UV_MT_unwrap", text="", icon="DOWNARROW_HLT")
 
         col_unwrap = layout.column(align=True)
