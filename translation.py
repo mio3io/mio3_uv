@@ -58,6 +58,7 @@ translation_dict = {
         ("*", "Process each edge loops"): "エッジループ毎に処理する",
         ("*", "Process multiple edge loops as a single group"): "複数のエッジループをひとつのグループとして処理する",
 
+        ("Operator", "Sort"): "ソート",
         ("Operator", "Align UVs"): "UVを整列",
         ("*", "Align UVs"): "UVを整列",
         ("*", "Align UVs of vertices, edge loops and islands"): "頂点・辺ループ・アイランドのUVを整列させる",
