@@ -1,6 +1,5 @@
 import bpy
 import bmesh
-import time
 from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes.operator import Mio3UVOperator
@@ -78,18 +77,6 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
-            # bpy.ops.mesh.select_linked(delimit={"UV"})
-
-        obj = context.active_object
-
-        current_mode = context.tool_settings.mesh_select_mode[:]
-        context.tool_settings.mesh_select_mode = (True, False, False)
-        bm = bmesh.from_edit_mesh(obj.data)
-        uv_layer = bm.loops.layers.uv.verify()
-        bm.verts.ensure_lookup_table()
-        bm.faces.ensure_lookup_table()
-
-        original_selected_verts = {v.index for v in bm.verts if v.select}
 
         if self.axis_3d == "AUTO":
             self.axis_3d = {"X": "X", "Y": "Z"}.get(self.axis_uv, self.axis_uv)
@@ -106,6 +93,54 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         else:
             self.get_symmetric_uv_point = lambda uv, center: Vector((uv.x, 2 * center.y - uv.y))
 
+        current_mode = context.tool_settings.mesh_select_mode[:]
+        context.tool_settings.mesh_select_mode = (True, False, False)
+
+        for obj in self.objects:
+            bm = bmesh.from_edit_mesh(obj.data)
+            bm.verts.ensure_lookup_table()
+            bm.faces.ensure_lookup_table()
+            uv_layer = bm.loops.layers.uv.verify()
+            original_selected_verts = {v.index for v in bm.verts if v.select}
+
+            self.symmetrize(context, bm, uv_layer, use_uv_select_sync)
+
+            for v in bm.verts:
+                v.select = False
+            for i in original_selected_verts:
+                bm.verts[i].select = True
+            bm.select_flush_mode()
+            bmesh.update_edit_mesh(obj.data)
+
+        if self.merge:
+            bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
+
+        context.tool_settings.mesh_select_mode = current_mode
+        if use_uv_select_sync:
+            context.tool_settings.use_uv_select_sync = True
+        self.print_time()
+        return {"FINISHED"}
+
+    def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, uv_selection):
+        uv_axis_index = 0 if self.axis_uv == "X" else 1
+        axis_3d_index = {"X": 0, "Y": 1, "Z": 2}[self.axis_3d]
+
+        for face, center in face_centers.items():
+            if uv_selection[face]:
+                face_uv_center = Vector((0, 0))
+                for loop in face.loops:
+                    face_uv_center += loop[uv_layer].uv
+                face_uv_center /= len(face.loops)
+                if self.direction == "POSITIVE":
+                    if face_uv_center[uv_axis_index] > sym_center_uv[uv_axis_index]:
+                        return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
+                else:
+                    if face_uv_center[uv_axis_index] < sym_center_uv[uv_axis_index]:
+                        return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
+
+        return self.direction
+
+    def symmetrize(self, context, bm, uv_layer, use_uv_select_sync):
         selected_verts = set()
         selected_loops = set()
         for face in bm.faces:
@@ -135,46 +170,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
         sym_center_uv = self.get_symmetry_center(context, uv_layer, selected_loops)
         direction_3d = self.check_uv_3d_direction(uv_layer, sym_center_uv, face_centers, uv_selection)
-        self.symmetrize(bm, uv_layer, kd, sym_center_uv, face_centers, uv_selection, direction_3d)
 
-        if self.merge:
-            bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
-
-        for v in bm.verts:
-            v.select = False
-        for i in original_selected_verts:
-            bm.verts[i].select = True
-        bm.select_flush_mode()
-
-        bmesh.update_edit_mesh(obj.data)
-
-        context.tool_settings.mesh_select_mode = current_mode
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
-
-        self.print_time()
-        return {"FINISHED"}
-
-    def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, uv_selection):
-        uv_axis_index = 0 if self.axis_uv == "X" else 1
-        axis_3d_index = {"X": 0, "Y": 1, "Z": 2}[self.axis_3d]
-
-        for face, center in face_centers.items():
-            if uv_selection[face]:
-                face_uv_center = Vector((0, 0))
-                for loop in face.loops:
-                    face_uv_center += loop[uv_layer].uv
-                face_uv_center /= len(face.loops)
-                if self.direction == "POSITIVE":
-                    if face_uv_center[uv_axis_index] > sym_center_uv[uv_axis_index]:
-                        return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
-                else:
-                    if face_uv_center[uv_axis_index] < sym_center_uv[uv_axis_index]:
-                        return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
-
-        return self.direction
-
-    def symmetrize(self, bm, uv_layer, kd, sym_center_uv, face_centers, uv_selection, direction_3d):
         sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in bm.verts if v.select}
         face_sym_verts = {face: [sym_positions[v] for v in face.verts] for face in bm.faces if face.select}
 
