@@ -1,5 +1,7 @@
 import bpy
 import os
+import math
+import bmesh
 from bpy.props import EnumProperty
 from ..classes.operator import Mio3UVOperator
 from ..icons import preview_collections
@@ -23,7 +25,7 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return obj is not None and obj.type == "MESH"
+        return obj is not None and obj.type == "MESH" and obj.mode == "OBJECT"
 
     def execute(self, context):
         obj = context.active_object
@@ -46,9 +48,44 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             # modifier["Socket_4"] = 1
             # modifier["Socket_6"] = 2
             props_object.uvmesh_factor = 1
-            props_object.uvmesh_size = 2
+            props_object.uvmesh_size = self.auto_adjust_size(obj)
 
         return {"FINISHED"}
+
+    def auto_adjust_size(self, obj):
+        mesh_area = self.calculate_mesh_area(obj)
+        uv_area = self.calculate_uv_area(obj)
+        if uv_area > 0:
+            size = math.sqrt(mesh_area / uv_area)
+            size = max(0.1, min(size, 10.0))
+            props_object = obj.mio3uv
+            props_object.uvmesh_size = size
+            return size
+        return 2
+
+    def calculate_mesh_area(self, obj):
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        area = sum(f.calc_area() for f in bm.faces)
+        bm.free()
+        return area
+
+    def calculate_uv_area(self, obj):
+        me = obj.data
+        uv_layer = me.uv_layers.active.data
+        total_area = 0
+        for poly in me.polygons:
+            area = 0
+            for i in range(1, len(poly.loop_indices) - 1):
+                idx1 = poly.loop_indices[0]
+                idx2 = poly.loop_indices[i]
+                idx3 = poly.loop_indices[i + 1]
+                uv1 = uv_layer[idx1].uv
+                uv2 = uv_layer[idx2].uv
+                uv3 = uv_layer[idx3].uv
+                area += abs(0.5 * ((uv2[0] - uv1[0]) * (uv3[1] - uv1[1]) - (uv3[0] - uv1[0]) * (uv2[1] - uv1[1])))
+            total_area += area
+        return total_area
 
     def find_node_groups(self):
         return bpy.data.node_groups.get(NAME_NODE_GROUP_UV_MESH)

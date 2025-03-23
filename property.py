@@ -80,8 +80,12 @@ class MIO3UV_ObjectProps(PropertyGroup):
         if modifier:
             node_group = modifier.node_group
             if hasattr(node_group, "interface"):
+                if node_group.interface.items_tree["Size"].socket_type == "NodeSocketInt":
+                    node_group.interface.items_tree["Size"].socket_type = "NodeSocketFloat"
                 modifier[node_group.interface.items_tree["Size"].identifier] = self.uvmesh_size
             else:
+                if node_group.inputs["Size"].socket_type == "NodeSocketInt":
+                    node_group.inputs["Size"].socket_type = "NodeSocketFloat"
                 modifier[node_group.inputs["Size"].identifier] = self.uvmesh_size
 
     realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance", default=False)
@@ -100,7 +104,7 @@ class MIO3UV_ObjectProps(PropertyGroup):
     )
     padding_px: IntProperty(name="Padding (px)", default=16, update=callback_update_padding)
     uvmesh_factor: FloatProperty(name="Factor", default=1, min=0, max=1, update=callback_update_uvmesh_factor)
-    uvmesh_size: IntProperty(name="Size", default=2, min=1, max=10, update=callback_update_uvmesh_size)
+    uvmesh_size: FloatProperty(name="Size", default=2, min=1, max=100, update=callback_update_uvmesh_size)
 
 
 class MIO3UV_ImageProps(PropertyGroup):
