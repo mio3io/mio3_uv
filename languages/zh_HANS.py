@@ -72,6 +72,7 @@ translation_dict = {
         ("*", "Distribute islands evenly"): "均匀分布岛屿",
         ("*", "Distribute"): "分布",
         ("Operator", "Stretch Island"): "拉伸岛屿",
+        ("Operator", "Stretch"): "拉伸",
 
         # 顶点
         ("Operator", "Distribute UVs"): "分布 UV",

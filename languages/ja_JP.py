@@ -72,6 +72,7 @@ translation_dict = {
         ("*", "Distribute islands evenly"): "アイランドを等間隔に分布する",
         ("*", "Distribute"): "分布",
         ("Operator", "Stretch Island"): "ストレッチ",
+        ("Operator", "Stretch"): "ストレッチ",
 
         # Vertex
         ("Operator", "Distribute UVs"): "UVを分布",
