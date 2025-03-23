@@ -161,6 +161,8 @@ translation_dict = {
         ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"):
             "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
 
+        ("*", "Please display an image if you want to use pixel units"): "ピクセル単位を使用する場合は画像を表示してください",
+
     }
 }  # fmt: skip
 

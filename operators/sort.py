@@ -1,5 +1,4 @@
 import bpy
-import time
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
@@ -21,6 +20,18 @@ def get_alignment_items(self, context):
             ("MIDDLE", "Middle Align", "Middle Align"),
             ("BOTTOM", "Right Align", "Right Align"),
         ]
+
+
+def callback_grid_x(self, context):
+    if self.grid_link:
+        self["grid_y"] = self.grid_x
+        self["grid_y_px"] = self.grid_x_px
+
+
+def callback_grid_y(self, context):
+    if self.grid_link:
+        self["grid_x"] = self.grid_y
+        self["grid_x_px"] = self.grid_y_px
 
 
 class MIO3UV_OT_sort_common(Mio3UVOperator):
@@ -46,8 +57,15 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
     item_spacing: FloatProperty(name="Margin", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
     line_spacing: FloatProperty(name="Line Spacing", default=0.0, min=-0.5, max=0.5, step=0.1, precision=3)
 
-    grid_x: FloatProperty(name="Grid Size X", default=0.125, min=0.01, step=0.1, precision=3)
-    grid_y: FloatProperty(name="Grid Size Y", default=0.125, min=0.01, step=0.1, precision=3)
+    grid_x: FloatProperty(name="Grid Size X", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_x)
+    grid_y: FloatProperty(name="Grid Size Y", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_y)
+    grid_x_px: FloatProperty(name="Grid Size X", default=64, min=1, step=100, precision=1, update=callback_grid_x)
+    grid_y_px: FloatProperty(name="Grid Size Y", default=64, min=1, step=100, precision=1, update=callback_grid_y)
+    grid_units: EnumProperty(
+        name="Units",
+        items=[("RELATIVE", "Relative", "Relative"), ("PIXEL", "Pixel", "Pixel")],
+    )
+    grid_link: BoolProperty(name="Grid Link", default=True)
 
     grid_threshold: FloatProperty(name="Grid Threshold", default=0.2, min=0.01, max=1, step=1)
 
@@ -80,6 +98,9 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
     by_group: BoolProperty(name="By Group", default=False)
     group_unit: BoolProperty(name="Groups as Unit", default=False, options={"HIDDEN"})
 
+    calc_grid_x = None
+    calc_grid_y = None
+
     @property
     def start_angle_radian(self):
         hour = self.start_angle
@@ -87,10 +108,37 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         angle = -adjusted_hour * (math.pi / 6)
         return angle
 
+    def invoke(self, context, event):
+        if self.op_type == "grid_sort" and self.grid_units == "PIXEL":
+            if context.area.type == "IMAGE_EDITOR":
+                space = context.area.spaces.active
+                if space.image:
+                    return self.execute(context)
+            self.report({"WARNING"}, "Please display an image if you want to use pixel units")
+            return {"CANCELLED"}
+        return self.execute(context)
+
     def execute(self, context):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
+
+        grid_x = None
+        if self.op_type == "grid_sort" and self.grid_units == "PIXEL":
+            if context.area.type == "IMAGE_EDITOR":
+                space = context.area.spaces.active
+                if space.image:
+                    grid_x = self.grid_x_px / space.image.size[0]
+                    grid_y = self.grid_y_px / space.image.size[1]
+            if not grid_x:
+                self.report({"WARNING"}, "Please display an image if you want to use pixel units")
+                return {"CANCELLED"}
+        else:
+            grid_x = self.grid_x
+            grid_y = self.grid_y
+
+        self.calc_grid_x = grid_x
+        self.calc_grid_y = grid_y
 
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
@@ -267,6 +315,8 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
         center_3d = sum(all_centers, Vector()) / len(all_centers)
 
+        start_angle_radian = self.start_angle_radian
+
         def sort_func(island):
             if axis == "X":
                 relative_pos = Vector((island.center_3d.y, island.center_3d.z)) - Vector((center_3d.y, center_3d.z))
@@ -275,7 +325,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
             else:
                 relative_pos = Vector((island.center_3d.x, island.center_3d.y)) - Vector((center_3d.x, center_3d.y))
             angle = math.atan2(relative_pos.y, relative_pos.x)
-            adjusted_angle = (angle - self.start_angle_radian) % (2 * math.pi)
+            adjusted_angle = (angle - start_angle_radian) % (2 * math.pi)
             return adjusted_angle
 
         island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
@@ -365,7 +415,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
         for island in islands:
             original_size = Vector((island.width, island.height))
             if self.aling_mode == "FIXED":
-                island_size = Vector((self.grid_x, self.grid_y))
+                island_size = Vector((self.calc_grid_x, self.calc_grid_y))
             else:
                 if self.align_uv == "X":
                     island_size = Vector((island.width + spacing, island.height))
@@ -444,6 +494,7 @@ class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
     bl_idname = "uv.mio3_sort"
     bl_label = "Sort"
     bl_description = "Rearrange islands based on coordinates in 3D space"
+    op_type = "sort"
 
     def draw(self, context):
         icons = preview_collections["icons"]
@@ -466,75 +517,57 @@ class MIO3UV_OT_sort(MIO3UV_OT_sort_common):
             row_sub.label(text="Grid Threshold")
             row_sub.prop(self, "grid_threshold", text="")
 
-        row_axis = layout.row()
-        row_axis.scale_x = 1.2
-        row_axis.label(text="Base Axis")
-        row_axis.prop(self, "axis", expand=True)
+        split = layout.split(factor=0.25)
+        split.label(text="Base Axis")
+        split.row().prop(self, "axis", expand=True)
 
-        row_align_uv = layout.row()
-        row_align_uv.label(text="Align", icon_value=icons["ALIGN_L"].icon_id)
-        row_align_uv = layout.row()
-        row_align_uv.prop(self, "align_uv", expand=True)
-        row_aling_mode = layout.row()
-        row_aling_mode.prop(self, "alignment", expand=True)
+        layout.label(text="Align", icon_value=icons["ALIGN_L"].icon_id)
+        layout.row().prop(self, "align_uv", expand=True)
+
+        layout.row().prop(self, "alignment", expand=True)
 
         row = layout.row()
         row.label(text="Island Margin", text_ctxt="Operator")
         row.prop(self, "item_spacing", text="")
 
         wrap_box = layout.box()
-        row = wrap_box.row()
-        col = row.column()
-        col.prop(self, "use_wrap", text="Wrap Count")
-        col = row.column()
-        row_wrap = col.row(align=True)
-        row_wrap.prop(self, "wrap_count", text="")
-
+        col = wrap_box.column()
+        split = col.split(factor=0.5)
+        split.prop(self, "use_wrap", text="Wrap Count")
+        row = split.row()
+        row.prop(self, "wrap_count", text="")
         if not self.use_wrap:
-            col.enabled = False
-        row_wrap = wrap_box.row()
-        row_wrap.label(text="Line Spacing")
-        row_wrap.prop(self, "line_spacing", text="")
+            row.enabled = False
+        split = col.split(factor=0.5)
         if not self.use_wrap:
-            row_wrap.enabled = False
+            split.enabled = False
+        row = split.row()
+        row.label(text="Line Spacing")
+        split.prop(self, "line_spacing", text="")
 
         group_box = layout.box()
-        row = group_box.row(align=True)
-        row.label(text="Group")
-        row.prop(self, "group_type", text="")
-
-        group_content = group_box.column()
+        col = group_box.column()
+        split = col.split(factor=0.5)
+        split.label(text="Group")
+        split.prop(self, "group_type", text="")
+        split = col.split(factor=0.5)
         if not self.group_type != "NONE":
-            group_content.enabled = False
+            split.enabled = False
+        split.label(text="Group Margin")
+        split.prop(self, "group_spacing", text="")
 
-        row_s = group_content.row(align=True)
-        row_s.label(text="Group Margin")
-        row_s.prop(self, "group_spacing", text="")
-
-        row_reverse = layout.row()
-        row_reverse.prop(self, "reverse")
+        layout.prop(self, "reverse")
 
 
 class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
     bl_idname = "uv.mio3_sort_grid"
     bl_label = "Grid Sort"
     bl_description = "Gridding island based on coordinates in 3D space"
+    op_type = "grid_sort"
 
     aling_mode: EnumProperty(items=[("FIXED", "Grid Size", "")])
     by_group: BoolProperty(name="By Group", default=True, options={"HIDDEN"})
     group_unit: BoolProperty(name="Groups as Unit", default=False, options={"HIDDEN"})
-
-    def invoke(self, context, event):
-        grid_link = context.scene.mio3uv.grid_link
-        if grid_link:
-            self.grid_y = self.grid_x
-        return self.execute(context)
-
-    def check(self, context):
-        grid_link = context.scene.mio3uv.grid_link
-        if grid_link:
-            self.grid_y = self.grid_x
-        return True
 
     def draw(self, context):
         icons = preview_collections["icons"]
@@ -557,39 +590,40 @@ class MIO3UV_OT_sort_grid(MIO3UV_OT_sort_common):
             row_sub.label(text="Grid Threshold")
             row_sub.prop(self, "grid_threshold", text="")
 
-        row_axis = layout.row()
-        row_axis.scale_x = 1.2
-        row_axis.label(text="Base Axis")
-        row_axis.prop(self, "axis", expand=True)
+        split = layout.split(factor=0.25)
+        split.label(text="Base Axis")
+        split.row().prop(self, "axis", expand=True)
 
-        row_align_uv = layout.row()
-        row_align_uv.label(text="Align", icon_value=icons["ALIGN_L"].icon_id)
-        row_align_uv.prop(self, "align_uv", expand=True)
+        layout.label(text="Align", icon_value=icons["ALIGN_L"].icon_id)
+        layout.row().prop(self, "align_uv", expand=True)
 
-        row = layout.row(align=True)
-        row.label(text="Grid Size")
-        row.scale_x = 0.8
-        row.prop(self, "grid_x", text="")
-        row.scale_x = 1.25
-        row.prop(context.scene.mio3uv, "grid_link", text="", icon="LINKED", toggle=True)
-        row.scale_x = 0.8
-        row.prop(self, "grid_y", text="")
+        split = layout.split(factor=0.3)
+        split.label(text="Grid Size")
+        row = split.row(align=True)
+        if self.grid_units == "PIXEL":
+            row.prop(self, "grid_x_px", text="")
+            row.prop(self, "grid_link", text="", icon="LINKED", toggle=True)
+            row.prop(self, "grid_y_px", text="")
+        else:
+            row.prop(self, "grid_x", text="")
+            row.prop(self, "grid_link", text="", icon="LINKED", toggle=True)
+            row.prop(self, "grid_y", text="")
 
-        row = layout.row()
-        col = row.column()
-        col.prop(self, "use_wrap", text="Wrap Count")
-        col = row.column()
-        row_wrap = col.row(align=True)
-        row_wrap.prop(self, "wrap_count", text="")
+        split = layout.split(factor=0.3)
+        split.label(text="Units")
+        split.row().prop(self, "grid_units", expand=True)
+
+        split = layout.split(factor=0.5)
+        split.prop(self, "use_wrap", text="Wrap Count")
+        row = split.row()
+        row.prop(self, "wrap_count", text="")
         if not self.use_wrap:
-            col.enabled = False
+            row.enabled = False
+        split = layout.split(factor=0.5)
+        split.label(text="Group")
+        split.prop(self, "group_type", text="")
 
-        row = layout.row(align=True)
-        row.label(text="Group")
-        row.prop(self, "group_type", text="")
-
-        row_reverse = layout.row()
-        row_reverse.prop(self, "reverse")
+        layout.prop(self, "reverse")
 
 
 classes = [MIO3UV_OT_sort, MIO3UV_OT_sort_grid]

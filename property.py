@@ -58,7 +58,6 @@ class MIO3_UVProperties(PropertyGroup):
         ],
         default="AUTO",
     )
-    grid_link: BoolProperty(name="Grid Link", default=True)
     use_exposure: BoolProperty(name="Exposure", description="Default", default=False) # Dummy Property
     exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
