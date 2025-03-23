@@ -21,23 +21,26 @@ class MIO3UV_PT_Utility(Panel):
         layout = self.layout
         icons = preview_collections["icons"]
 
-        props_object = context.active_object.mio3uv
         props_image = context.edit_image.mio3uv if context.edit_image is not None else context.scene.mio3uv
 
         props_scene = context.scene.mio3uv
-        row = layout.row()
-        row.prop(props_image, "use_exposure")
-        row.enabled = context.edit_image is not None
-        exposure_row = row.column()
+        split = layout.split()
+        split.enabled = context.edit_image is not None
+        split.prop(props_image, "use_exposure")
+        exposure_row = split.column()
         exposure_row.active = props_image.use_exposure
         exposure_row.prop(props_scene, "exposure", text="")
 
+        split = layout.split(factor=0.5)
+        split.label(text="Size")
+        split.prop(props_scene, "checker_map_size", text="")
+        
         col = layout.column(align=True)
         row = col.row(align=True)
         row.operator("mio3uv.checker_map", icon_value=icons["COLOR_GRID"].icon_id)
         row.operator("mio3uv.checker_map_clear", text="", icon="CANCEL")
-        row = layout.row()
-        row.prop(props_object, "image_size")
+
+        layout.operator("mio3uv.checker_map_cleanup", text="Ceanup All Chaker Maps", icon="TRASH")
 
 
 class MIO3UV_PT_UVMesh(Panel):
@@ -104,6 +107,10 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         icons = preview_collections["icons"]
         layout = self.layout
         props_object = context.active_object.mio3uv
+
+        row = layout.row()
+        row.prop(props_object, "image_size", text="Size")
+
         row = layout.row(align=True)
         row.operator(
             "uv.mio3_guide_padding",

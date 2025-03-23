@@ -5,7 +5,17 @@ from .icons import preview_collections
 from .operators import view_padding
 
 
-class MIO3_UVProperties(PropertyGroup):
+def items_checker_maps(self, context):
+    return [
+        ("512", "512", "512x512 (4px)"),
+        ("1024", "1024", "1024x1024 (8px)"),
+        ("2048", "2048", "2048x2048 (16px)"),
+        ("4096", "4096", "4096x4096 (32px)"),
+        ("8192", "8192", "8192x8192 (64px)"),
+    ]
+
+
+class MIO3UV_PG_scene(PropertyGroup):
     def callback_update_exposure(self, context):
         context.scene.view_settings.exposure = self.exposure
 
@@ -58,11 +68,17 @@ class MIO3_UVProperties(PropertyGroup):
         ],
         default="AUTO",
     )
-    use_exposure: BoolProperty(name="Exposure", description="Default", default=False) # Dummy Property
+    checker_map_size: EnumProperty(
+        name="Checker Map Size",
+        description="Choose an image size",
+        items=items_checker_maps,
+        default=1,
+    )
+    use_exposure: BoolProperty(name="Exposure", description="Default", default=False)  # Dummy Property
     exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
 
-class MIO3UV_ObjectProps(PropertyGroup):
+class MIO3UV_PG_object(PropertyGroup):
     def callback_update_padding(self, context):
         view_padding.MIO3UV_OT_view_padding.redraw(context)
 
@@ -92,14 +108,8 @@ class MIO3UV_ObjectProps(PropertyGroup):
     image_size: EnumProperty(
         name="Size",
         description="Choose an image size",
-        items=[
-            ("512", "512", "512x512 (4px)"),
-            ("1024", "1024", "1024x1024 (8px)"),
-            ("2048", "2048", "2048x2048 (16px)"),
-            ("4096", "4096", "4096x4096 (32px)"),
-            ("8192", "8192", "8192x8192 (64px)"),
-        ],
-        default="1024",
+        items=items_checker_maps,
+        default=1,
         update=callback_update_padding,
     )
     padding_px: IntProperty(name="Padding (px)", default=16, update=callback_update_padding)
@@ -107,7 +117,7 @@ class MIO3UV_ObjectProps(PropertyGroup):
     uvmesh_size: FloatProperty(name="Size", default=2, min=1, max=100, update=callback_update_uvmesh_size)
 
 
-class MIO3UV_ImageProps(PropertyGroup):
+class MIO3UV_PG_image(PropertyGroup):
     def callback_update_use_exposure(self, context):
         if hasattr(context, "edit_image"):
             context.edit_image.use_view_as_render = self.use_exposure
@@ -127,19 +137,19 @@ class MIO3UV_ImageProps(PropertyGroup):
                 scene.view_settings.exposure = 0
 
 
-classes = [MIO3_UVProperties, MIO3UV_ObjectProps, MIO3UV_ImageProps]
+classes = [MIO3UV_PG_scene, MIO3UV_PG_object, MIO3UV_PG_image]
 
 
 def register():
     for c in classes:
         bpy.utils.register_class(c)
-    bpy.types.Scene.mio3uv = PointerProperty(type=MIO3_UVProperties)
-    bpy.types.Object.mio3uv = PointerProperty(type=MIO3UV_ObjectProps)
-    bpy.types.Image.mio3uv = PointerProperty(type=MIO3UV_ImageProps)
+    bpy.types.Scene.mio3uv = PointerProperty(type=MIO3UV_PG_scene)
+    bpy.types.Object.mio3uv = PointerProperty(type=MIO3UV_PG_object)
+    bpy.types.Image.mio3uv = PointerProperty(type=MIO3UV_PG_image)
 
 
 def unregister():
-    MIO3UV_ImageProps.reset_images()
+    MIO3UV_PG_image.reset_images()
     del bpy.types.Image.mio3uv
     del bpy.types.Object.mio3uv
     del bpy.types.Scene.mio3uv

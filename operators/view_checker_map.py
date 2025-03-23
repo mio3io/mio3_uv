@@ -1,6 +1,6 @@
 import bpy
 import os
-from ..classes.operator import Mio3UVOperator
+from ..classes.operator import Mio3UVGlobalOperator
 
 CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "checker_maps")
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
@@ -8,13 +8,13 @@ NAME_NODE_GROUP_OVERRIDE = "Mio3MaterialOverride"
 NAME_MOD_CHECKER_MAP = "Mio3CheckerMapModifier"
 
 
-class MIO3UV_OT_checker_map(Mio3UVOperator):
+class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map"
     bl_label = "Checker Map"
     bl_description = "Set the checker map (using Geometry Nodes)"
     bl_options = {"REGISTER", "UNDO"}
 
-    size = 1024
+    size = None
 
     @classmethod
     def poll(cls, context):
@@ -22,37 +22,41 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
         return obj is not None and obj.type == "MESH"
 
     def execute(self, context):
-        mio3uv = context.active_object.mio3uv
+        selected_objects = [obj for obj in context.selected_objects if obj.type == "MESH"]
+        if not selected_objects:
+            return {"CANCELLED"}
 
-        obj = context.active_object
+        self.size = int(context.scene.mio3uv.checker_map_size)
 
-        self.size = int(mio3uv.image_size)
+        mode = context.active_object.mode
+        if mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
 
-        existing_modifier = self.find_modifier(obj)
-        if not existing_modifier:
-            existing_material = self.find_material()
-            if existing_material:
-                mat = existing_material
-            else:
-                mat = self.create_new_material()
+        existing_material = self.find_material()
+        if existing_material:
+            mat = existing_material
+        else:
+            mat = self.create_new_material()
 
-            existing_geometry_node = self.find_node_groups()
-            if existing_geometry_node:
-                geometry_node = existing_geometry_node
-            else:
-                geometry_node = self.create_new_geometry_node(context)
+        existing_geometry_node = self.find_node_groups()
+        if existing_geometry_node:
+            geometry_node = existing_geometry_node
+        else:
+            geometry_node = self.create_new_geometry_node(context)
+
+        for obj in selected_objects:
+            existing_modifier = self.find_modifier(obj)
+            if existing_modifier:
+                obj.modifiers.remove(existing_modifier)
 
             modifier = obj.modifiers.new(name=NAME_MOD_CHECKER_MAP, type="NODES")
             modifier.show_expanded = False
             modifier.node_group = geometry_node
             modifier["Socket_2"] = mat
+            obj.select_set(True)
 
-            for area in context.screen.areas:
-                if area.type == "VIEW_3D":
-                    if area.spaces.active.shading.type != "MATERIAL":
-                        area.spaces.active.shading.type = "MATERIAL"
-                    area.tag_redraw()
-                    break
+        if mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="EDIT")
 
         return {"FINISHED"}
 
@@ -68,9 +72,6 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
     def create_new_geometry_node(self, context):
         blend_path = os.path.join(BLEND_DIR, "mio3uv.blend")
         try:
-            mode = context.active_object.mode
-            if mode != "OBJECT":
-                bpy.ops.object.mode_set(mode="OBJECT")
             bpy.ops.wm.append(
                 filename=NAME_NODE_GROUP_OVERRIDE,
                 directory=os.path.join(blend_path, "NodeTree"),
@@ -78,8 +79,6 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
             )
             node_group = bpy.data.node_groups.get(NAME_NODE_GROUP_OVERRIDE)
             node_group.use_fake_user = True
-            if mode != context.active_object.mode:
-                bpy.ops.object.mode_set(mode=mode)
             return node_group
         except:
             self.report({"ERROR"}, "Failed import node group")
@@ -126,10 +125,10 @@ class MIO3UV_OT_checker_map(Mio3UVOperator):
         return mat
 
 
-class MIO3UV_OT_checker_map_clear(Mio3UVOperator):
+class MIO3UV_OT_checker_map_clear(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map_clear"
     bl_label = "Clear Checker Map"
-    bl_description = ""
+    bl_description = "Clear Checker Map"
     bl_options = {"REGISTER", "UNDO", "INTERNAL"}
 
     @classmethod
@@ -138,16 +137,75 @@ class MIO3UV_OT_checker_map_clear(Mio3UVOperator):
         return obj is not None
 
     def execute(self, context):
-        obj = context.active_object
-        modifier = obj.modifiers.get(NAME_MOD_CHECKER_MAP)
-        if not modifier:
+        selected_objects = [obj for obj in context.selected_objects if obj.type == "MESH"]
+        if not selected_objects:
             return {"CANCELLED"}
-
-        obj.modifiers.remove(modifier)
+        
+        for obj in selected_objects:
+            modifier = obj.modifiers.get(NAME_MOD_CHECKER_MAP)
+            if modifier:
+                obj.modifiers.remove(modifier)
         return {"FINISHED"}
 
 
-classes = [MIO3UV_OT_checker_map, MIO3UV_OT_checker_map_clear]
+class MIO3UV_OT_checker_map_cleanup(Mio3UVGlobalOperator):
+    bl_idname = "mio3uv.checker_map_cleanup"
+    bl_label = "Cleanup Checker Maps"
+    bl_description = "Cleanup Checker Maps"
+    bl_options = {"REGISTER", "UNDO", "INTERNAL"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        removed_modifiers = 0
+        removed_nodegroups = 0
+        removed_materials = 0
+        removed_images = 0
+
+        for obj in bpy.data.objects:
+            for mod in obj.modifiers[:]:
+                if mod.name == NAME_MOD_CHECKER_MAP:
+                    obj.modifiers.remove(mod)
+                    removed_modifiers += 1
+
+        if NAME_NODE_GROUP_OVERRIDE in bpy.data.node_groups:
+            bpy.data.node_groups.remove(bpy.data.node_groups[NAME_NODE_GROUP_OVERRIDE])
+            removed_nodegroups += 1
+
+        for mat in bpy.data.materials[:]:
+            if mat.name.startswith("Mio3CheckerMapMat_"):
+                bpy.data.materials.remove(mat)
+                removed_materials += 1
+
+        checker_path_pattern = os.path.join("mio3_uv", "images", "checker_maps")
+        normalized_pattern = checker_path_pattern.replace(os.path.sep, "/")
+        for img in bpy.data.images[:]:
+            if img.filepath:
+                normalized_path = img.filepath.replace("\\", "/")
+                if normalized_pattern in normalized_path:
+                    bpy.data.images.remove(img)
+                    removed_images += 1
+
+        self.report(
+            {"INFO"},
+            "Cleanup: Modifier {}, Node Group {}, Material {}, Image {}".format(
+                removed_modifiers,
+                removed_nodegroups,
+                removed_materials,
+                removed_images,
+            ),
+        )
+
+        return {"FINISHED"}
+
+
+classes = [
+    MIO3UV_OT_checker_map,
+    MIO3UV_OT_checker_map_clear,
+    MIO3UV_OT_checker_map_cleanup,
+]
 
 
 def register():

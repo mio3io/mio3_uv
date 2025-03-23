@@ -109,3 +109,10 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
                         selected_face = True
                         break
             return selected_face
+
+
+class Mio3UVGlobalOperator(Operator, Mio3UVDebug):
+    def get_selected_objects(self, context):
+        return [obj for obj in context.selected_objects if obj.type == "MESH"]
+
+
