@@ -1,5 +1,4 @@
 import bpy
-import time
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty, IntProperty
 from ..classes.uv import UVNodeManager

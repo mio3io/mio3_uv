@@ -1,5 +1,4 @@
 import bpy
-import time
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty

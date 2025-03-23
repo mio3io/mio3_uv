@@ -1,6 +1,5 @@
 import bpy
 import bmesh
-import time
 from bpy.props import BoolProperty, FloatProperty
 from mathutils import Vector
 from ..classes.operator import Mio3UVOperator

@@ -1,6 +1,4 @@
 import bpy
-import bmesh
-import time
 from bpy.props import EnumProperty
 from bpy.app.translations import pgettext_iface as tt_iface
 from ..icons import preview_collections

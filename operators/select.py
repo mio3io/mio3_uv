@@ -1,6 +1,5 @@
 import bpy
 import bmesh
-import time
 import math
 from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty

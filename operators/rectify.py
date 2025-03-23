@@ -1,5 +1,4 @@
 import bpy
-import time
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
 from ..utils import straight_uv_nodes

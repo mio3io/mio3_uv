@@ -1,7 +1,6 @@
 import bpy
 import bmesh
 import math
-import time
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from bpy.app.translations import pgettext_iface as tt_iface

@@ -1,9 +1,6 @@
 import bpy
-import time
-import math
 import numpy as np
 from bpy.props import EnumProperty
-from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator

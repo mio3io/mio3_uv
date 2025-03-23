@@ -1,5 +1,4 @@
 import bpy
-import time
 from bpy.props import BoolProperty, EnumProperty
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator

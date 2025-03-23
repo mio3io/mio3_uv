@@ -1,5 +1,4 @@
 import bpy
-import time
 import random
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator

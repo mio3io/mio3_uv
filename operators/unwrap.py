@@ -1,6 +1,5 @@
 import bpy
-import time
-from bpy.props import BoolProperty, EnumProperty
+from bpy.props import  EnumProperty
 from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..classes.uv import UVIslandManager
