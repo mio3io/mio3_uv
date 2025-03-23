@@ -46,7 +46,27 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
         node_manager = UVNodeManager(self.objects, mode="VERT")
 
         if len(node_manager.groups) == 1:
-            pass
+            obj = node_manager.groups[0].obj
+            bm = node_manager.groups[0].bm
+            uv_layer = node_manager.groups[0].uv_layer
+            selected_uv_verts = set()
+            for face in bm.faces:
+                for loop in face.loops:
+                    if loop[uv_layer].select:
+                        selected_uv_verts.add(loop.vert)
+            for face in bm.faces:
+                for loop in face.loops:
+                    if loop.vert in selected_uv_verts:
+                        loop[uv_layer].select = True
+
+            node_manager.update_uvmeshes()
+            node_manager = UVNodeManager([obj], mode="VERT")
+            groups = []
+            for group in node_manager.groups:
+                if len(group.nodes) == 1:
+                    group.deselect_all_uv()
+                else:
+                    groups.append(group)
         else:
             groups = node_manager.groups
 
