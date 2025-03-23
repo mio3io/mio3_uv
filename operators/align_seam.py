@@ -35,42 +35,18 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        obj = context.active_object
+        self.objects = self.get_selected_objects(context)
+        if not self.objects:
+            self.report({"WARNING"}, "Object is not selected")
+            return {"CANCELLED"}
 
-        self.use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if self.use_uv_select_sync:
-            self.sync_uv_from_mesh(context, [obj])
-            context.tool_settings.use_uv_select_sync = False
+        if context.tool_settings.use_uv_select_sync:
+            self.sync_uv_from_mesh(context, self.objects)
 
-        bm = bmesh.from_edit_mesh(obj.data)
-        uv_layer = bm.loops.layers.uv.verify()
-
-        node_manager = UVNodeManager.from_object(obj, bm, uv_layer)
+        node_manager = UVNodeManager(self.objects, mode="VERT")
 
         if len(node_manager.groups) == 1:
-            selected_uv_verts = set()
-            for face in bm.faces:
-                for loop in face.loops:
-                    if loop[uv_layer].select:
-                        selected_uv_verts.add(loop.vert)
-            for face in bm.faces:
-                for loop in face.loops:
-                    if loop.vert in selected_uv_verts:
-                        loop[uv_layer].select = True
-                        # エッジ
-                        # edge = loop.edge
-                        # vert1 = edge.verts[0]
-                        # vert2 = edge.verts[1]
-                        # if vert1 in selected_uv_verts and vert2 in selected_uv_verts:
-                        #     loop[uv_layer].select_edge = True
-
-            node_manager = UVNodeManager.from_object(obj, bm, uv_layer)
-            groups = []
-            for group in node_manager.groups:
-                if len(group.nodes) == 1:
-                    group.deselect_all_uv()
-                else:
-                    groups.append(group)
+            pass
         else:
             groups = node_manager.groups
 
@@ -122,15 +98,11 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
 
         node_manager.update_uvmeshes()
 
-        if self.use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
 
         self.print_time()
         return {"FINISHED"}
 
     def cancel_operator(self, context):
-        if self.use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
         return {"CANCELLED"}
 
     def determine_axis(self, group):
