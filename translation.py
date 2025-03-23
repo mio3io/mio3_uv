@@ -6,13 +6,13 @@ translation_dict = {}
 
 
 addon_dir = os.path.dirname(__file__)
-locale_dir = os.path.join(addon_dir, "locale")
+languages_dir = os.path.join(addon_dir, "languages")
 
-for lang_file in os.listdir(locale_dir):
+for lang_file in os.listdir(languages_dir):
     if lang_file.endswith(".py") and not lang_file.startswith("__"):
         lang_code = lang_file[:-3]
         try:
-            module_path = "{}.locale.{}".format(__package__, lang_code)
+            module_path = "{}.languages.{}".format(__package__, lang_code)
             module = importlib.import_module(module_path)
             translation_dict.update(module.translation_dict)
         except Exception as e:
