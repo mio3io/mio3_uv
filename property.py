@@ -1,8 +1,11 @@
 import bpy
+import bmesh
+from bpy.app.handlers import persistent
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty, PointerProperty
 from .icons import preview_collections
 from .operators import view_padding
+from .utils import sync_uv_from_mesh_obj, sync_mesh_from_uv_obj
 
 
 def items_checker_maps(self, context):
@@ -18,6 +21,9 @@ def items_checker_maps(self, context):
 class MIO3UV_PG_scene(PropertyGroup):
     def callback_update_exposure(self, context):
         context.scene.view_settings.exposure = self.exposure
+
+    auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=True)
+    auto_uv_sync_skip: BoolProperty(name="UV Sync Auto Select Skip", default=False)
 
     edge_mode: BoolProperty(name="Edge Mode", description="Edge Mode", default=False)
     island_mode: BoolProperty(name="Island Mode", description="Island Mode", default=False)
@@ -137,7 +143,57 @@ class MIO3UV_PG_image(PropertyGroup):
                 scene.view_settings.exposure = 0
 
 
-classes = [MIO3UV_PG_scene, MIO3UV_PG_object, MIO3UV_PG_image]
+
+def callback_use_uv_select_sync():
+    context = bpy.context
+    props_s = context.scene.mio3uv
+    # print("callback_use_uv_select_sync [{}]".format(str(props_s.auto_uv_sync_skip)))
+
+    if props_s.auto_uv_sync:
+        if not props_s.auto_uv_sync_skip:
+            if context.scene.tool_settings.use_uv_select_sync:
+                selected_objects = [obj for obj in context.objects_in_mode if obj.type == "MESH"]
+                for obj in selected_objects:
+                    sync_mesh_from_uv_obj(obj)
+                    obj.data.update()
+            else:
+                selected_objects = [obj for obj in context.objects_in_mode if obj.type == "MESH"]
+                for obj in selected_objects:
+                    sync_uv_from_mesh_obj(obj)
+                    bm = bmesh.from_edit_mesh(obj.data)
+                    for face in bm.faces:
+                        face.select = True
+                    bm.select_flush(True)
+                    bmesh.update_edit_mesh(obj.data)
+
+        props_s.auto_uv_sync_skip = False
+
+
+msgbus_owner = object()
+
+
+def handler_register():
+    bpy.msgbus.clear_by_owner(msgbus_owner)
+    bpy.msgbus.subscribe_rna(
+        key=(bpy.types.ToolSettings, "use_uv_select_sync"),
+        owner=msgbus_owner,
+        args=(),
+        notify=callback_use_uv_select_sync,
+    )
+    if load_handler not in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.append(load_handler)
+
+
+@persistent
+def load_handler(scene):
+    handler_register()
+
+
+classes = [
+    MIO3UV_PG_scene,
+    MIO3UV_PG_object,
+    MIO3UV_PG_image,
+]
 
 
 def register():
@@ -146,6 +202,7 @@ def register():
     bpy.types.Scene.mio3uv = PointerProperty(type=MIO3UV_PG_scene)
     bpy.types.Object.mio3uv = PointerProperty(type=MIO3UV_PG_object)
     bpy.types.Image.mio3uv = PointerProperty(type=MIO3UV_PG_image)
+    handler_register()
 
 
 def unregister():
@@ -155,3 +212,6 @@ def unregister():
     del bpy.types.Scene.mio3uv
     for c in classes:
         bpy.utils.unregister_class(c)
+
+    bpy.msgbus.clear_by_owner(msgbus_owner)
+    bpy.app.handlers.load_post.remove(load_handler)

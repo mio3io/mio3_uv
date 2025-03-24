@@ -16,6 +16,7 @@ class MIO3UV_PT_options(Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.prop(context.scene.mio3uv, "auto_uv_sync")
         layout.prop(context.scene.mio3uv, "udim")
 
 
