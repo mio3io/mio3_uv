@@ -1,5 +1,8 @@
 translation_dict = {
     "ja_JP": {
+        # Options
+        ("*", "UV Sync Auto Select"): "選択同期で自動選択",
+        
         # Common
         ("Operator", "Horizontal"): "水平",
         ("Operator", "Vertical"): "垂直",
@@ -62,7 +65,7 @@ translation_dict = {
         ("*", "Align UVs of vertices, edge loops and islands"): "頂点・辺ループ・アイランドのUVを整列させる",
         ("*", "Align Edge Loops"): "辺ループを整列",
         ("Operator", "Orient Edge"): "辺で整列",
-        ("*", "Axis-align the island to the selected edge"): "選択した辺を基準にアイランドを軸整列させる",
+        ("*", "Align the selected edge or island to an axis"): "選択した辺またはアイランドを軸に揃えます",
         ("Operator", "Align Axis"): "軸整列",
         ("Operator", "Orient World"): "ワールド方向",
         ("Operator", "Align Seam"): "シーム整列",

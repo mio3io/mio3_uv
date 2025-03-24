@@ -1,5 +1,8 @@
 translation_dict = {
     "zh_HANS": {
+        # 选项
+        ("*", "UV Sync Auto Select"): "选择同步自动选择",
+
         # 常用
         ("Operator", "Horizontal"): "水平",
         ("Operator", "Vertical"): "垂直",
@@ -62,7 +65,7 @@ translation_dict = {
         ("*", "Align UVs of vertices, edge loops and islands"): "对齐顶点、边缘环和岛屿的 UV",
         ("*", "Align Edge Loops"): "对齐边缘环",
         ("Operator", "Orient Edge"): "边缘对齐",
-        ("*", "Axis-align the island to the selected edge"): "将岛屿对齐到选中的边缘",
+        ("*", "Align the selected edge or island to an axis"): "根据选定的边缘或岛屿对齐轴",
         ("Operator", "Align Axis"): "轴对齐",
         ("Operator", "Orient World"): "世界方向对齐",
         ("Operator", "Align Seam"): "缝线对齐",
