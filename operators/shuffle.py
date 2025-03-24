@@ -16,7 +16,6 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            context.tool_settings.use_uv_select_sync = False
             island_manager = UVIslandManager(self.objects, mesh_link_uv=True)
         else:
             island_manager = UVIslandManager(self.objects)
@@ -42,7 +41,6 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
 
         if use_uv_select_sync:
             island_manager.restore_vertex_selection()
-            context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()
 

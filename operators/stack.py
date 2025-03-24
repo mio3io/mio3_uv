@@ -59,6 +59,7 @@ class MIO3UV_OT_stack(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
+            context.scene.mio3uv.auto_uv_sync_skip = True
             island_manager = UVIslandManager(self.objects, find_all=True, mesh_all=True)
         else:
             island_manager = UVIslandManager(self.objects, find_all=True)

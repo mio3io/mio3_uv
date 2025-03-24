@@ -82,12 +82,14 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = False
-            self.sync_uv_from_mesh(context, self.objects)
-            island_manager = UVIslandManager(self.objects, find_all=True, mesh_all=True, uv_select=False)
-
-        else:
-            island_manager = UVIslandManager(self.objects, find_all=True, uv_select=False)
+            context.tool_settings.mesh_select_mode = (False, False, True)
+            try:
+                bpy.ops.mesh.select_similar_region()
+            except:
+                pass
+            return {"FINISHED"}
+        
+        island_manager = UVIslandManager(self.objects, find_all=True, uv_select=False)
 
         base_island = None
         for island in island_manager.islands:
@@ -312,13 +314,12 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
         self.start_time()
         self.objects = self.get_selected_objects(context)
 
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        uv_select_mode = context.tool_settings.uv_select_mode
-
-        context.tool_settings.uv_select_mode = "EDGE"
-
-        if use_uv_select_sync:
+        if context.tool_settings.use_uv_select_sync:
+            bpy.ops.mesh.select_all(action="SELECT")
             return self.use_uv_select_sync_process()
+
+        uv_select_mode = context.tool_settings.uv_select_mode
+        context.tool_settings.uv_select_mode = "EDGE"
 
         check_selected = self.check_selected_face_objects(self.objects)
         if not check_selected:
@@ -449,7 +450,7 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            context.tool_settings.use_uv_select_sync = False
+            context.tool_settings.mesh_select_mode = (False, False, True)
 
         check_selected = self.check_selected_face_objects(self.objects)
 
@@ -491,7 +492,6 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
             bmesh.update_edit_mesh(obj.data)
 
         if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
             self.sync_mesh_from_uv(context, self.objects)
 
         self.print_time()
@@ -509,8 +509,8 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = False
             self.sync_uv_from_mesh(context, self.objects)
+            context.tool_settings.mesh_select_mode = (False, False, True)
 
         check_selected = self.check_selected_face_objects(self.objects)
 
@@ -551,7 +551,6 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
 
         if use_uv_select_sync:
             self.sync_mesh_from_uv(context, self.objects)
-            context.tool_settings.use_uv_select_sync = True
 
         self.print_time()
         return {"FINISHED"}

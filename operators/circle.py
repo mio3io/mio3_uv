@@ -28,7 +28,6 @@ class MIO3UV_OT_circle(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            context.tool_settings.use_uv_select_sync = False
             node_manager = UVNodeManager(self.objects, mode="VERT")
         else:
             node_manager = UVNodeManager(self.objects, mode="EDGE")
@@ -51,8 +50,6 @@ class MIO3UV_OT_circle(Mio3UVOperator):
 
         node_manager.update_uvmeshes()
 
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
         self.print_time()
         return {"FINISHED"}
 

@@ -57,7 +57,6 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            context.tool_settings.use_uv_select_sync = False
 
         if use_uv_select_sync:
             island_manager = UVIslandManager(self.objects, mesh_keep=True, mesh_link_uv=True)
@@ -96,9 +95,6 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
 
         island_manager.update_uvmeshes()
 
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
-        
         self.print_time()
         return {"FINISHED"}
 

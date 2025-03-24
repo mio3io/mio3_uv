@@ -27,18 +27,19 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        uv_select_mode = context.tool_settings.uv_select_mode
-
-        if uv_select_mode not in ["VERTEX", "EDGE"]:
-            return {"CANCELLED"}
-
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             bpy.ops.mesh.select_linked(delimit={"UV"})
             context.tool_settings.use_uv_select_sync = False
+            context.scene.mio3uv.auto_uv_sync_skip = True
+
             node_manager = UVNodeManager(self.objects, mode="VERT")
         else:
             node_manager = UVNodeManager(self.objects, mode="EDGE")
+
+        uv_select_mode = context.tool_settings.uv_select_mode
+        if uv_select_mode == "FACE":
+            context.tool_settings.uv_select_mode = "EDGE"
 
         for group in node_manager.groups:
             group.store_selection()

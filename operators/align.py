@@ -63,8 +63,6 @@ class MIO3UV_OT_align(Mio3UVOperator):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = False
 
         if self.island and not self.edge_mode:
             if use_uv_select_sync:
@@ -85,8 +83,6 @@ class MIO3UV_OT_align(Mio3UVOperator):
             self.align_uv_nodes(node_manager, self.type)
             node_manager.update_uvmeshes()
 
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
         self.print_time()
         return {"FINISHED"}
 
@@ -252,6 +248,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         if self.use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
+            context.scene.mio3uv.auto_uv_sync_skip = True
 
         self.objests_state = {}
 
