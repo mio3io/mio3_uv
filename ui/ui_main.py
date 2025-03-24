@@ -116,13 +116,12 @@ class MIO3UV_PT_align(Mio3UVPanel):
         row.operator("uv.mio3_rotate", text="90", icon_value=icons["N90"].icon_id).angle = 1.5708
 
         row = col_rotate.row(align=True)
-        row.operator("uv.align_rotation", text="Align Axis", icon_value=icons["ROTATE"].icon_id).method = "AUTO"
+        row.operator("uv.mio3_orient", icon_value=icons["ROTATE"].icon_id)
         op = row.operator("uv.align_rotation", text="Orient World", icon_value=icons["Z"].icon_id)
         op.method = "GEOMETRY"
         op.axis = "Z"
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_orient_edge", icon_value=icons["ALIGN_EDGE"].icon_id)
         row.operator("uv.mio3_align_seam", icon_value=icons["ALIGN_SEAM_Y"].icon_id)
 
         row = col_rotate.row(align=True)
