@@ -1,5 +1,57 @@
 import bpy
+import bmesh
 from mathutils import Vector
+
+
+def sync_uv_from_mesh(context, selected_objects):
+    objects = selected_objects if selected_objects else context.objects_in_mode
+    for obj in objects:
+        sync_uv_from_mesh_obj(obj)
+
+
+def sync_uv_from_mesh_obj(obj):
+    bm = bmesh.from_edit_mesh(obj.data)
+    uv_layer = bm.loops.layers.uv.verify()
+    for face in bm.faces:
+        for loop in face.loops:
+            loop[uv_layer].select = False
+            loop[uv_layer].select_edge = False
+    for vert in bm.verts:
+        if vert.select:
+            for loop in vert.link_loops:
+                loop[uv_layer].select = True
+    for edge in bm.edges:
+        if edge.select:
+            for loop in edge.link_loops:
+                loop[uv_layer].select_edge = True
+    bmesh.update_edit_mesh(obj.data)
+
+
+def sync_mesh_from_uv(context, selected_objects):
+    objects = selected_objects if selected_objects else context.selected_objects
+    for obj in objects:
+        sync_mesh_from_uv_obj(obj)
+        obj.data.update()
+
+
+def sync_mesh_from_uv_obj(obj):
+    bm = bmesh.from_edit_mesh(obj.data)
+    uv_layer = bm.loops.layers.uv.verify()
+
+    for vert in bm.verts:
+        vert.select = False
+    bm.select_flush(False)
+
+    for vert in bm.verts:
+        vert.select = all(loop[uv_layer].select for loop in vert.link_loops)
+    # for edge in bm.edges:
+    #     if all(loop[uv_layer].select_edge for loop in edge.link_loops):
+    #         edge.select = True
+    for face in bm.faces:
+        if all(loop[uv_layer].select for loop in face.loops):
+            face.select = True
+    bm.select_flush(True)
+    bmesh.update_edit_mesh(obj.data)
 
 
 def get_tile_co(offset_vector, uv_layer, loops):
@@ -143,17 +195,16 @@ def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=Fal
         for node in ordered_nodes:
             original_center += node.uv
         original_center /= len(ordered_nodes)
-        
+
         aligned_center = Vector((0, 0))
         for pos in new_positions.values():
             aligned_center += pos
         aligned_center /= len(new_positions)
-        
+
         center_offset = original_center - aligned_center
-        
+
         for node in new_positions:
             new_positions[node] += center_offset
 
     for node, new_position in new_positions.items():
         node.uv = new_position
-
