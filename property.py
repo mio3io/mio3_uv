@@ -22,7 +22,7 @@ class MIO3UV_PG_scene(PropertyGroup):
     def callback_update_exposure(self, context):
         context.scene.view_settings.exposure = self.exposure
 
-    auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=True)
+    auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False)
     auto_uv_sync_skip: BoolProperty(name="UV Sync Auto Select Skip", default=False)
 
     edge_mode: BoolProperty(name="Edge Mode", description="Edge Mode", default=False)
