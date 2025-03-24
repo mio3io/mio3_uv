@@ -11,6 +11,7 @@ from .operators import seam
 from .operators import normalize
 
 from .operators import rotate
+from .operators import mirror
 from .operators import orient
 from .operators import select
 
@@ -63,6 +64,7 @@ modules = [
     seam,
     normalize,
     rotate,
+    mirror,
     orient,
     select,
     align,

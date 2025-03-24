@@ -94,18 +94,8 @@ class MIO3UV_PT_align(Mio3UVPanel):
         row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
         row = col_right.row(align=True)
         row.scale_x = 3
-        row.operator_context = "EXEC_REGION_WIN"
-        row.operator("transform.mirror", text="", icon_value=icons["FLIP_Y"].icon_id).constraint_axis = (
-            False,
-            True,
-            False,
-        )
-        row.operator("transform.mirror", text="", icon_value=icons["FLIP_X"].icon_id).constraint_axis = (
-            True,
-            False,
-            False,
-        )
-        row.operator_context = "INVOKE_DEFAULT"
+        row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_Y"].icon_id).axis="Y"
+        row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
 
         col_rotate = layout.column(align=True)
         col_rotate.scale_y = 1.1
