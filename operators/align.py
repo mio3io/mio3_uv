@@ -61,6 +61,14 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+
+        if self.type == "ALIGN_S":
+            try:
+                bpy.ops.uv.align(axis='ALIGN_S')
+            except:
+                return {"CANCELLED"}
+            return {"FINISHED"}
+
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
@@ -174,6 +182,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             for node in nodes:
                 node.uv.x = center_x
                 node.uv.y = center_y
+
 
     def align_islands(self, island_manager, align_type):
         islands = island_manager.islands
@@ -323,7 +332,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
             nodes = group.nodes
             original_uvs = [node.uv.copy() for node in nodes]
             uv_coords = [node.uv for node in nodes]
-            
+
             if alignment_type == "Y":
                 avg_x = sum(uv.x for uv in uv_coords) / len(uv_coords)
                 for node, original_uv in zip(nodes, original_uvs):
@@ -334,7 +343,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
                 for node, original_uv in zip(nodes, original_uvs):
                     aligned_y = avg_y
                     node.uv.y = original_uv.y * (1 - self.blend_factor) + aligned_y * self.blend_factor
-            
+
             group.update_uvs()
 
 
