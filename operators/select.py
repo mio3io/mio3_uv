@@ -5,6 +5,29 @@ from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes.uv import UVIslandManager
 from ..classes.operator import Mio3UVOperator
+from ..utils import sync_uv_from_mesh_obj, sync_mesh_from_uv_obj
+
+
+class MIO3UV_OT_auto_uv_sync(bpy.types.Operator):
+    bl_idname = "uv.mio3_auto_uv_sync"
+    bl_label = "Auto UV Sync"
+    bl_description = "Auto UV Sync"
+    bl_options = {"REGISTER", "UNDO", "INTERNAL"}
+
+    def execute(self, context):
+        selected_objects = [obj for obj in context.objects_in_mode if obj.type == "MESH"]
+        if context.scene.tool_settings.use_uv_select_sync:
+            for obj in selected_objects:
+                sync_mesh_from_uv_obj(obj)
+        else:
+            for obj in selected_objects:
+                sync_uv_from_mesh_obj(obj)
+                bm = bmesh.from_edit_mesh(obj.data)
+                for face in bm.faces:
+                    face.select = True
+                bm.select_flush(True)
+                bmesh.update_edit_mesh(obj.data)
+        return {"FINISHED"}
 
 
 class MIO3UV_OT_select_half(Mio3UVOperator):
@@ -88,7 +111,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
             except:
                 pass
             return {"FINISHED"}
-        
+
         island_manager = UVIslandManager(self.objects, find_all=True, uv_select=False)
 
         base_island = None
@@ -312,11 +335,11 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+
         self.objects = self.get_selected_objects(context)
 
         if context.tool_settings.use_uv_select_sync:
-            bpy.ops.mesh.select_all(action="SELECT")
-            return self.use_uv_select_sync_process()
+            return self.use_uv_select_sync_process(context)
 
         uv_select_mode = context.tool_settings.uv_select_mode
         context.tool_settings.uv_select_mode = "EDGE"
@@ -359,12 +382,20 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def use_uv_select_sync_process(self):
+    def use_uv_select_sync_process(self, context):
+        self.sync_uv_from_mesh(context, self.objects)
+
+        check_selected = self.check_selected_face_objects(self.objects)
+        if not check_selected:
+            bpy.ops.mesh.select_all(action="SELECT")
+
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
             selected_verts = set(v for v in bm.verts if v.select)
             boundary_verts = set()
             for edge in bm.edges:
+                if check_selected and not edge.select:
+                    continue
                 edge_verts = set(edge.verts)
                 if edge_verts.issubset(selected_verts):
                     if edge.is_boundary or edge.seam:
@@ -557,6 +588,7 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
 
 
 classes = [
+    MIO3UV_OT_auto_uv_sync,
     MIO3UV_OT_select_half,
     MIO3UV_OT_select_similar,
     MIO3UV_OT_select_shared,

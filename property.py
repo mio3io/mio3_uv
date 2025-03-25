@@ -5,7 +5,6 @@ from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty, PointerProperty
 from .icons import preview_collections
 from .operators import view_padding
-from .utils import sync_uv_from_mesh_obj, sync_mesh_from_uv_obj
 
 
 def items_checker_maps(self, context):
@@ -143,30 +142,13 @@ class MIO3UV_PG_image(PropertyGroup):
                 scene.view_settings.exposure = 0
 
 
-
 def callback_use_uv_select_sync():
     context = bpy.context
     props_s = context.scene.mio3uv
-    # print("callback_use_uv_select_sync [{}]".format(str(props_s.auto_uv_sync_skip)))
-
     if props_s.auto_uv_sync:
         if not props_s.auto_uv_sync_skip:
-            if context.scene.tool_settings.use_uv_select_sync:
-                selected_objects = [obj for obj in context.objects_in_mode if obj.type == "MESH"]
-                for obj in selected_objects:
-                    sync_mesh_from_uv_obj(obj)
-                    obj.data.update()
-            else:
-                selected_objects = [obj for obj in context.objects_in_mode if obj.type == "MESH"]
-                for obj in selected_objects:
-                    sync_uv_from_mesh_obj(obj)
-                    bm = bmesh.from_edit_mesh(obj.data)
-                    for face in bm.faces:
-                        face.select = True
-                    bm.select_flush(True)
-                    bmesh.update_edit_mesh(obj.data)
-
-        props_s.auto_uv_sync_skip = False
+            bpy.ops.uv.mio3_auto_uv_sync("EXEC_DEFAULT")
+    props_s.auto_uv_sync_skip = False
 
 
 msgbus_owner = object()
