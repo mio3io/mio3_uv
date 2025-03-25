@@ -9,7 +9,7 @@ from ..classes.uv import UVIslandManager
 class MIO3UV_OT_mirror(Mio3UVOperator):
     bl_idname = "uv.mio3_mirror"
     bl_label = "Mirror"
-    bl_description = "[Shift] {}".format(tt_iface("Individual Origins"))
+    bl_description = "[Shift] {}\n[Alt] {}".format(tt_iface("Individual Origins"), tt_iface("Y Axis"))
     bl_options = {"REGISTER", "UNDO"}
 
     axis: EnumProperty(
@@ -38,6 +38,8 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
 
         if context.tool_settings.use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
+
+        self.axis = "Y" if event.alt else "X"
 
         if event.shift:
             self.pivot_point = "INDIVIDUAL_ORIGINS"
