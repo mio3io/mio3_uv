@@ -1,3 +1,4 @@
+from . import preferences
 from . import icons
 from . import property
 from . import translation
@@ -95,6 +96,8 @@ modules = [
 
 def register():
     translation.register(__name__)
+    preferences.register(__name__)
+
     for module in modules:
         module.register()
 
@@ -102,4 +105,5 @@ def register():
 def unregister():
     for module in reversed(modules):
         module.unregister()
+    preferences.unregister(__name__)
     translation.unregister(__name__)
