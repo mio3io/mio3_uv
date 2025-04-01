@@ -2,7 +2,7 @@ import bpy
 import os
 import math
 import bmesh
-from bpy.props import EnumProperty
+from bpy.props import BoolProperty, EnumProperty
 from ..classes.operator import Mio3UVOperator
 from ..icons import preview_collections
 
@@ -21,6 +21,8 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
     bl_label = "UV Mesh"
     bl_description = "Set up a modifier for UV to Mesh (using Geometry Nodes)"
     bl_options = {"REGISTER", "UNDO"}
+
+    auto_scale: BoolProperty(name="Auto Scaling", default=True)
 
     @classmethod
     def poll(cls, context):
@@ -48,7 +50,10 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             # modifier["Socket_4"] = 1
             # modifier["Socket_6"] = 2
             props_object.uvmesh_factor = 1
-            props_object.uvmesh_size = self.auto_adjust_size(obj)
+            if self.auto_scale:
+                props_object.uvmesh_size = self.auto_adjust_size(obj)
+            else:
+                props_object.uvmesh_size = 2
 
         return {"FINISHED"}
 
@@ -57,7 +62,7 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         uv_area = self.calculate_uv_area(obj)
         if uv_area > 0:
             size = math.sqrt(mesh_area / uv_area)
-            size = max(0.1, min(size, 10.0))
+            size = max(0.1, min(size, 200.0))
             props_object = obj.mio3uv
             props_object.uvmesh_size = size
             return size

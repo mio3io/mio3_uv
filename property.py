@@ -152,8 +152,9 @@ class MIO3UV_PG_object(PropertyGroup):
     )
 
     uvmesh_factor: FloatProperty(name="Factor", default=1, min=0, max=1, update=callback_update_uvmesh_factor)
-    uvmesh_size: FloatProperty(name="Size", default=2, min=1, max=100, update=callback_update_uvmesh_size)
-
+    uvmesh_size: FloatProperty(
+        name="Size", description="1 = 1m", default=2, min=0.1, max=200, update=callback_update_uvmesh_size
+    )
 
 class MIO3UV_PG_image(PropertyGroup):
     def callback_update_use_exposure(self, context):
