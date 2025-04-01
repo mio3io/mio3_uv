@@ -2,7 +2,8 @@ translation_dict = {
     "ja_JP": {
         # Options
         ("*", "UV Sync Auto Select"): "選択同期で自動選択",
-        
+        ("*", "Legacy UI Layout"): "従来のUIレイアウト",
+
         # Common
         ("Operator", "Horizontal"): "水平",
         ("Operator", "Vertical"): "垂直",
@@ -98,6 +99,7 @@ translation_dict = {
         ("Operator", "Shuffle"): "シャッフル",
         ("Operator", "Unify UV Shapes"): "UVの形状を揃える",
         ("Operator", "Average Island Scales"): "3Dに基づく大きさ",
+        ("Operator", "Average Scales"): "平均化",
 
         # Group
         ("Operator", "Grid Sort"): "グリッド状にソート",
@@ -160,6 +162,7 @@ translation_dict = {
         ("*", "Warning: This option may poor performance"):
             "警告: このオプションはパフォーマンスが低下する可能性があります",
         ("Operator", "UV Mesh"): "UV Mesh",
+        ("*", "Auto Scaling"): "自動スケール",
         ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"):
             "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
 

@@ -8,7 +8,7 @@ from ..utils import sync_uv_from_mesh, sync_mesh_from_uv
 class Mio3UVPanel(Panel):
     @classmethod
     def poll(cls, context):
-        return context.area.spaces.active.mode == "UV"
+        return context.area.spaces.active.mode == "UV" and context.active_object is not None
 
 
 class Mio3UVDebug:

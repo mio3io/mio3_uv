@@ -7,14 +7,13 @@ from .icons import preview_collections
 from .operators import view_padding
 
 
-def items_checker_maps(self, context):
-    return [
-        ("512", "512", "512x512 (4px)"),
-        ("1024", "1024", "1024x1024 (8px)"),
-        ("2048", "2048", "2048x2048 (16px)"),
-        ("4096", "4096", "4096x4096 (32px)"),
-        ("8192", "8192", "8192x8192 (64px)"),
-    ]
+ITEMS_TEXTURE_SIZE = [
+    ("512", "512", "512x512 (4px)"),
+    ("1024", "1024", "1024x1024 (8px)"),
+    ("2048", "2048", "2048x2048 (16px)"),
+    ("4096", "4096", "4096x4096 (32px)"),
+    ("8192", "8192", "8192x8192 (64px)"),
+]
 
 
 class MIO3UV_PG_scene(PropertyGroup):
@@ -76,8 +75,8 @@ class MIO3UV_PG_scene(PropertyGroup):
     checker_map_size: EnumProperty(
         name="Checker Map Size",
         description="Choose an image size",
-        items=items_checker_maps,
-        default=1,
+        items=ITEMS_TEXTURE_SIZE,
+        default="1024",
     )
     use_exposure: BoolProperty(name="Exposure", description="Default", default=False)  # Dummy Property
     exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
@@ -110,14 +109,48 @@ class MIO3UV_PG_object(PropertyGroup):
                 modifier[node_group.inputs["Size"].identifier] = self.uvmesh_size
 
     realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance", default=False)
+
+    def callback_update_texture_size_x(self, context):
+        if self.texture_size_link:
+            current_index = [i for i, item in enumerate(ITEMS_TEXTURE_SIZE) if item[0] == self.texture_size_x][0]
+            self["texture_size_y"] = current_index
+
+    def callback_update_texture_size_y(self, context):
+        if self.texture_size_link:
+            current_index = [i for i, item in enumerate(ITEMS_TEXTURE_SIZE) if item[0] == self.texture_size_y][0]
+            self["texture_size_x"] = current_index
+
+    texture_size_x: EnumProperty(
+        name="Size X",
+        description="Choose an image size",
+        items=ITEMS_TEXTURE_SIZE,
+        default="1024",
+        update=callback_update_texture_size_x,
+    )
+    texture_size_y: EnumProperty(
+        name="Size Y",
+        description="Choose an image size",
+        items=ITEMS_TEXTURE_SIZE,
+        default="1024",
+        update=callback_update_texture_size_y,
+    )
+    texture_size_link: BoolProperty(name="Size Link", default=True)
+
     image_size: EnumProperty(
         name="Size",
         description="Choose an image size",
-        items=items_checker_maps,
+        items=ITEMS_TEXTURE_SIZE,
         default=1,
         update=callback_update_padding,
     )
-    padding_px: IntProperty(name="Padding (px)", default=16, update=callback_update_padding)
+
+    padding_px: EnumProperty(
+        name="Padding (px)",
+        items=[("4", "4", ""), ("8", "8", ""), ("16", "16", ""), ("32", "32", ""), ("64", "64", "")],
+        default="16",
+        update=callback_update_padding,
+    )
+
     uvmesh_factor: FloatProperty(name="Factor", default=1, min=0, max=1, update=callback_update_uvmesh_factor)
     uvmesh_size: FloatProperty(name="Size", default=2, min=1, max=100, update=callback_update_uvmesh_size)
 

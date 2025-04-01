@@ -10,6 +10,7 @@ from .operators import rectify
 from .operators import gridify
 from .operators import seam
 from .operators import normalize
+from .operators import pin
 
 from .operators import rotate
 from .operators import mirror
@@ -40,7 +41,6 @@ from .operators import mesh_uvmesh
 
 from .ui import ui_main
 from .ui import ui_view
-from .ui import ui_options
 from .ui import ui_menu
 
 
@@ -64,6 +64,7 @@ modules = [
     gridify,
     seam,
     normalize,
+    pin,
     rotate,
     mirror,
     orient,
@@ -88,7 +89,6 @@ modules = [
     mesh_uvmesh,
     ui_main,
     ui_view,
-    ui_options,
     ui_menu,
     property,
 ]

@@ -97,7 +97,7 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
     def update_state(cls, context):
         obj = context.active_object
         mio3uv = obj.mio3uv
-        padding_pixels = mio3uv.padding_px
+        padding_pixels = int(mio3uv.padding_px)
         if mio3uv.image_size == "AUTO":
             image_size = None
             for area in context.screen.areas:

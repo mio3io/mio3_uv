@@ -20,16 +20,7 @@ class MIO3UV_PT_Utility(Panel):
     def draw(self, context):
         layout = self.layout
         icons = preview_collections["icons"]
-
-        props_image = context.edit_image.mio3uv if context.edit_image is not None else context.scene.mio3uv
-
         props_scene = context.scene.mio3uv
-        split = layout.split()
-        split.enabled = context.edit_image is not None
-        split.prop(props_image, "use_exposure")
-        exposure_row = split.column()
-        exposure_row.active = props_image.use_exposure
-        exposure_row.prop(props_scene, "exposure", text="")
 
         split = layout.split(factor=0.5)
         split.label(text="Size")

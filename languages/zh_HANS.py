@@ -2,6 +2,7 @@ translation_dict = {
     "zh_HANS": {
         # 选项
         ("*", "UV Sync Auto Select"): "选择同步自动选择",
+        ("*", "Use Legacy UI Layout"): "传统UI布局",
 
         # 常用
         ("Operator", "Horizontal"): "水平",
@@ -97,6 +98,7 @@ translation_dict = {
         ("Operator", "Shuffle"): "随机排列",
         ("Operator", "Unify UV Shapes"): "统一UV形状",
         ("Operator", "Average Island Scales"): "平均岛屿大小",
+        ("Operator", "Average Scales"): "平均大小",
 
         # 组
         ("Operator", "Grid Sort"): "网格排序",
@@ -155,6 +157,7 @@ translation_dict = {
         ("*", "Preview the padding lines"): "预览填充线",
         ("*", "Warning: This option may poor performance"): "警告：此选项可能会降低性能",
         ("Operator", "UV Mesh"): "UV 网格",
+        ("*", "Auto Scaling"): "自动缩放",
         ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "设置UV到网格的修改器(使用几何节点)",
 
         ("*", "Please display an image if you want to use pixel units"): "如需使用像素单位，请显示图像",

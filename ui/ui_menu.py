@@ -2,31 +2,12 @@ import bpy
 from bpy.types import Menu, Panel
 from ..icons import preview_collections
 from bpy.app.translations import pgettext_iface as tt_iface
-
-
-class MIO3UV_MT_unwrap(Menu):
-    bl_idname = "MIO3UV_MT_unwrap"
-    bl_label = "Unwrap Menu"
-
-    def draw(self, context):
-        icons = preview_collections["icons"]
-
-        layout = self.layout
-        layout.operator(
-            "uv.mio3_unwrap",
-            text=tt_iface("Unwrap Horizontal(X) Only"),
-            icon_value=icons["EDGE_X"].icon_id,
-        ).axis = "X"
-        layout.operator(
-            "uv.mio3_unwrap",
-            text=tt_iface("Unwrap Vertical(Y) Only"),
-            icon_value=icons["EDGE_Y"].icon_id,
-        ).axis = "Y"
+from ..globals import get_preferences
 
 
 class MIO3UV_PT_auto_body_parts_popover(Panel):
     bl_label = "Auto Body Parts"
-    bl_space_type = "VIEW_3D"
+    bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "WINDOW"
     def draw(self, context):
         icons = preview_collections["icons"]
@@ -59,10 +40,38 @@ class MIO3UV_MT_arrange(Menu):
         layout.operator("uv.mio3_unfoldify", icon_value=icons["UNFOLDIFY"].icon_id)
 
 
+class MIO3UV_PT_options_popover(Panel):
+    bl_label = "Options"
+    bl_space_type = "IMAGE_EDITOR"
+    bl_region_type = "WINDOW"
+    def draw(self, context):
+        pref = get_preferences()
+        layout = self.layout
+        props_s = context.scene.mio3uv
+        # props_o = context.active_object.mio3uv
+        # row = layout.row(align=True)
+        # row.prop(props_o, "texture_size_x", text="")
+        # row.prop(props_o, "texture_size_link", text="", icon="LINKED", toggle=True)
+        # row.prop(props_o, "texture_size_y", text="")
+
+        col = layout.column(align=True)
+        col.prop(context.scene.mio3uv, "auto_uv_sync")
+        col.prop(context.scene.mio3uv, "udim")
+        col.prop(pref, "ui_legacy")
+
+        props_image = context.edit_image.mio3uv if context.edit_image is not None else context.scene.mio3uv
+        split = layout.split(factor=0.4)
+        split.enabled = context.edit_image is not None
+        split.prop(props_image, "use_exposure")
+        exposure_row = split.column()
+        exposure_row.active = props_image.use_exposure
+        exposure_row.prop(props_s, "exposure", text="")
+
+
 classes = [
-    MIO3UV_MT_unwrap,
     MIO3UV_MT_arrange,
-    MIO3UV_PT_auto_body_parts_popover
+    MIO3UV_PT_auto_body_parts_popover,
+    MIO3UV_PT_options_popover,
 ]
 
 
