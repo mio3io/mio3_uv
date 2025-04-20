@@ -128,7 +128,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         other_islands = {"FRONT": [], "RIGHT": [], "LEFT": [], "TOP": [], "BOTTOM": [], "BACK": []}
 
         if self.use_active:
-            base_island = self.find_active_island(islands)
+            base_island = self.get_active_island(islands)
 
         center = Vector((0, 0, 0))
         total_area = 0
@@ -239,7 +239,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             island.move(offset)
             current_v -= (island.max_uv.y - island.min_uv.y) + margin
 
-    def find_active_island(self, islands):
+    def get_active_island(self, islands):
         active_obj = bpy.context.active_object
         if not active_obj or not active_obj.data.total_face_sel:
             return None

@@ -32,13 +32,16 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
     def is_valid_object(obj):
         return obj is not None and obj.type == "MESH" and obj.mode == "EDIT"
 
-    def get_selected_objects(self, context):
+    @staticmethod
+    def get_selected_objects(context):
         return [obj for obj in context.objects_in_mode if obj.type == "MESH"]
 
-    def sync_uv_from_mesh(self, context, selected_objects):
+    @staticmethod
+    def sync_uv_from_mesh(context, selected_objects):
         sync_uv_from_mesh(context, selected_objects)
 
-    def sync_mesh_from_uv(self, context, selected_objects):
+    @staticmethod
+    def sync_mesh_from_uv(context, selected_objects):
         sync_mesh_from_uv(context, selected_objects)
 
     def check_selected_face_objects(self, objects):
@@ -75,7 +78,8 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
 
 
 class Mio3UVGlobalOperator(Operator, Mio3UVDebug):
-    def get_selected_objects(self, context):
+    @staticmethod
+    def get_selected_objects(context):
         return [obj for obj in context.selected_objects if obj.type == "MESH"]
 
 

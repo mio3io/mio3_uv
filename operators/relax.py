@@ -29,7 +29,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
         min=1,
         max=20,
     )
-    factor = 0.5
+    _factor = 0.5
 
     def invoke(self, context, event):
         self.objects = self.get_selected_objects(context)
@@ -86,9 +86,9 @@ class MIO3UV_OT_relax(Mio3UVOperator):
                     new_pos = node.uv.copy()
                     
                     if self.relax_x:
-                        new_pos.x = node.uv.x + (avg_pos.x - node.uv.x) * self.factor
+                        new_pos.x = node.uv.x + (avg_pos.x - node.uv.x) * self._factor
                     if self.relax_y:
-                        new_pos.y = node.uv.y + (avg_pos.y - node.uv.y) * self.factor
+                        new_pos.y = node.uv.y + (avg_pos.y - node.uv.y) * self._factor
                     
                     new_positions[node] = new_pos
 

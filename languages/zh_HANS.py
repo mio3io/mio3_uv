@@ -21,6 +21,7 @@ translation_dict = {
         ("*", "Right Align"): "右对齐",
         ("*", "Wrap Count"): "换行次数",
         ("*", "Reverse Order"): "反转顺序",
+        ("*", "Anchor"): "锚点",
         ("*", "Keep Aspect Ratio"): "保持纵横比",
         ("*", "Keep Position"): "保持位置",
         ("*", "Keep Angle"): "保持角度",

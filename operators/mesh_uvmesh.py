@@ -33,10 +33,10 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         obj = context.active_object
         props_object = obj.mio3uv
 
-        existing_modifier = self.find_modifier(obj)
+        existing_modifier = self.get_modifier(obj)
         if not existing_modifier:
 
-            existing_geometry_node = self.find_node_groups()
+            existing_geometry_node = self.get_node_groups()
             if existing_geometry_node:
                 geometry_node = existing_geometry_node
             else:
@@ -58,8 +58,8 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         return {"FINISHED"}
 
     def auto_adjust_size(self, obj):
-        mesh_area = self.calculate_mesh_area(obj)
-        uv_area = self.calculate_uv_area(obj)
+        mesh_area = self.calc_mesh_area(obj)
+        uv_area = self.calc_uv_area(obj)
         if uv_area > 0:
             size = math.sqrt(mesh_area / uv_area)
             size = max(0.1, min(size, 200.0))
@@ -68,14 +68,14 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             return size
         return 2
 
-    def calculate_mesh_area(self, obj):
+    def calc_mesh_area(self, obj):
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         area = sum(f.calc_area() for f in bm.faces)
         bm.free()
         return area
 
-    def calculate_uv_area(self, obj):
+    def calc_uv_area(self, obj):
         me = obj.data
         uv_layer = me.uv_layers.active.data
         total_area = 0
@@ -92,10 +92,10 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             total_area += area
         return total_area
 
-    def find_node_groups(self):
+    def get_node_groups(self):
         return bpy.data.node_groups.get(NAME_NODE_GROUP_UV_MESH)
 
-    def find_modifier(self, obj):
+    def get_modifier(self, obj):
         return obj.modifiers.get(NAME_MOD_UV_MESH)
 
     def create_new_geometry_node(self, context):

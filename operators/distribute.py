@@ -21,6 +21,11 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         name="Axis",
         items=[("AUTO", "Auto", ""), ("X", "X", ""), ("Y", "Y", "")],
     )
+    reference: EnumProperty(
+        name="Reference",
+        items=[("BBOX", "Boundary", ""), ("CENTER", "Center", "")],
+    )
+
     spacing: FloatProperty(
         name="Margin",
         default=0.01,
@@ -126,38 +131,63 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
 
             first_island = islands[0]
             last_island = islands[-1]
-
-            if axis == "X":
-                total_space = last_island.max_uv.x - first_island.min_uv.x
-                islands_width = sum(island.width for island in islands[1:-1])
-                space = (total_space - islands_width - first_island.width - last_island.width) / (total_islands - 1)
-                current_pos = first_island.max_uv.x + space
-                for island in islands[1:-1]:
-                    offset = Vector((current_pos - island.min_uv.x, 0))
-                    island.move(offset)
-                    current_pos += island.width + space
+            
+            if self.reference == "BBOX":
+                if axis == "X":
+                    total_space = last_island.max_uv.x - first_island.min_uv.x
+                    islands_width = sum(island.width for island in islands[1:-1])
+                    space = (total_space - islands_width - first_island.width - last_island.width) / (total_islands - 1)
+                    
+                    current_pos = first_island.max_uv.x + space
+                    for island in islands[1:-1]:
+                        offset = Vector((current_pos - island.min_uv.x, 0))
+                        island.move(offset)
+                        current_pos += island.width + space
+                else:
+                    total_space = first_island.max_uv.y - last_island.min_uv.y
+                    islands_height = sum(island.height for island in islands[1:-1])
+                    space = (total_space - islands_height - first_island.height - last_island.height) / (total_islands - 1)
+                    
+                    current_pos = first_island.min_uv.y - space
+                    for island in islands[1:-1]:
+                        offset = Vector((0, current_pos - island.max_uv.y))
+                        island.move(offset)
+                        current_pos -= island.height + space
             else:
-                total_space = first_island.max_uv.y - last_island.min_uv.y
-                islands_height = sum(island.height for island in islands[1:-1])
-                space = (total_space - islands_height - first_island.height - last_island.height) / (total_islands - 1)
-                current_pos = first_island.min_uv.y - space
-                for island in islands[1:-1]:
-                    offset = Vector((0, current_pos - island.max_uv.y))
+                start_center = first_island.center[0 if axis == "X" else 1]
+                end_center = last_island.center[0 if axis == "X" else 1]
+                total_space = abs(end_center - start_center)
+                equal_space = total_space / (total_islands - 1)
+                
+                for i, island in enumerate(islands[1:-1], 1):
+                    target_center = start_center + (equal_space * i * (1 if axis == "X" else -1))
+                    current_center = island.center[0 if axis == "X" else 1]
+                    offset_value = target_center - current_center
+                    offset = Vector((offset_value, 0)) if axis == "X" else Vector((0, offset_value))
                     island.move(offset)
-                    current_pos -= island.height + space
         else:
-            if axis == "X":
-                current_pos = min(island.min_uv.x for island in islands)
-                for island in islands:
-                    offset = Vector((current_pos - island.min_uv.x, 0))
-                    current_pos += island.width + self.spacing
-                    island.move(offset)
+            if self.reference == "BBOX":
+                if axis == "X":
+                    current_pos = min(island.min_uv.x for island in islands)
+                    for island in islands:
+                        offset = Vector((current_pos - island.min_uv.x, 0))
+                        current_pos += island.width + self.spacing
+                        island.move(offset)
+                else:
+                    current_pos = max(island.max_uv.y for island in islands)
+                    for island in islands:
+                        offset = Vector((0, current_pos - island.max_uv.y))
+                        current_pos -= island.height + self.spacing
+                        island.move(offset)
             else:
-                current_pos = max(island.max_uv.y for island in islands)
+                get_center = lambda island: island.center[0 if axis == "X" else 1]
+                current_pos = min(get_center(island) for island in islands) if axis == "X" else max(get_center(island) for island in islands)
                 for island in islands:
-                    offset = Vector((0, current_pos - island.max_uv.y))
-                    current_pos -= island.height + self.spacing
+                    current_center = get_center(island)
+                    offset_value = current_pos - current_center
+                    offset = Vector((offset_value, 0)) if axis == "X" else Vector((0, offset_value))
                     island.move(offset)
+                    current_pos += self.spacing * (1 if axis == "X" else -1)
 
     def adjust_edges(self, group):
         align_uvs = self.align_uvs
@@ -237,6 +267,8 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             row.enabled = self.method == "FREE"
             row = layout.row()
             row.prop(self, "axis", expand=True)
+            row = layout.row()
+            row.prop(self, "reference", expand=True)
         else:
             layout.prop(self, "align_uvs")
             layout.prop(self, "smooth_factor")

@@ -4,7 +4,7 @@ import gpu
 from mathutils import Vector
 from gpu_extras.batch import batch_for_shader
 from ..classes.operator import Mio3UVOperator
-
+from bpy.types import SpaceImageEditor
 
 mio3uv_view_padding_msgbus = object()
 
@@ -27,13 +27,13 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
     bl_description = "Preview the padding lines"
     bl_options = {"REGISTER", "UNDO"}
 
-    __handle = None
-    __shader = None
-    __region = None
-    __color = (0.1, 0.5, 1.0, 1)
-    __vertices = []
+    _handle = None
+    _shader = None
+    _region = None
+    _color = (0.1, 0.5, 1.0, 1)
+    _vertices = []
 
-    __padding = None
+    _padding = None
 
     def execute(self, context):
         if not MIO3UV_OT_view_padding.is_running():
@@ -43,28 +43,28 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
         return {"FINISHED"}
 
     @classmethod
-    def __draw(cls, context):
+    def draw_2d(cls, context):
         obj = context.active_object
         if obj.mio3uv.realtime:
             cls.update_mesh(context)
-        viewport_vertices = [cls.__region.view2d.view_to_region(v[0], v[1], clip=False) for v in cls.__vertices]
-        batch = batch_for_shader(cls.__shader, "LINES", {"pos": viewport_vertices})
+        viewport_vertices = [cls._region.view2d.view_to_region(v[0], v[1], clip=False) for v in cls._vertices]
+        batch = batch_for_shader(cls._shader, "LINES", {"pos": viewport_vertices})
 
-        cls.__shader.bind()
-        cls.__shader.uniform_float("color", cls.__color)
-        batch.draw(cls.__shader)
+        cls._shader.bind()
+        cls._shader.uniform_float("color", cls._color)
+        batch.draw(cls._shader)
 
     @classmethod
     def is_running(cls):
-        return cls.__handle is not None
+        return cls._handle is not None
 
     @classmethod
     def handle_add(cls, context):
-        cls.__handle = bpy.types.SpaceImageEditor.draw_handler_add(cls.__draw, (context,), "WINDOW", "POST_PIXEL")
-        cls.__shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+        cls._handle = SpaceImageEditor.draw_handler_add(cls.draw_2d, (context,), "WINDOW", "POST_PIXEL")
+        cls._shader = gpu.shader.from_builtin("UNIFORM_COLOR")
 
         area = next(a for a in context.screen.areas if a.type == "IMAGE_EDITOR")
-        cls.__region = next(r for r in area.regions if r.type == "WINDOW")
+        cls._region = next(r for r in area.regions if r.type == "WINDOW")
 
         cls.redraw(context)
 
@@ -78,12 +78,12 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
     @classmethod
     def handle_remove(cls, context):
         if cls.is_running():
-            bpy.types.SpaceImageEditor.draw_handler_remove(cls.__handle, "WINDOW")
-            cls.__handle = None
-            cls.__shader = None
-            cls.__region = None
-            cls.__vertices = []
-            cls.__padding = None
+            SpaceImageEditor.draw_handler_remove(cls._handle, "WINDOW")
+            cls._handle = None
+            cls._shader = None
+            cls._region = None
+            cls._vertices = []
+            cls._padding = None
             bpy.msgbus.clear_by_owner(mio3uv_view_padding_msgbus)
             reload_view(context)
 
@@ -109,11 +109,11 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
                 image_size = 2048
         else:
             image_size = int(mio3uv.image_size)
-        cls.__padding = padding_pixels / image_size
+        cls._padding = padding_pixels / image_size
 
     @classmethod
     def update_mesh(cls, context):
-        cls.__vertices = []
+        cls._vertices = []
 
         if not cls.is_running():
             return
@@ -121,7 +121,7 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
         selected_objects = [obj for obj in context.selected_objects if obj.type == "MESH" and obj.mode == "EDIT"]
 
         for obj in selected_objects:
-            padding_distance = cls.__padding
+            padding_distance = cls._padding
 
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
@@ -142,7 +142,7 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
                         normal = Vector((edge_vector.y, -edge_vector.x)).normalized()
                         padding_v1 = uv + normal * padding_distance
                         padding_v2 = uv_next + normal * padding_distance
-                        cls.__vertices.extend([padding_v1, padding_v2])
+                        cls._vertices.extend([padding_v1, padding_v2])
 
                         vertex_to_padded.setdefault(uv_tuple, []).append(padding_v1)
                         vertex_to_padded.setdefault(uv_next_tuple, []).append(padding_v2)
@@ -152,7 +152,7 @@ class MIO3UV_OT_view_padding(Mio3UVOperator):
                     padded_positions = vertex_to_padded[original_v]
                     for i in range(len(padded_positions)):
                         for j in range(i + 1, len(padded_positions)):
-                            cls.__vertices.extend([padded_positions[i], padded_positions[j]])
+                            cls._vertices.extend([padded_positions[i], padded_positions[j]])
 
             bm.free()
 
@@ -178,7 +178,10 @@ def load_handler(dummy):
     MIO3UV_OT_view_padding.handle_remove(bpy.context)
 
 
-classes = [MIO3UV_OT_view_padding, MIO3UV_OT_view_padding_refresh]
+classes = [
+    MIO3UV_OT_view_padding,
+    MIO3UV_OT_view_padding_refresh,
+]
 
 
 def register():

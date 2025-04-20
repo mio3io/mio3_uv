@@ -3,7 +3,6 @@ import bmesh
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
-from bpy.app.translations import pgettext_iface as tt_iface
 from ..classes.uv import UVIslandManager, UVNodeManager
 from ..classes.operator import Mio3UVOperator
 

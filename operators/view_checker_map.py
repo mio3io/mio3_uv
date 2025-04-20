@@ -32,20 +32,20 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
         if mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
 
-        existing_material = self.find_material()
+        existing_material = self.get_material()
         if existing_material:
             mat = existing_material
         else:
             mat = self.create_new_material()
 
-        existing_geometry_node = self.find_node_groups()
+        existing_geometry_node = self.get_node_groups()
         if existing_geometry_node:
             geometry_node = existing_geometry_node
         else:
             geometry_node = self.create_new_geometry_node(context)
 
         for obj in selected_objects:
-            existing_modifier = self.find_modifier(obj)
+            existing_modifier = self.get_modifier(obj)
             if existing_modifier:
                 obj.modifiers.remove(existing_modifier)
 
@@ -60,13 +60,13 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
 
         return {"FINISHED"}
 
-    def find_material(self):
+    def get_material(self):
         return bpy.data.materials.get("Mio3CheckerMapMat_{}".format(self.size))
 
-    def find_node_groups(self):
+    def get_node_groups(self):
         return bpy.data.node_groups.get(NAME_NODE_GROUP_OVERRIDE)
 
-    def find_modifier(self, obj):
+    def get_modifier(self, obj):
         return obj.modifiers.get(NAME_MOD_CHECKER_MAP)
 
     def create_new_geometry_node(self, context):

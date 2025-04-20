@@ -1,7 +1,5 @@
 import bpy
 from bpy.props import EnumProperty
-from bpy.app.translations import pgettext_iface as tt_iface
-from ..icons import preview_collections
 from ..classes.uv import UVNodeManager
 from ..classes.operator import Mio3UVOperator
 

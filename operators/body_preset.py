@@ -52,7 +52,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         max_co = Vector(np.max(bound_box, axis=0))
 
         if self.type == "AUTO":
-            parts_type = self.find_humanoid_parts(avg_center, max_co, min_co)
+            parts_type = self.get_humanoid_parts(avg_center, max_co, min_co)
             if parts_type == "HEAD":
                 parts_type = "HAIR_F"
         else:
@@ -97,7 +97,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 
-    def find_humanoid_parts(self, avg_center, max_co, min_co):
+    def get_humanoid_parts(self, avg_center, max_co, min_co):
         dimensions = max_co - min_co
         rel_x = (avg_center.x - min_co.x) / dimensions.x
         rel_z = (avg_center.z - min_co.z) / dimensions.z
@@ -131,7 +131,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
 
         parts_groups = {parts: [] for parts in anchor_positions.keys()}
         for island in island_manager.islands:
-            parts_type = self.find_humanoid_parts(island.center_3d, max_co, min_co)
+            parts_type = self.get_humanoid_parts(island.center_3d, max_co, min_co)
             parts_groups[parts_type].append(island)
 
         for parts_type, islands in parts_groups.items():

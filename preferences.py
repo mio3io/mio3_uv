@@ -8,7 +8,7 @@ class MIO3UV_preferences(AddonPreferences):
 
     ui_legacy: BoolProperty(
         name="Legacy UI Layout",
-        default=False,
+        default=True,
     )
 
     def draw(self, context):

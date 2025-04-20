@@ -456,9 +456,6 @@ class UVNodeManager:
     def __post_init__(self):
         self.find_all_groups()
 
-    def is_seam(self, edge):
-        return edge.seam or any(loop.edge.seam for loop in edge.link_loops)
-
     def find_all_groups(self):
         for obj in self.objects:
             if self.island_manager and obj in self.island_manager.bmesh_dict:
@@ -468,13 +465,13 @@ class UVNodeManager:
                 bm = bmesh.from_edit_mesh(obj.data)
                 uv_layer = bm.loops.layers.uv.verify()
 
-            uv_groups = self.get_uv_nodes(bm, uv_layer)
+            uv_groups = self.find_uv_nodes(bm, uv_layer)
             self.add_group(obj, bm, uv_layer, uv_groups)
 
     def add_group(self, obj, bm, uv_layer, uv_groups):
         self.groups.extend([UVNodeGroup(nodes=group, obj=obj, bm=bm, uv_layer=uv_layer) for group in uv_groups])
 
-    def get_uv_nodes(self, bm, uv_layer, selected=None):
+    def find_uv_nodes(self, bm, uv_layer, selected=None):
         uv_nodes = {}
 
         def round_uv(uv):
@@ -536,7 +533,8 @@ class UVNodeManager:
 
         return self.group_uv_nodes(list(uv_nodes.values()))
 
-    def group_uv_nodes(self, uv_nodes):
+    @staticmethod
+    def group_uv_nodes(uv_nodes):
         visited = set()
         islands = []
         stack = []
@@ -569,7 +567,7 @@ class UVNodeManager:
         if not bm and not uv_layer:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-        uv_groups = manager.get_uv_nodes(bm, uv_layer, selected)
+        uv_groups = manager.find_uv_nodes(bm, uv_layer, selected)
         if uv_groups:
             manager.add_group(obj, bm, uv_layer, uv_groups)
         return manager

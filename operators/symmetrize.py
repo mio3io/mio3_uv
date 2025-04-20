@@ -179,7 +179,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             if uv_selection[face] and self.should_symmetrize(center, direction_3d):
                 sym_center = self.get_symmetric_3d_point(center)
                 potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
-                sym_face = self.find_symmetric_face(face, potential_sym_faces, face_sym_verts)
+                sym_face = self.get_symmetric_face(face, potential_sym_faces, face_sym_verts)
                 if not sym_face:
                     continue
                 for loop in face.loops:
@@ -202,7 +202,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         )
 
     # 対称的な面を見つける
-    def find_symmetric_face(self, face, potential_faces, face_sym_verts):
+    def get_symmetric_face(self, face, potential_faces, face_sym_verts):
         face_vert_count = len(face.verts)
         sym_verts = face_sym_verts[face]
         for pot_face in potential_faces:
@@ -229,8 +229,8 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
     # 3Dの対称頂点を選択
     def select_symmetric_verts(self, bm, selected_verts):
         kd = kdtree.KDTree(len(bm.verts))
-        for v in bm.verts:
-            kd.insert(v.co, v.index)
+        for i, v in enumerate(bm.verts):
+            kd.insert(v.co, i)
         kd.balance()
 
         for face in bm.faces:
