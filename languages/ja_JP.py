@@ -48,11 +48,13 @@ translation_dict = {
 
         ("Operator", "Mark Seam by Angle"): "角度でシームを設定",
         ("Operator", "Mark Seam by Boundary"): "選択境界にシームを設定",
-        ("*", "Exclude Angle"): "正面にシームを入れない",
+        # ("*", "Exclude Angle"): "正面にシームを入れない",
         ("*", "Box Wrap Point"): "ボックスの折り返し",
-        ("*", "Front Angle Threshold"): "正面に含む角度",
+        ("*", "Box Mode"): "ボックスモード",
+        ("*", "Flat Angle Threshold"): "フラット面のしきい値",
         ("*", "Clear Seam"): "シームをクリア",
         ("*", "Clear Original Seam"): "元のシームをクリア",
+        ("*", "Rear"): "背面",
 
         # Align
         ("*", "Fixed Mode"): "モード固定",

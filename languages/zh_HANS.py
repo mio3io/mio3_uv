@@ -48,11 +48,13 @@ translation_dict = {
 
         ("Operator", "Mark Seam by Angle"): "按角度标记缝线",
         ("Operator", "Mark Seam by Boundary"): "按边界标记缝线",
-        ("*", "Exclude Angle"): "排除角度",
+        # ("*", "Exclude Angle"): "排除角度",
         ("*", "Box Wrap Point"): "盒子包裹点",
-        ("*", "Front Angle Threshold"): "正面角度阈值",
+        ("*", "Box Mode"): "立方体模式",
+        ("*", "Flat Angle Threshold"): "平面角度阈值",
         ("*", "Clear Seam"): "清除缝线",
         ("*", "Clear Original Seam"): "清除原始缝线",
+        ("*", "Rear"): "背面",
 
         # 对齐
         ("*", "Fixed Mode"): "固定模式",
