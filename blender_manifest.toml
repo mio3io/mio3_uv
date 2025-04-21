@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 id = "mio3_uv"
 name = "Mio3 UV"
-version = "1.4.0"
+version = "1.5.0"
 tagline = "UV Edit Assistant Tools"
 maintainer = "Mio"
 type = "add-on"
@@ -12,4 +12,4 @@ website = "https://github.com/mio3io"
 copyright = ["2025 Mio"]
 
 [permissions]
-files = "Import images and nodes from the included file"
+files = "Imports images, nodes, and translations from the bundled files"
