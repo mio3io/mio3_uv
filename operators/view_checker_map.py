@@ -157,6 +157,9 @@ class MIO3UV_OT_checker_map_cleanup(Mio3UVGlobalOperator):
     @classmethod
     def poll(cls, context):
         return context.active_object is not None
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
         removed_modifiers = 0

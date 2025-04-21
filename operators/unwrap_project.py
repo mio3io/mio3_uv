@@ -128,7 +128,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
         height = max_y - min_y
 
         unit_size = max(width, height)
-        scale = unit_size / self.scale_factor
+        scale = max(0.001, unit_size / self.scale_factor)
 
         for face in faces:
             for loop in face.loops:

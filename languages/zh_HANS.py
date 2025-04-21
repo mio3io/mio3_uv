@@ -163,6 +163,7 @@ translation_dict = {
         ("*", "Auto Scaling"): "自动缩放",
         ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "设置UV到网格的修改器(使用几何节点)",
 
+        ("*", "Adjusts Exposure if image is set"): "如果设置了纹理，则调整曝光",
         ("*", "Please display an image if you want to use pixel units"): "如需使用像素单位，请显示图像",
     }
 }  # fmt: skip

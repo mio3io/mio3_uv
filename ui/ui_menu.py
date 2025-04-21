@@ -55,9 +55,9 @@ class MIO3UV_PT_options_popover(Panel):
         # row.prop(props_o, "texture_size_y", text="")
 
         col = layout.column(align=True)
-        col.prop(context.scene.mio3uv, "auto_uv_sync")
+        col.prop(pref, "auto_uv_sync")
         col.prop(context.scene.mio3uv, "udim")
-        col.prop(pref, "ui_legacy")
+        # col.prop(pref, "ui_legacy")
 
         props_image = context.edit_image.mio3uv if context.edit_image is not None else context.scene.mio3uv
         split = layout.split(factor=0.4)

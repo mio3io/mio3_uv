@@ -58,66 +58,44 @@ class MIO3UV_PT_align(Mio3UVPanel):
     bl_category = "Mio3"
 
     def draw(self, context):
-        pref = get_preferences()
+        # pref = get_preferences()
         icons = preview_collections["icons"]
-        props_scene = context.scene.mio3uv
+        # props_scene = context.scene.mio3uv
         layout = self.layout
 
-        if pref.ui_legacy:
-            split = layout.split(factor=0.5)
-            col_left = split.column()
-            col_left.scale_y = 1.1
-            grid = col_left.grid_flow(row_major=True, columns=3, even_columns=True, even_rows=True, align=True)
-            grid.label(text="")
-            grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
-            grid.label(text="")
-            grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
-            dummy = grid.row(align=True)
-            dummy.scale_x = 3
-            dummy.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_CENTER"].icon_id).type = "CENTER"
-            grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_R"].icon_id).type = "MAX_X"
-            grid.label(text="")
-            grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B"].icon_id).type = "MIN_Y"
 
-            # Right
-            col_right = split.column(align=True)
-            col_right.scale_y = 1.14
+        split = layout.split(factor=0.5)
+        col_left = split.column()
+        col_left.scale_y = 1.1
+        grid = col_left.grid_flow(row_major=True, columns=3, even_columns=True, even_rows=True, align=True)
+        grid.label(text="")
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
+        grid.label(text="")
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
+        dummy = grid.row(align=True)
+        dummy.scale_x = 3
+        dummy.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_CENTER"].icon_id).type = "CENTER"
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_R"].icon_id).type = "MAX_X"
+        grid.label(text="")
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B"].icon_id).type = "MIN_Y"
 
-            row = col_right.row(align=True)
-            row.scale_x = 3
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_Y_CENTER"].icon_id).type = "ALIGN_Y"
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
-            row = col_right.row(align=True)
-            row.scale_x = 3
-            row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_X"].icon_id).axis = "X"
-            row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
-            row = col_right.row(align=True)
-            row.scale_x = 3
-            row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_Y"].icon_id).axis="Y"
-            row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
-        else:
-            col = layout.column(align=True)
-            col.scale_y = 1.2
+        # Right
+        col_right = split.column(align=True)
+        col_right.scale_y = 1.14
 
-            row = col.row(align=True)
-            row.scale_x = 2.3
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_Y_CENTER"].icon_id).type = "ALIGN_Y"
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B"].icon_id).type = "MIN_Y"
-            row.separator(factor=0.2)
-            row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_X"].icon_id).axis = "X"
-            row.separator(factor=0.2)
-            row.operator("uv.mio3_align", text="", icon_value=icons["DIST_UVS"].icon_id).type = "ALIGN_S"
-            col.separator(factor=0.25)
-            row = col.row(align=True)
-            row.scale_x = 2.3
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
-            row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_R"].icon_id).type = "MAX_X"
-            row.separator(factor=0.2)
-            row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
-            row.separator(factor=0.2)
-            row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
+        row = col_right.row(align=True)
+        row.scale_x = 3
+        row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_Y_CENTER"].icon_id).type = "ALIGN_Y"
+        row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
+        row = col_right.row(align=True)
+        row.scale_x = 3
+        row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_X"].icon_id).axis = "X"
+        row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
+        row = col_right.row(align=True)
+        row.scale_x = 3
+        row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_Y"].icon_id).axis="Y"
+        row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
+
 
         col_rotate = layout.column(align=True)
         col_rotate.scale_y = 1.1

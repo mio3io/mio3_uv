@@ -83,8 +83,7 @@ translation_dict = {
 
         # Vertex
         ("Operator", "Distribute UVs"): "UVを分布",
-        ("*", "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"):
-            "アイランド:等間隔に分布\nUVグループ:等間隔またはジオメトリに基づくように分布",
+        ("*", "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"): "アイランド:等間隔に分布\nUVグループ:等間隔またはジオメトリに基づくように分布",
         ("Operator", "Circular"): "円形",
         ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("Operator", "Offset"): "オフセット",
@@ -106,8 +105,7 @@ translation_dict = {
 
         # Group
         ("Operator", "Grid Sort"): "グリッド状にソート",
-        ("*", "Gridding island based on coordinates in 3D space"):
-            "3D空間の座標に基づきアイランドをグリッド状に並び替え",
+        ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標に基づきアイランドをグリッド状に並び替え",
         ("*", "Grid Threshold"): "グリッドのしきい値",
         ("*", "UV Distance"): "UV空間での距離",
         ("*", "UV Similar"): "UVの類似性",
@@ -117,16 +115,14 @@ translation_dict = {
         ("*", "Group Margin"): "グループの間隔",
 
         ("Operator", "Unfoldify"): "展開図レイアウト",
-        ("*", "Arrange islands vertically and horizontally based on their positional relationships in 3D space"):
-            "3D空間の位置関係に基づきアイランドを配置します",
+        ("*", "Arrange islands vertically and horizontally based on their positional relationships in 3D space"): "3D空間の位置関係に基づきアイランドを配置します",
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
         ("*", "Based on Active"): "アクティブをベースに",
         ("*", "Orient World"): "ワールド方向",
 
         ("Operator", "Auto Body Parts"): "パーツを自動で整列",
-        ("*", "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"):
-            "髪の房や指をまとめて選択して自動的に回転と順序を揃えます.\n全身を選択している場合はパーツで分類します",
+        ("*", "Select hair strands or fingers to auto-align rotation and order.\nClassify by parts if whole body is selected"): "髪の房や指をまとめて選択して自動的に回転と順序を揃えます.\n全身を選択している場合はパーツで分類します",
         ("Operator", "Hand L"): "左手L",
         ("Operator", "Hand R"): "右手R",
         ("Operator", "Foot L"): "左足L",
@@ -162,14 +158,12 @@ translation_dict = {
         ("*", "Set the checker map (using Geometry Nodes)"): "チェッカーマップを設定します（ジオメトリノードを使用）",
         ("Operator", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
-        ("*", "Warning: This option may poor performance"):
-            "警告: このオプションはパフォーマンスが低下する可能性があります",
+        ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
         ("Operator", "UV Mesh"): "UV Mesh",
         ("*", "Auto Scaling"): "自動スケール",
-        ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"):
-            "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
+        ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
 
+        ("*", "Adjusts Exposure if image is set"): "画像が設定されている場合に露光を調整します",
         ("*", "Please display an image if you want to use pixel units"): "ピクセル単位を使用する場合は画像を表示してください",
-
     }
 }  # fmt: skip

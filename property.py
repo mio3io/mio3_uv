@@ -5,6 +5,7 @@ from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty, PointerProperty
 from .icons import preview_collections
 from .operators import view_padding
+from .globals import get_preferences
 
 
 ITEMS_TEXTURE_SIZE = [
@@ -20,7 +21,7 @@ class MIO3UV_PG_scene(PropertyGroup):
     def callback_update_exposure(self, context):
         context.scene.view_settings.exposure = self.exposure
 
-    auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False)
+    # auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False)
     auto_uv_sync_skip: BoolProperty(name="UV Sync Auto Select Skip", default=False)
 
     edge_mode: BoolProperty(name="Edge Mode", description="Edge Mode", default=False)
@@ -78,7 +79,11 @@ class MIO3UV_PG_scene(PropertyGroup):
         items=ITEMS_TEXTURE_SIZE,
         default="1024",
     )
-    use_exposure: BoolProperty(name="Exposure", description="Default", default=False)  # Dummy Property
+    use_exposure: BoolProperty(
+        name="Exposure",
+        default=False,
+        description="Adjusts Exposure if image is set",
+    )  # Dummy Property
     exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
 
@@ -156,6 +161,7 @@ class MIO3UV_PG_object(PropertyGroup):
         name="Size", description="1 = 1m", default=2, min=0.1, max=200, update=callback_update_uvmesh_size
     )
 
+
 class MIO3UV_PG_image(PropertyGroup):
     def callback_update_use_exposure(self, context):
         if hasattr(context, "edit_image"):
@@ -163,7 +169,12 @@ class MIO3UV_PG_image(PropertyGroup):
             context.scene.mio3uv.use_exposure = self.use_exposure
             context.scene.view_settings.exposure = context.scene.mio3uv.exposure if self.use_exposure else 0
 
-    use_exposure: BoolProperty(name="Exposure", default=False, update=callback_update_use_exposure)
+    use_exposure: BoolProperty(
+        name="Exposure",
+        default=False,
+        update=callback_update_use_exposure,
+        description="Adjusts Exposure if image is set",
+    )
 
     @classmethod
     def reset_images(cls):
@@ -177,9 +188,10 @@ class MIO3UV_PG_image(PropertyGroup):
 
 
 def callback_use_uv_select_sync():
+    pref = get_preferences()
     context = bpy.context
     props_s = context.scene.mio3uv
-    if props_s.auto_uv_sync:
+    if pref.auto_uv_sync:
         if not props_s.auto_uv_sync_skip:
             bpy.ops.uv.mio3_auto_uv_sync("EXEC_DEFAULT")
     props_s.auto_uv_sync_skip = False
