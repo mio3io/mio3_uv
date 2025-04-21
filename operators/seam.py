@@ -211,7 +211,7 @@ class MIO3UV_OT_seam_boundary(Mio3UVOperator):
     bl_description = "Mark Seam by Boundary"
     bl_options = {"REGISTER", "UNDO"}
 
-    clear_seams: BoolProperty(name="Celar Seam", description="Celar Seam", default=False)
+    clear_seams: BoolProperty(name="Clear Seam", description="Clear Seam", default=False)
 
     def execute(self, context):
         obj = context.active_object

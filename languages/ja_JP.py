@@ -51,7 +51,7 @@ translation_dict = {
         ("*", "Exclude Angle"): "正面にシームを入れない",
         ("*", "Box Wrap Point"): "ボックスの折り返し",
         ("*", "Front Angle Threshold"): "正面に含む角度",
-        ("*", "Celar Seam"): "シームをクリア",
+        ("*", "Clear Seam"): "シームをクリア",
         ("*", "Clear Original Seam"): "元のシームをクリア",
 
         # Align
