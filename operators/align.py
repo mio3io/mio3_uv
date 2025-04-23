@@ -63,7 +63,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
         if self.type == "ALIGN_S":
             try:
-                bpy.ops.uv.align(axis='ALIGN_S')
+                bpy.ops.uv.align(axis="ALIGN_S")
             except:
                 return {"CANCELLED"}
             return {"FINISHED"}
@@ -182,7 +182,6 @@ class MIO3UV_OT_align(Mio3UVOperator):
                 node.uv.x = center_x
                 node.uv.y = center_y
 
-
     def align_islands(self, island_manager, align_type):
         islands = island_manager.islands
         if not islands:
@@ -266,12 +265,8 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
             self.objests_state[obj] = {
                 "bm": bm,
                 "uv_layer": uv_layer,
-                "original_selected_verts": (
-                    {vert: vert.select for vert in bm.verts} if self.use_uv_select_sync else None
-                ),
-                "original_selected_loops": {
-                    loop: loop[uv_layer].select_edge for face in bm.faces for loop in face.loops
-                },
+                "selected_verts": ({vert: vert.select for vert in bm.verts} if self.use_uv_select_sync else None),
+                "selected_loops": {loop: loop[uv_layer].select_edge for face in bm.faces for loop in face.loops},
             }
 
         bpy.ops.mesh.select_linked(delimit={"UV"})
@@ -282,7 +277,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
             self.process_uv_selection(bm, uv_layer, self.axis)
             node_manager = UVNodeManager.from_object(obj, bm=bm, uv_layer=uv_layer, mode="EDGE")
             self.align_uv_nodes(node_manager, self.axis)
-            self.restore_selection_state(self.objests_state[obj])
+            self.restore_selection(self.objests_state[obj])
             bmesh.update_edit_mesh(obj.data)
 
         if self.use_uv_select_sync:
@@ -291,14 +286,14 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def restore_selection_state(self, objests_state):
+    def restore_selection(self, objests_state):
         bm = objests_state["bm"]
         uv_layer = objests_state["uv_layer"]
         if self.use_uv_select_sync:
-            for vert, select in objests_state["original_selected_verts"].items():
+            for vert, select in objests_state["selected_verts"].items():
                 vert.select = select
             bm.select_flush(False)
-        for loop, state in objests_state["original_selected_loops"].items():
+        for loop, state in objests_state["selected_loops"].items():
             loop[uv_layer].select_edge = state
 
     def process_uv_selection(self, bm, uv_layer, axis):

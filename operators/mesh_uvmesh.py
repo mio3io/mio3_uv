@@ -58,8 +58,11 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         return {"FINISHED"}
 
     def auto_adjust_size(self, obj):
-        mesh_area = self.calc_mesh_area(obj)
-        uv_area = self.calc_uv_area(obj)
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        mesh_area = self.calc_mesh_area(bm)
+        uv_area = self.calc_uv_area(bm)
+        bm.free()
         if uv_area > 0:
             size = math.sqrt(mesh_area / uv_area)
             size = max(0.1, min(size, 200.0))
@@ -68,28 +71,23 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
             return size
         return 2
 
-    def calc_mesh_area(self, obj):
-        bm = bmesh.new()
-        bm.from_mesh(obj.data)
+    def calc_mesh_area(self, bm):
         area = sum(f.calc_area() for f in bm.faces)
-        bm.free()
         return area
 
-    def calc_uv_area(self, obj):
-        me = obj.data
-        uv_layer = me.uv_layers.active.data
-        total_area = 0
-        for poly in me.polygons:
-            area = 0
-            for i in range(1, len(poly.loop_indices) - 1):
-                idx1 = poly.loop_indices[0]
-                idx2 = poly.loop_indices[i]
-                idx3 = poly.loop_indices[i + 1]
-                uv1 = uv_layer[idx1].uv
-                uv2 = uv_layer[idx2].uv
-                uv3 = uv_layer[idx3].uv
-                area += abs(0.5 * ((uv2[0] - uv1[0]) * (uv3[1] - uv1[1]) - (uv3[0] - uv1[0]) * (uv2[1] - uv1[1])))
-            total_area += area
+    def calc_uv_area(self, bm):
+        uv_layer = bm.loops.layers.uv.verify()
+        total_area = 0.0
+        for face in bm.faces:
+            if len(face.loops) < 3:
+                continue
+            uv_coords = [loop[uv_layer].uv for loop in face.loops]
+            uv0 = uv_coords[0]
+            for i in range(1, len(uv_coords) - 1):
+                uv1 = uv_coords[i]
+                uv2 = uv_coords[i + 1]
+                area = 0.5 * abs((uv1.x - uv0.x) * (uv2.y - uv0.y) - (uv2.x - uv0.x) * (uv1.y - uv0.y))
+                total_area += area
         return total_area
 
     def get_node_groups(self):

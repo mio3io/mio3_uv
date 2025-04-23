@@ -47,13 +47,13 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                 bm = island.bm
                 uv_layer = island.uv_layer
 
-                quad = self.find_anchor_face(uv_layer, island.faces)
+                quad = self.get_base_face(uv_layer, island.faces)
                 if not quad:
                     island.deselect_all_uv()
                     continue
                 bm.faces.active = quad
 
-                self.align_active_uv_to_square(uv_layer, bm.faces.active)
+                self.align_square(uv_layer, bm.faces.active)
 
                 for face in island.faces:
                     if all(loop[uv_layer].select for loop in face.loops):
@@ -83,7 +83,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def find_anchor_face(self, uv_layer, selected_faces):
+    def get_base_face(self, uv_layer, selected_faces):
         best_face = None
         best_score = float("inf")
 
@@ -113,7 +113,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         return best_face
 
     # 四角形にする
-    def align_active_uv_to_square(self, uv_layer, active_face):
+    def align_square(self, uv_layer, active_face):
         uv_coords = [loop[uv_layer].uv for loop in active_face.loops]
         min_uv = Vector((min(uv.x for uv in uv_coords), min(uv.y for uv in uv_coords)))
         max_uv = Vector((max(uv.x for uv in uv_coords), max(uv.y for uv in uv_coords)))

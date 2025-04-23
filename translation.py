@@ -19,10 +19,10 @@ for lang_file in os.listdir(languages_dir):
             print("❌ Failed to load translation file: {} - {}".format(lang_code, e))
 
 
-def register(name):
-    bpy.app.translations.unregister(name)
-    bpy.app.translations.register(name, translation_dict)
+def register():
+    bpy.app.translations.unregister(__name__)
+    bpy.app.translations.register(__name__, translation_dict)
 
 
-def unregister(name):
-    bpy.app.translations.unregister(name)
+def unregister():
+    bpy.app.translations.unregister(__name__)

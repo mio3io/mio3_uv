@@ -74,7 +74,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                 bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
 
             if parts_type in {"HAND_R", "FOOT_R", "FOOT_L"}:
-                self.rotate_uv_islands(island_manager)
+                self.rotate_islands(island_manager)
 
             if parts_type == "BUTTON":
                 self.sort_axis(island_manager, "Z", reverse=False)
@@ -186,7 +186,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                 island.move(island_offset)
                 offset.y -= island.height + 0.01
 
-    def rotate_uv_islands(self, island_manager):
+    def rotate_islands(self, island_manager):
         for island in island_manager.islands:
             uv_layer = island.uv_layer
             pivot = Vector(((island.min_uv.x + island.max_uv.x) / 2, (island.min_uv.y + island.max_uv.y) / 2))

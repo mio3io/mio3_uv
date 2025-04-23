@@ -40,8 +40,8 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             bm = island_manager.bmesh_dict[obj]
             if islands:
                 if self.group:
-                    face_groups = self.get_connected_face_groups(bm)
-                    island_groups = self.group_islands_by_face_groups(islands, face_groups)
+                    face_groups = self.find_groups(bm)
+                    island_groups = self.find_islands(islands, face_groups)
                     for group in island_groups:
                         if group:
                             groups.append(group)
@@ -82,7 +82,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def get_connected_face_groups(self, bm):
+    def find_groups(self, bm):
         face_groups = []
         unprocessed = set(bm.faces)
         while unprocessed:
@@ -99,7 +99,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             face_groups.append(current_group)
         return face_groups
 
-    def group_islands_by_face_groups(self, islands, face_groups):
+    def find_islands(self, islands, face_groups):
         island_groups = [[] for _ in face_groups]
         for island in islands:
             island_face = next(iter(island.faces))
@@ -152,7 +152,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             other_islands[category].append(island)
 
         if not base_island:
-            base_island = self.select_base_island(other_islands)
+            base_island = self.get_base_island(other_islands)
 
         return base_island, other_islands
 
@@ -177,7 +177,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         base_center_u = (base_island.min_uv.x + base_island.max_uv.x) / 2
 
         if other_islands["FRONT"]:
-            sorted_front = self.sort_islands_by_3d_position(other_islands["FRONT"], "FRONT")
+            sorted_front = self.sort_islands(other_islands["FRONT"], "FRONT")
             for island in sorted_front:
                 island_center_u = (island.min_uv.x + island.max_uv.x) / 2
                 u_offset = base_center_u - island_center_u
@@ -186,7 +186,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 current_v -= (island.max_uv.y - island.min_uv.y) + margin
 
         if other_islands["BOTTOM"]:
-            sorted_bottom = self.sort_islands_by_3d_position(other_islands["BOTTOM"], "BOTTOM")
+            sorted_bottom = self.sort_islands(other_islands["BOTTOM"], "BOTTOM")
             total_width = sum(island.width for island in sorted_bottom) + margin * (len(sorted_bottom) - 1)
             start_u = (base_island.min_uv.x + base_island.max_uv.x) / 2 - total_width / 2
 
@@ -201,7 +201,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 current_v -= max_height + margin
 
         if other_islands["BACK"]:
-            sorted_back = self.sort_islands_by_3d_position(other_islands["BACK"], "BACK")
+            sorted_back = self.sort_islands(other_islands["BACK"], "BACK")
             for island in sorted_back:
                 island_center_u = (island.min_uv.x + island.max_uv.x) / 2
                 u_offset = base_center_u - island_center_u
@@ -210,7 +210,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 current_v -= (island.max_uv.y - island.min_uv.y) + margin
 
         if other_islands["TOP"]:
-            sorted_top = self.sort_islands_by_3d_position(other_islands["TOP"], "TOP")
+            sorted_top = self.sort_islands(other_islands["TOP"], "TOP")
             total_width = sum(island.width for island in sorted_top) + margin * (len(sorted_top) - 1)
             start_u = (base_island.min_uv.x + base_island.max_uv.x) / 2 - total_width / 2
             top_v = base_island.max_uv.y + margin
@@ -223,7 +223,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         for direction, islands in other_islands.items():
             if not islands or direction not in ["RIGHT", "LEFT"]:
                 continue
-            sorted_islands = self.sort_islands_by_3d_position(islands, direction)
+            sorted_islands = self.sort_islands(islands, direction)
             self.layout_vertical(sorted_islands, direction, base_island, margin)
 
 
@@ -256,7 +256,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 return island
         return None
 
-    def select_base_island(self, other_islands):
+    def get_base_island(self, other_islands):
         front_islands = other_islands["FRONT"]
         if front_islands:
             base_island = max(front_islands, key=lambda x: sum(face.calc_area() for face in x.faces))
@@ -275,7 +275,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
 
         return base_island
 
-    def sort_islands_by_3d_position(self, islands, direction):
+    def sort_islands(self, islands, direction):
         if direction == "TOP" or direction == "BOTTOM":
             # X 左から右 / Y 手前から奥
             return sorted(islands, key=lambda i: (i.center_3d_local.x, -i.center_3d_local.y))

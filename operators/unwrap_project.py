@@ -39,7 +39,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
             if not self.units:
                 self.project_faces(selected_faces, uv_layer)
             else:
-                face_groups = self.get_connected_face_groups(selected_faces)
+                face_groups = self.find_groups(selected_faces)
                 for _, group in enumerate(face_groups):
                     self.project_faces(group, uv_layer)
 
@@ -79,7 +79,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
             island.move(Vector((offset_x, offset_y)))
             current_x += island.width + 0.01
 
-    def get_connected_face_groups(self, faces):
+    def find_groups(self, faces):
         face_groups = []
         used_faces = set()
 
