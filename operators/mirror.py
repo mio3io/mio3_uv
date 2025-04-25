@@ -39,7 +39,8 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
         if context.tool_settings.use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        self.axis = "Y" if event.alt else "X"
+        if event.alt:
+            self.axis = "Y"
 
         if event.shift:
             self.pivot_point = "INDIVIDUAL_ORIGINS"
