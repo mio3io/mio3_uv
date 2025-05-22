@@ -89,7 +89,7 @@ class MIO3UV_PG_scene(PropertyGroup):
 
 class MIO3UV_PG_object(PropertyGroup):
     def callback_update_padding(self, context):
-        view_padding.MIO3UV_OT_view_padding.redraw(context)
+        view_padding.UV_OT_mio3_guide_padding.redraw(context)
 
     def callback_update_uvmesh_factor(self, context):
         modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
