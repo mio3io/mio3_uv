@@ -1,8 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty, IntProperty
-from ..classes.uv import UVNodeManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVNodeManager, Mio3UVOperator
 
 
 class MIO3UV_OT_relax(Mio3UVOperator):

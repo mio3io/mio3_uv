@@ -2,8 +2,7 @@ import bpy
 import bmesh
 from bpy.props import BoolProperty, FloatProperty
 from mathutils import Vector
-from ..classes.operator import Mio3UVOperator
-from ..classes.uv import UVIslandManager
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_unfoldify(Mio3UVOperator):

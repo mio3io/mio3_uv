@@ -4,8 +4,7 @@ from bpy.props import BoolProperty, FloatProperty
 from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..icons import preview_collections
-from ..classes.uv import UVIslandManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_unwrap_project(Mio3UVOperator):

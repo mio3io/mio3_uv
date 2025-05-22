@@ -3,8 +3,7 @@ import math
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
 from ..icons import preview_collections
-from ..classes.uv import UVIslandManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 def get_alignment_items(self, context):

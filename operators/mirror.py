@@ -2,8 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, EnumProperty
-from ..classes.operator import Mio3UVOperator
-from ..classes.uv import UVIslandManager
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_mirror(Mio3UVOperator):

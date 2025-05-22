@@ -2,9 +2,9 @@ import bpy
 import bmesh
 import gpu
 from mathutils import Vector
-from gpu_extras.batch import batch_for_shader
-from ..classes.operator import Mio3UVOperator
 from bpy.types import SpaceImageEditor
+from gpu_extras.batch import batch_for_shader
+from ..classes import Mio3UVOperator
 
 msgbus_owner = object()
 

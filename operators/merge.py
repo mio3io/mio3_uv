@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import FloatProperty
-from ..classes.operator import Mio3UVOperator
+from ..classes import Mio3UVOperator
 
 
 class MIO3UV_OT_merge(Mio3UVOperator):

@@ -3,8 +3,7 @@ import math
 from mathutils import Vector, Matrix
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..classes.operator import Mio3UVOperator
-from ..classes.uv import UVIslandManager
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_rotate(Mio3UVOperator):

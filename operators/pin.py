@@ -2,7 +2,7 @@ import bpy
 import bmesh
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty
-from ..classes.operator import Mio3UVOperator
+from ..classes import Mio3UVOperator
 
 
 class MIO3UV_OT_pin(Mio3UVOperator):

@@ -1,6 +1,6 @@
 import bpy
 import os
-from ..classes.operator import Mio3UVGlobalOperator
+from ..classes import Mio3UVGlobalOperator
 
 CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "checker_maps")
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")

@@ -3,8 +3,7 @@ import bmesh
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
-from ..classes.uv import UVIslandManager, UVNodeManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
 
 
 class MIO3UV_OT_align(Mio3UVOperator):

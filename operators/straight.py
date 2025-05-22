@@ -1,8 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 from ..utils import straight_uv_nodes
-from ..classes.uv import UVNodeManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVNodeManager, Mio3UVOperator
 
 
 class MIO3UV_OT_straight(Mio3UVOperator):

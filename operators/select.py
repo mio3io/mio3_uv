@@ -3,8 +3,7 @@ import bmesh
 import math
 from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..classes.uv import UVIslandManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, Mio3UVOperator
 from ..utils import sync_uv_from_mesh_obj, sync_mesh_from_uv_obj
 
 

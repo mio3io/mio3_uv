@@ -2,8 +2,7 @@ import bpy
 import math
 from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector
-from ..classes.uv import UVIslandManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_grid(Mio3UVOperator):

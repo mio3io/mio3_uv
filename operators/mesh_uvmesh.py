@@ -3,7 +3,7 @@ import os
 import math
 import bmesh
 from bpy.props import BoolProperty, EnumProperty
-from ..classes.operator import Mio3UVOperator
+from ..classes import Mio3UVOperator
 from ..icons import preview_collections
 
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")

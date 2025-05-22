@@ -2,8 +2,7 @@ import bpy
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty
-from ..classes.uv import UVIslandManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_orient(Mio3UVOperator):

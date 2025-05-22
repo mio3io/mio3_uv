@@ -2,8 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
 from ..utils import straight_uv_nodes
-from ..classes.uv import UVIslandManager, UVNodeManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
 
 
 class MIO3UV_OT_rectify(Mio3UVOperator):

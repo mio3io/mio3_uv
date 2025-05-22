@@ -2,7 +2,7 @@ import bpy
 import bmesh
 from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..classes.operator import Mio3UVOperator
+from ..classes import Mio3UVOperator
 from ..utils import get_tile_co
 from ..icons import preview_collections
 

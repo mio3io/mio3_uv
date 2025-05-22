@@ -5,7 +5,7 @@ from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from bpy.app.translations import pgettext_iface as tt_iface
 from ..icons import preview_collections
-from ..classes.operator import Mio3UVOperator
+from ..classes import Mio3UVOperator
 
 
 class MIO3UV_OT_seam(Mio3UVOperator):

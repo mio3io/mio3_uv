@@ -2,8 +2,7 @@ import bpy
 import numpy as np
 from bpy.props import EnumProperty
 from mathutils import Vector
-from ..classes.uv import UVIslandManager
-from ..classes.operator import Mio3UVOperator
+from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_body_preset(Mio3UVOperator):
