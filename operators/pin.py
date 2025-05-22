@@ -8,7 +8,7 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_pin(Mio3UVOperator):
     bl_idname = "uv.mio3_pin"
     bl_label = "Pin"
-    bl_description = "[Ctrl][Alt] {}".format(tt_iface("Clear"))
+    bl_description = "[Alt] {}".format(tt_iface("Clear"))
     bl_options = {"REGISTER", "UNDO"}
 
     clear: BoolProperty(name="Clear", default=False)

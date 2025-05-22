@@ -26,7 +26,8 @@ class MIO3UV_PT_main(Mio3UVPanel):
         row2.alignment = "RIGHT"
 
         row3 = row.row(align=True)
-        row3.operator("uv.mio3_pin", text="", icon="PINNED")
+        row3.operator("uv.mio3_pin", text="", icon="PINNED").clear = False
+        row3.operator("uv.mio3_pin", text="", icon="UNPINNED").clear = True
         row3.separator()
         row3.popover("MIO3UV_PT_options_popover", text="", icon="PREFERENCES")
 
