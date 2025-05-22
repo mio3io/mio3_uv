@@ -117,14 +117,9 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
         return Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
 
 
-classes = [MIO3UV_OT_mirror]
-
-
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_mirror)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_mirror)

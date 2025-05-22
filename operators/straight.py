@@ -68,16 +68,9 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         return {"FINISHED"}
 
 
-classes = [
-    MIO3UV_OT_straight,
-]
-
-
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_straight)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_straight)

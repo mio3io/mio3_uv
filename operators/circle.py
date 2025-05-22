@@ -61,14 +61,9 @@ class MIO3UV_OT_circle(Mio3UVOperator):
                 node.uv = center + direction.normalized() * avg_radius
 
 
-classes = [MIO3UV_OT_circle]
-
-
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_circle)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_circle)

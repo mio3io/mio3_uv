@@ -113,7 +113,6 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
 
         node_manager.update_uvmeshes()
 
-
         self.print_time()
         return {"FINISHED"}
 
@@ -130,14 +129,9 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
         return "Y" if height > width else "X"
 
 
-classes = [MIO3UV_OT_align_seam]
-
-
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_align_seam)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_align_seam)

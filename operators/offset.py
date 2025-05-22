@@ -79,16 +79,10 @@ class MIO3UV_OT_offset(Mio3UVOperator):
                                 loop[uv_layer].uv += movement
 
 
-classes = [
-    MIO3UV_OT_offset,
-]
-
 
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_offset)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_offset)

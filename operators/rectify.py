@@ -256,16 +256,9 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
             loop[uv_layer].uv = scaled_uv + translation
 
 
-classes = [
-    MIO3UV_OT_rectify,
-]
-
-
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_rectify)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_rectify)
