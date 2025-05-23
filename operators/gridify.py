@@ -3,7 +3,7 @@ import math
 from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector
 from ..classes import UVIslandManager, Mio3UVOperator
-
+import mathutils
 
 class MIO3UV_OT_grid(Mio3UVOperator):
     bl_idname = "uv.mio3_gridify"
@@ -52,7 +52,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                     continue
                 bm.faces.active = quad
 
-                self.align_square(uv_layer, bm.faces.active)
+                self.align_rect(uv_layer, bm.faces.active)
 
                 for face in island.faces:
                     if all(loop[uv_layer].select for loop in face.loops):
@@ -111,53 +111,47 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
         return best_face
 
-    # 四角形にする
-    def align_square(self, uv_layer, active_face):
-        uv_coords = [loop[uv_layer].uv for loop in active_face.loops]
-        min_uv = Vector((min(uv.x for uv in uv_coords), min(uv.y for uv in uv_coords)))
-        max_uv = Vector((max(uv.x for uv in uv_coords), max(uv.y for uv in uv_coords)))
-        center_uv = (min_uv + max_uv) / 2
-
-        # 角度
-        edge_uv = uv_coords[1] - uv_coords[0]
-        current_angle = math.atan2(edge_uv.y, edge_uv.x)
-        rotation_angle = (round(math.degrees(current_angle) / 90) * 90 - math.degrees(current_angle) + 45) % 90 - 45
-        rotation_rad = math.radians(rotation_angle)
-        sin_rot, cos_rot = math.sin(rotation_rad), math.cos(rotation_rad)
-
-        rotated_uvs = []
-        for uv in uv_coords:
-            uv_local = uv - center_uv
-            uv_rotated = (
-                Vector(
-                    (
-                        uv_local.x * cos_rot - uv_local.y * sin_rot,
-                        uv_local.x * sin_rot + uv_local.y * cos_rot,
-                    )
-                )
-                + center_uv
-            )
-            rotated_uvs.append(uv_rotated)
-
-        min_x = min(uv.x for uv in rotated_uvs)
-        max_x = max(uv.x for uv in rotated_uvs)
-        min_y = min(uv.y for uv in rotated_uvs)
-        max_y = max(uv.y for uv in rotated_uvs)
-
-        new_uvs = [
-            Vector((min_x, min_y)),
-            Vector((max_x, min_y)),
-            Vector((max_x, max_y)),
-            Vector((min_x, max_y)),
+    def align_rect(self, uv_layer, face):
+        uvs = [loop[uv_layer].uv.copy() for loop in face.loops]
+        center = sum(uvs, Vector((0, 0))) / 4
+        edge0 = (uvs[1] - uvs[0]).length
+        edge1 = (uvs[2] - uvs[1]).length
+        edge2 = (uvs[3] - uvs[2]).length
+        edge3 = (uvs[0] - uvs[3]).length
+        right_angle_thresh = 1 
+        length_ratio_thresh = 0.01
+        is_rect = True
+        for i in range(4):
+            v1 = uvs[i] - uvs[(i - 1) % 4]
+            v2 = uvs[(i + 1) % 4] - uvs[i]
+            angle = abs(math.degrees(math.atan2(v1.x * v2.y - v1.y * v2.x, v1.dot(v2))))
+            if abs(angle - 90) > right_angle_thresh:
+                is_rect = False
+                break
+        if is_rect:
+            w1 = edge0
+            w2 = edge2
+            h1 = edge1
+            h2 = edge3
+            if abs(w1 - w2) / max(w1, w2) > length_ratio_thresh or abs(h1 - h2) / max(h1, h2) > length_ratio_thresh:
+                is_rect = False
+        if is_rect:
+            return
+        width = (edge0 + edge2) / 2
+        height = (edge1 + edge3) / 2
+        angle = 0
+        half_w = width / 2
+        half_h = height / 2
+        rect = [
+            Vector((-half_w, -half_h)),
+            Vector((half_w, -half_h)),
+            Vector((half_w, half_h)),
+            Vector((-half_w, half_h)),
         ]
-
-        center = Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
-        sorted_pairs = sorted(
-            zip(rotated_uvs, active_face.loops),
-            key=lambda pair: ((pair[0] - center).angle_signed(Vector((1, 0))) if (pair[0] - center).length > 0 else 0),
-        )
-
-        for (_, loop), new_uv in zip(sorted_pairs, new_uvs):
+        rot = mathutils.Matrix.Rotation(angle, 2)
+        rect = [rot @ v + center for v in rect]
+        pairs = sorted(zip(uvs, face.loops), key=lambda p: (p[0] - center).angle_signed(Vector((1, 0))))
+        for (_, loop), new_uv in zip(pairs, rect):
             loop[uv_layer].uv = new_uv
 
     def draw(self, context):
