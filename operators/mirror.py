@@ -35,9 +35,6 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        if context.tool_settings.use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-
         if event.alt:
             self.axis = "Y"
 
@@ -60,7 +57,7 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
                 self.sync_uv_from_mesh(context, self.objects)
 
             if use_uv_select_sync:
-                island_manager = UVIslandManager(self.objects, mesh_keep=True, mesh_link_uv=True)
+                island_manager = UVIslandManager(self.objects, sync=True, mesh_link_uv=True)
             else:
                 island_manager = UVIslandManager(self.objects)
 

@@ -45,6 +45,13 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
         sync_mesh_from_uv(context, selected_objects)
 
     def check_selected_face_objects(self, objects):
+        if bpy.context.tool_settings.use_uv_select_sync:
+            for obj in objects:
+                if obj.type == "MESH":
+                    if obj.data.total_face_sel > 0:
+                        return True
+            return False
+
         selected_face_objects = False
         for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
@@ -57,24 +64,14 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
         return selected_face_objects
 
     def check_selected_uv(self, bm, uv_layer):
-        use_uv_select_sync = bpy.context.tool_settings.use_uv_select_sync
         selected_face = False
-        if use_uv_select_sync:
-            for face in bm.faces:
-                if face.select:
-                    uv_selected = [l[uv_layer].select for l in face.loops]
-                    if all(uv_selected):
-                        selected_face = True
-                        break
-            return selected_face
-        else:
-            for face in bm.faces:
-                if face.select:
-                    uv_selected = [l[uv_layer].select_edge for l in face.loops]
-                    if all(uv_selected):
-                        selected_face = True
-                        break
-            return selected_face
+        for face in bm.faces:
+            if face.select:
+                uv_selected = [l[uv_layer].select_edge for l in face.loops]
+                if all(uv_selected):
+                    selected_face = True
+                    break
+        return selected_face
 
 
 class Mio3UVGlobalOperator(Operator, Mio3UVDebug):

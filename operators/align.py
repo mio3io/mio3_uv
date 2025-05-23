@@ -36,10 +36,6 @@ class MIO3UV_OT_align(Mio3UVOperator):
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-
         selected_face = self.check_selected_face_objects(self.objects)
         self.island = True if context.scene.mio3uv.island_mode else selected_face
 
@@ -51,14 +47,12 @@ class MIO3UV_OT_align(Mio3UVOperator):
             self.edge_mode = context.tool_settings.uv_select_mode == "EDGE" and not self.island
         return self.execute(context)
 
-    def check(self, context):
-        self.objects = self.get_selected_objects(context)
-        if context.tool_settings.use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-        return True
-
     def execute(self, context):
         self.start_time()
+
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        if context.tool_settings.use_uv_select_sync:
+            self.sync_uv_from_mesh(context, self.objects)
 
         if self.type == "ALIGN_S":
             try:
@@ -72,7 +66,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
         if self.island and not self.edge_mode:
             if use_uv_select_sync:
-                island_manager = UVIslandManager(self.objects, mesh_keep=True, mesh_link_uv=True)
+                island_manager = UVIslandManager(self.objects, sync=True, mesh_link_uv=True)
             else:
                 island_manager = UVIslandManager(self.objects)
             if not island_manager.islands:

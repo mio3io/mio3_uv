@@ -141,7 +141,7 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, mesh_keep=True)
+            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, sync=True)
         else:
             island_manager = UVIslandManager(self.objects)
 

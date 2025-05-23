@@ -60,20 +60,9 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
         selected_face = self.check_selected_face_objects(self.objects)
-
         self.island = True if context.scene.mio3uv.island_mode else selected_face
-
         return self.execute(context)
-
-    def check(self, context):
-        self.objects = self.get_selected_objects(context)
-        if context.tool_settings.use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-        return True
 
     def execute(self, context):
         self.start_time()
@@ -84,7 +73,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             self.sync_uv_from_mesh(context, self.objects)
 
         if self.island:
-            island_manager = UVIslandManager(self.objects)
+            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, sync=use_uv_select_sync)
             if not island_manager.islands:
                 return {"CANCELLED"}
             self.align_islands(island_manager)

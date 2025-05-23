@@ -96,6 +96,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                         selected_uvs[key].append(loop)
 
             bbox_vectors = [Vector(uv) for uv in selected_uvs.keys()]
+            if not bbox_vectors:
+                continue
             min_u = min(v.x for v in bbox_vectors)
             max_u = max(v.x for v in bbox_vectors)
             min_v = min(v.y for v in bbox_vectors)

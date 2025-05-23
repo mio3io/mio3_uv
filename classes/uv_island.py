@@ -144,10 +144,10 @@ class UVIslandManager:
     bmesh_dict: dict[Object, BMesh] = field(default_factory=dict, init=False)
     uv_layer_dict: dict[Object, BMLayerItem] = field(default_factory=dict, init=False)
 
+    sync: bool = False # 選択同期
     extend: bool = True # 選択しているUVを境界まで拡張する
     uv_select: bool = True # UVを選択しているもののみ
     mesh_select: bool = True # メッシュを選択しているもののみ
-    mesh_keep: bool = False # メッシュの選択状態をキープする（選択同期用）
     mesh_link_uv: bool = False # メッシュのアイランドを境界まで拡張する（選択同期用）
     find_all: bool = False # すべてのアイランドを対象にする
     mesh_all: bool = False # すべてのメッシュを対象にする
@@ -182,9 +182,6 @@ class UVIslandManager:
                     uv = loop[uv_layer]
                     original_uv_select[obj][uv] = (uv.select, uv.select_edge)
 
-            # for edge in bm.edges:
-            #     edge.seam = False
-
         if self.mesh_all:
             bpy.ops.mesh.select_all(action="SELECT")
         elif self.mesh_link_uv:
@@ -215,7 +212,7 @@ class UVIslandManager:
                 uv.select_edge = select_edge
             for edge, seam in original_edge_seam[obj].items():
                 edge.seam = seam
-            if self.mesh_keep:
+            if self.sync:
                 for vert, select in self.original_selected_verts[obj].items():
                     vert.select = select
                 bm.select_flush(False)

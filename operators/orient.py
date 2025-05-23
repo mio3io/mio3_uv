@@ -20,11 +20,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
         selected_face = self.check_selected_face_objects(self.objects)
-
         self.island = True if context.scene.mio3uv.island_mode else selected_face
         return self.execute(context)
 
@@ -35,7 +31,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, mesh_keep=True)
+            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, sync=True)
         else:
             island_manager = UVIslandManager(self.objects)
 
