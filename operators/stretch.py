@@ -30,18 +30,15 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-
+        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
+
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
         if self.island:
-            if use_uv_select_sync:
-                im = UVIslandManager(self.objects, mesh_link_uv=True, sync=True)
-            else:
-                im = UVIslandManager(self.objects)
-
+            im = UVIslandManager(self.objects, sync=use_uv_select_sync)
             if not im.islands:
                 return {"CANCELLED"}
 

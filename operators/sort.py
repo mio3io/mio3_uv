@@ -119,8 +119,12 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
+
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        if use_uv_select_sync:
+            self.sync_uv_from_mesh(context, self.objects)
 
         grid_x = None
         if self.op_type == "grid_sort" and self.grid_units == "PIXEL":
@@ -138,13 +142,8 @@ class MIO3UV_OT_sort_common(Mio3UVOperator):
 
         self.calc_grid_x = grid_x
         self.calc_grid_y = grid_y
-
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-            island_manager = UVIslandManager(self.objects, mesh_link_uv=True, sync=True)
-        else:
-            island_manager = UVIslandManager(self.objects)
-
+        
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 

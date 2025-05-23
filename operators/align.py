@@ -49,9 +49,11 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+        context.scene.mio3uv.auto_uv_sync_skip = True
+        self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if context.tool_settings.use_uv_select_sync:
+        if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
         if self.type == "ALIGN_S":
@@ -61,14 +63,10 @@ class MIO3UV_OT_align(Mio3UVOperator):
                 return {"CANCELLED"}
             return {"FINISHED"}
 
-        self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         if self.island and not self.edge_mode:
-            if use_uv_select_sync:
-                island_manager = UVIslandManager(self.objects, sync=True, mesh_link_uv=True)
-            else:
-                island_manager = UVIslandManager(self.objects)
+            island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
             if not island_manager.islands:
                 return {"CANCELLED"}
             self.align_islands(island_manager, self.type)

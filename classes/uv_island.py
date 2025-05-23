@@ -145,9 +145,9 @@ class UVIslandManager:
     uv_layer_dict: dict[Object, BMLayerItem] = field(default_factory=dict, init=False)
 
     sync: bool = False # 選択同期
+    sync_any: bool = False
     extend: bool = True # 選択しているUVを境界まで拡張する
     uv_select: bool = True # UVを選択しているもののみ
-    mesh_select: bool = True # メッシュを選択しているもののみ
     mesh_link_uv: bool = False # メッシュのアイランドを境界まで拡張する（選択同期用）
     find_all: bool = False # すべてのアイランドを対象にする
     mesh_all: bool = False # すべてのメッシュを対象にする
@@ -184,12 +184,12 @@ class UVIslandManager:
 
         if self.mesh_all:
             bpy.ops.mesh.select_all(action="SELECT")
-        elif self.mesh_link_uv:
+        elif self.mesh_link_uv or self.sync:
             bpy.ops.mesh.select_linked(delimit={"UV"})
 
         if self.find_all:
             bpy.ops.uv.select_all(action="SELECT")  # シームを切る
-        elif self.extend and self.uv_select:
+        elif self.extend:
             bpy.ops.uv.select_linked()
 
         bpy.ops.uv.seams_from_islands(mark_seams=True)
@@ -198,8 +198,8 @@ class UVIslandManager:
             bm = self.bmesh_dict[obj]
             uv_layer = self.uv_layer_dict[obj]
 
-            if self.mesh_link_uv:
-                self.sync_uv_from_mesh(bm, uv_layer)
+            # if self.mesh_link_uv:
+            #     self.sync_uv_from_mesh(bm, uv_layer)
 
             obj_islands = self.find_islands(bm, uv_layer, obj)
             if obj_islands:
@@ -219,34 +219,14 @@ class UVIslandManager:
 
     def find_islands(self, bm: BMesh, uv_layer: BMLayerItem, obj: Object) -> list[UVIsland]:
         target_faces = set()
-
-        if self.mesh_select:
-            if self.find_all:
-                for face in bm.faces:
-                    if face.select:
-                        target_faces.add(face)
-            else:
-                if not self.extend:
-                    for face in bm.faces:
-                        if face.select and all(loop[uv_layer].select for loop in face.loops):
-                            target_faces.add(face)
-                else:
-                    for face in bm.faces:
-                        if face.select:
-                            for loop in face.loops:
-                                uv = loop[uv_layer]
-                                if uv.select and face not in target_faces:
-                                    target_faces.add(face)
-                                    break
+        if self.find_all:
+            for face in bm.faces:
+                target_faces.add(face)
         else:
-            if self.find_all:
-                for face in bm.faces:
-                    target_faces.add(face)
-            else:
-                if not self.extend:
+            if self.extend:
+                if self.sync:
                     for face in bm.faces:
-                        if all(loop[uv_layer].select for loop in face.loops):
-                            target_faces.add(face) 
+                        target_faces.add(face)
                 else:
                     for face in bm.faces:
                         for loop in face.loops:
@@ -254,6 +234,15 @@ class UVIslandManager:
                             if uv.select and face not in target_faces:
                                 target_faces.add(face)
                                 break
+            else:
+                if self.sync:
+                    for face in bm.faces:
+                        if any(loop[uv_layer].select for loop in face.loops):
+                            target_faces.add(face) 
+                else:
+                    for face in bm.faces:
+                        if all(loop[uv_layer].select for loop in face.loops):
+                            target_faces.add(face) 
 
         islands = []
         processed_faces = set()
@@ -287,13 +276,16 @@ class UVIslandManager:
                     new_island.boundary_edge = boundary_edges
                     islands.append(new_island)
 
-        if self.find_all and self.uv_select:
-            islands = [
-                island
-                for island in islands
-                if any(any(loop[uv_layer].select for loop in face.loops) for face in island.faces)
-            ]
+        if self.find_all:
+            return islands
 
+        if self.sync and not self.sync_any:
+            # Sync 面選択しているアイランド
+            # bpy.ops.uv.select_linked() で選択されてる…
+            # islands = [i for i in islands if any(face.select for face in i.faces)]
+            islands = [i for i in islands if any(all(loop[uv_layer].select for loop in face.loops) for face in i.faces)]
+        else:
+            islands = [i for i in islands if any(any(loop[uv_layer].select for loop in face.loops) for face in i.faces)]
         return islands
 
     def sync_uv_from_mesh(self, bm, uv_layer):

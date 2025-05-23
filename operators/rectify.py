@@ -60,27 +60,28 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         if context.tool_settings.uv_select_mode not in ["VERTEX", "ISLAND"]:
             context.tool_settings.uv_select_mode = "VERTEX"
 
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
-            context.scene.mio3uv.auto_uv_sync_skip = True
             island_manager = UVIslandManager(self.objects, mesh_link_uv=True)
         else:
             island_manager = UVIslandManager(self.objects)
 
+        valid_islands = set()
         for island in island_manager.islands:
             island.store_selection()
             island.deselect_all_uv()
-            if island.selection_uv_count < 3:
-                island_manager.remove_island(island)
+            if island.selection_uv_count >= 3:
+                valid_islands.add(island)
 
-        for island in island_manager.islands:
+        for island in valid_islands:
             island.restore_selection()
             bm = island.bm
             uv_layer = island.uv_layer
@@ -182,25 +183,24 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                 for loop in loops:
                     loop[uv_layer].pin_uv = True
 
-            # end island_manager.islands:
+            # end valid_islands:
 
         if self.unwrap:
-            for island in island_manager.islands:
+            for island in valid_islands:
                 island.select_all_uv()
             bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         if self.stretch and self.unwrap:
-            for island in island_manager.islands:
+            for island in valid_islands:
                 island.restore_selection()
-            # bpy.ops.uv.select_less()
             bpy.ops.uv.minimize_stretch(fill_holes=False, iterations=50)
 
         if not self.pin:
-            for island in island_manager.islands:
+            for island in valid_islands:
                 island.select_all_uv()
             bpy.ops.uv.pin(clear=True)
 
-        for island in island_manager.islands:
+        for island in valid_islands:
             island.restore_selection()
 
         if use_uv_select_sync:

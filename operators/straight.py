@@ -23,15 +23,14 @@ class MIO3UV_OT_straight(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            bpy.ops.mesh.select_linked(delimit={"UV"})
-            context.tool_settings.use_uv_select_sync = False
-            context.scene.mio3uv.auto_uv_sync_skip = True
 
+        if use_uv_select_sync:
             node_manager = UVNodeManager(self.objects, mode="VERT")
         else:
             node_manager = UVNodeManager(self.objects, mode="EDGE")
@@ -51,7 +50,6 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         bpy.ops.uv.pin(clear=False)
         bpy.ops.uv.select_linked()
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
-
         bpy.ops.uv.select_all(action="DESELECT")
 
         for group in node_manager.groups:
@@ -60,9 +58,6 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         bpy.ops.uv.pin(clear=True)
 
         node_manager.update_uvmeshes()
-
-        if use_uv_select_sync:
-            context.tool_settings.use_uv_select_sync = True
 
         self.print_time()
         return {"FINISHED"}
