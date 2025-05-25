@@ -107,16 +107,17 @@ class MIO3UV_PT_align(Mio3UVPanel):
         row.operator("uv.mio3_rotate", text="90", icon_value=icons["N90"].icon_id).angle = 1.5708
 
         row = col_rotate.row(align=True)
+        row.operator("uv.mio3_orient", icon_value=icons["ROTATE"].icon_id)
         op = row.operator("uv.align_rotation", text="Orient World", icon_value=icons["Z"].icon_id)
         op.method = "GEOMETRY"
         op.axis = "Z"
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_orient", icon_value=icons["ROTATE"].icon_id)
+        row.operator("uv.mio3_stretch", icon_value=icons["STRATCH"].icon_id)
         row.operator("uv.mio3_align_seam", icon_value=icons["ALIGN_SEAM_Y"].icon_id)
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_stretch", icon_value=icons["STRATCH"].icon_id)
+        row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
         row.operator("uv.mio3_distribute", icon_value=icons["DIST_X"].icon_id)
 
         row = layout.row(align=True)
@@ -154,20 +155,21 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         # Island
         row = layout.row()
         row.label(text="Island", icon_value=icons["ISLAND"].icon_id)
-        row.menu("MIO3UV_MT_arrange", text="", icon="DOWNARROW_HLT")
 
         col_iisland = layout.column(align=True)
         col_iisland.scale_y = 1.2
 
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
-        row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
-        row = col_iisland.row(align=True)
         row.operator("uv.copy", text="Copy", icon_value=icons["COPY"].icon_id)
         row.operator("uv.mio3_paste", icon_value=icons["PASTE"].icon_id).mode = "PASTE"
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stitch", icon_value=icons["STITCH"].icon_id)
+        row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
         row.operator("uv.mio3_shuffle_island", icon_value=icons["SHUFFLE"].icon_id)
+
+        row = col_iisland.row(align=True)
+        row.operator("uv.mio3_stitch", icon_value=icons["STITCH"].icon_id)
+        row.operator("uv.mio3_unfoldify", icon_value=icons["UNFOLDIFY"].icon_id)
+        
         row = col_iisland.row(align=True)
         row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons["CUBE"].icon_id)
         col = layout.column(align=True)

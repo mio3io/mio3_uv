@@ -114,7 +114,7 @@ translation_dict = {
         ("*", "Align by group"): "グループごとに整列",
         ("*", "Group Margin"): "グループの間隔",
 
-        ("Operator", "Unfoldify"): "展開図レイアウト",
+        ("Operator", "Unfoldify"): "展開配置",
         ("*", "Arrange islands vertically and horizontally based on their positional relationships in 3D space"): "3D空間の位置関係に基づきアイランドを配置します",
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
