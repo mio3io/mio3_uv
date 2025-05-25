@@ -100,47 +100,19 @@ def split_uv_islands(uv_layer, selected_faces):
 
 
 def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=False):
-    uv_nodes = list(node_group.nodes)
-    uv_layer = node_group.uv_layer
-
-    start_node = next((node for node in uv_nodes if len(node.neighbors) == 1), None)
-    if start_node is None:
-        start_node = min(uv_nodes)
-
-    ordered_nodes = []
-    visited = set()
-    current_node = start_node
-    while len(ordered_nodes) < len(uv_nodes):
-        if current_node not in visited:
-            ordered_nodes.append(current_node)
-            visited.add(current_node)
-        next_node = next((n for n in current_node.neighbors if n not in visited), None)
-        if next_node is None:
-            unvisited = set(uv_nodes) - visited
-            if unvisited:
-                current_node = min(unvisited, key=lambda n: (n.uv - current_node.uv).length)
-            else:
-                break
-        else:
-            current_node = next_node
+    ordered_nodes = node_group.get_ordered_nodes()
+    if len(ordered_nodes) <= 1:
+        return
 
     start_uv = ordered_nodes[0].uv
     end_uv = ordered_nodes[-1].uv
     direction = end_uv - start_uv
-
     if abs(direction.x) > abs(direction.y):
         direction.y = 0
     else:
         direction.x = 0
 
-    original_uv_length = (
-        sum((ordered_nodes[i + 1].uv - ordered_nodes[i].uv).length for i in range(len(ordered_nodes) - 1))
-        if keep_length
-        else 0
-    )
-
-    if len(ordered_nodes) <= 1:
-        return
+    original_uv_length = node_group.get_sum_length(ordered_nodes) if keep_length else 0
 
     if mode == "GEOMETRY":
         total_3d_distance = 0

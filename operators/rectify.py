@@ -161,8 +161,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                 except:
                     pass
 
-                faces = {face for face in island.faces if face.select}
-                node_manager = UVNodeManager.from_object(island.obj, bm, uv_layer, mode="FACE", selected=faces)
+                selected_edges = {edge for face in island.faces for edge in face.edges if edge.select}
+                node_manager = UVNodeManager.from_object(island.obj, bm, uv_layer, selected=selected_edges)
                 if len(node_manager.groups):
                     group = node_manager.groups[0]
                     for node in group.nodes:

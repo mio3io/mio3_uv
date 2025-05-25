@@ -94,11 +94,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
             im.update_uvmeshes()
         else:
-            if use_uv_select_sync:
-                nm = UVNodeManager(self.objects, mode="VERT")
-            else:
-                nm = UVNodeManager(self.objects, mode="EDGE")
-            
+            nm = UVNodeManager(self.objects, sync=use_uv_select_sync)
             if not nm.groups:
                 return {"CANCELLED"}
 

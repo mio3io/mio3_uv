@@ -47,9 +47,8 @@ class MIO3UV_OT_relax(Mio3UVOperator):
             use_uv_select_sync = context.tool_settings.use_uv_select_sync
             if use_uv_select_sync:
                 self.sync_uv_from_mesh(context, self.objects)
-                node_manager = UVNodeManager(self.objects, mode="VERT")
-            else:
-                node_manager = UVNodeManager(self.objects, mode="FACE")
+
+            node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 
             self.cache_data = self.prepare_cache_data(node_manager)
 

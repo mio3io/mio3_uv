@@ -72,10 +72,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             self.align_islands(island_manager, self.type)
             island_manager.update_uvmeshes()
         else:
-            if use_uv_select_sync:
-                node_manager = UVNodeManager(self.objects, mode="VERT")
-            else:
-                node_manager = UVNodeManager(self.objects, mode="EDGE" if self.edge_mode else "FACE")
+            node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
             if not node_manager.groups:
                 return {"CANCELLED"}
             self.align_uv_nodes(node_manager, self.type)
@@ -266,7 +263,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
             bm = self.objests_state[obj]["bm"]
             uv_layer = self.objests_state[obj]["uv_layer"]
             self.process_uv_selection(bm, uv_layer, self.axis)
-            node_manager = UVNodeManager.from_object(obj, bm=bm, uv_layer=uv_layer, mode="EDGE")
+            node_manager = UVNodeManager.from_object(obj, bm=bm, uv_layer=uv_layer)
             self.align_uv_nodes(node_manager, self.axis)
             self.restore_selection(self.objests_state[obj])
             bmesh.update_edit_mesh(obj.data)

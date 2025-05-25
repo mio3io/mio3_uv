@@ -2,10 +2,9 @@ import bpy
 import bmesh
 from mathutils import Vector
 from dataclasses import dataclass, field
-from typing import Literal
 from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
-from .uv_island import UVIslandManager
+
 
 @dataclass
 class UVNode:
@@ -31,6 +30,11 @@ class UVNode:
         for loop in self.loops:
             loop[uv_layer].uv = self.uv
 
+    def is_break(self):
+        for loop in self.loops:
+            if not loop.edge.seam:
+                return False
+        return True
 
 @dataclass
 class UVNodeGroup:
@@ -46,12 +50,12 @@ class UVNodeGroup:
     selection_states: dict[int, bool] = field(default_factory=dict)
 
     def __hash__(self):
-        return hash((self.obj, id(self.bm), id(self.uv_layer)))
+        return hash(frozenset(self.nodes))
 
     def __eq__(self, other):
         if not isinstance(other, UVNodeGroup):
             return NotImplemented
-        return (self.obj, id(self.bm), id(self.uv_layer)) == (other.obj, id(other.bm), id(other.uv_layer))
+        return frozenset(self.nodes) == frozenset(other.nodes)
 
     def update_bounds(self):
         uv_points = [node.uv for node in self.nodes]
@@ -69,7 +73,7 @@ class UVNodeGroup:
     def update_uvs(self):
         for node in self.nodes:
             node.update_uv(self.uv_layer)
-    
+
     def deselect_all_uv(self):
         for node in self.nodes:
             for loop in node.loops:
@@ -91,93 +95,87 @@ class UVNodeGroup:
                     loop[self.uv_layer].select = select
                     loop[self.uv_layer].select_edge = select_edge
 
+    # 順序付けしたリストを取得
+    def get_ordered_nodes(self):
+        uv_nodes = self.nodes
+
+        start_node = None
+        if start_node is None:
+            start_node = next((node for node in uv_nodes if len(node.neighbors) == 1), None)
+        if start_node is None:
+            start_node = min(uv_nodes)
+
+        ordered_nodes = [start_node]
+        visited = {start_node}
+        stack = [start_node]
+        while stack:
+            current_node = stack.pop()
+            for neighbor in current_node.neighbors:
+                if neighbor in uv_nodes and neighbor not in visited:
+                    ordered_nodes.append(neighbor)
+                    visited.add(neighbor)
+                    stack.append(neighbor)
+
+        return ordered_nodes
+
+    # すべてのUVエッジの長さの合計を取得
+    def get_sum_length(self, ordered_nodes):
+        return sum((ordered_nodes[i + 1].uv - ordered_nodes[i].uv).length for i in range(len(ordered_nodes) - 1))
+
+
 @dataclass
 class UVNodeManager:
     objects: list[Object]
-    mode: Literal["VERT", "EDGE", "FACE"] = "FACE"
-    island_manager: UVIslandManager | None = None
+    sync: bool = False
 
     groups: list[UVNodeGroup] = field(default_factory=list)
 
     def __post_init__(self):
-        self.find_all_groups()
-
-    def find_all_groups(self):
         for obj in self.objects:
-            if self.island_manager and obj in self.island_manager.bmesh_dict:
-                bm = self.island_manager.bmesh_dict[obj]
-                uv_layer = self.island_manager.uv_layer_dict[obj]
-            else:
-                bm = bmesh.from_edit_mesh(obj.data)
-                uv_layer = bm.loops.layers.uv.verify()
-
+            bm = bmesh.from_edit_mesh(obj.data)
+            uv_layer = bm.loops.layers.uv.verify()
             uv_groups = self.find_uv_nodes(bm, uv_layer)
-            self.add_group(obj, bm, uv_layer, uv_groups)
+            for group in uv_groups:
+                self.add_group(group, obj, bm, uv_layer)
 
-    def add_group(self, obj, bm, uv_layer, uv_groups):
-        self.groups.extend([UVNodeGroup(nodes=group, obj=obj, bm=bm, uv_layer=uv_layer) for group in uv_groups])
+    def add_group(self, group, obj, bm, uv_layer):
+        self.groups.append(UVNodeGroup(nodes=group, obj=obj, bm=bm, uv_layer=uv_layer))
 
     def find_uv_nodes(self, bm, uv_layer, selected=None):
         uv_nodes = {}
 
-        def round_uv(uv):
-            return (round(uv.x, 6), round(uv.y, 6))
+        # 選択されているループを座標をキーにしたノードグループにする（sync_uv_from_meshしていること）
+        # ToDo: 座標をキーにすると閉じたループの場合一緒に始点と終点のノードができない
+        edges = selected if selected else bm.edges
+        for edge in edges:
+            if any(v.select for v in edge.verts):
+                for loop in edge.link_loops:
+                    if loop[uv_layer].select:
+                        key = self.get_key(loop[uv_layer].uv)
+                        if key not in uv_nodes:
+                            uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert)
+                        uv_nodes[key].loops.append(loop)
 
-        def add_uv_node(loop):
-            key = round_uv(loop[uv_layer].uv)
-            if key not in uv_nodes:
-                uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert)
-            uv_nodes[key].loops.append(loop)
+        # UVノードの隣接リストを作成
+        for node in uv_nodes.values():
+            for loop in node.loops:
+                edge = loop.edge
+                # 選択されていないエッジループがある場合は接続を無視
+                if not any(loop[uv_layer].select_edge for loop in edge.link_loops):
+                    continue
+                for loop in edge.link_loops:
+                    prev_key = self.get_key(loop[uv_layer].uv)
+                    next_key = self.get_key(loop.link_loop_next[uv_layer].uv)
+                    if prev_key in uv_nodes and next_key in uv_nodes:
+                        uv_nodes[prev_key].neighbors.add(uv_nodes[next_key])
+                        uv_nodes[next_key].neighbors.add(uv_nodes[prev_key])
 
-        if self.mode == "EDGE":  # Edge Mode
-            edges = selected if selected else bm.edges
-            for edge in edges:
-                if edge.select:
-                    selected_faces = [face for face in edge.link_faces if face.select]
-                    # if any(face.select for face in edge.link_faces):
-                    for loop in edge.link_loops:
-                        if loop.face in selected_faces:
-                            if loop[uv_layer].select:
-                                add_uv_node(loop)
-
-        elif self.mode == "VERT":  # Sync Mode
-            verts = selected if selected else bm.verts
-            for vert in verts:
-                if vert.select:
-                    for loop in vert.link_loops:
-                        if loop[uv_layer].select:
-                            add_uv_node(loop)
-        else:  # fast
-            faces =  selected if selected else bm.faces
-            for face in faces:
-                if face.select:
-                    for loop in face.loops:
-                        if loop[uv_layer].select:
-                            add_uv_node(loop)
-
-        if self.mode == "EDGE":
-            for key, node in uv_nodes.items():
-                for loop in node.loops:
-                    edge = loop.edge
-                    if not any(loop[uv_layer].select_edge for loop in edge.link_loops):
-                        continue
-                    for loop in edge.link_loops:
-                        current_key = round_uv(loop[uv_layer].uv)
-                        next_key = round_uv(loop.link_loop_next[uv_layer].uv)
-                        if current_key in uv_nodes and next_key in uv_nodes:
-                            uv_nodes[current_key].neighbors.add(uv_nodes[next_key])
-                            uv_nodes[next_key].neighbors.add(uv_nodes[current_key])
-        else:
-            for key, node in uv_nodes.items():
-                for loop in node.loops:
-                    prev_key = round_uv(loop.link_loop_prev[uv_layer].uv)
-                    next_key = round_uv(loop.link_loop_next[uv_layer].uv)
-                    if prev_key in uv_nodes:
-                        node.neighbors.add(uv_nodes[prev_key])
-                    if next_key in uv_nodes:
-                        node.neighbors.add(uv_nodes[next_key])
-
+        # 接続ごとにグループ分けして返す
         return self.group_uv_nodes(list(uv_nodes.values()))
+
+    @staticmethod
+    def get_key(uv):
+        return (round(uv.x, 6), round(uv.y, 6))
 
     @staticmethod
     def group_uv_nodes(uv_nodes):
@@ -208,12 +206,13 @@ class UVNodeManager:
             bmesh.update_edit_mesh(obj.data)
 
     @classmethod
-    def from_object(cls, obj, bm, uv_layer, selected=None, mode="FACE"):
-        manager = cls(objects=[], mode=mode)
+    def from_object(cls, obj, bm, uv_layer, selected=None):
+        manager = cls(objects=[])
         if not bm and not uv_layer:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
         uv_groups = manager.find_uv_nodes(bm, uv_layer, selected)
         if uv_groups:
-            manager.add_group(obj, bm, uv_layer, uv_groups)
+            for group in uv_groups:
+                manager.add_group(group, obj, bm, uv_layer)
         return manager

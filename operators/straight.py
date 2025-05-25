@@ -30,10 +30,7 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        if use_uv_select_sync:
-            node_manager = UVNodeManager(self.objects, mode="VERT")
-        else:
-            node_manager = UVNodeManager(self.objects, mode="EDGE")
+        node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 
         uv_select_mode = context.tool_settings.uv_select_mode
         if uv_select_mode == "FACE":

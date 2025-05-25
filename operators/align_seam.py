@@ -35,10 +35,11 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        if context.tool_settings.use_uv_select_sync:
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        node_manager = UVNodeManager(self.objects, mode="VERT")
+        node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 
         if len(node_manager.groups) == 1:
             obj = node_manager.groups[0].obj
@@ -55,7 +56,7 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
                         loop[uv_layer].select = True
 
             node_manager.update_uvmeshes()
-            node_manager = UVNodeManager([obj], mode="VERT")
+            node_manager = UVNodeManager([obj], sync=use_uv_select_sync)
             groups = []
             for group in node_manager.groups:
                 if len(group.nodes) == 1:

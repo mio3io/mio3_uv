@@ -80,10 +80,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             self.align_islands(island_manager)
             island_manager.update_uvmeshes()
         else:
-            if use_uv_select_sync:
-                node_manager = UVNodeManager(self.objects, mode="VERT")
-            else:
-                node_manager = UVNodeManager(self.objects, mode="EDGE")
+            node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 
             count = sum(len(group.nodes) for group in node_manager.groups)
             if count > 1000:
