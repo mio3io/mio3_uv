@@ -381,16 +381,14 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         spacing = 0 if self.aling_mode == "FIXED" else self.group_spacing
 
         for i, group in enumerate(groups):
-            group_offset, group_size = self.align_items(group, offset)
-
+            group_end = self.align_items(group, offset)
             if self.align_uv == "X":
-                offset.x = group_offset.x + spacing
+                offset.x = group_end.x + spacing
             else:
-                offset.y = group_offset.y - spacing
+                offset.y = group_end.y - spacing
 
     def align_items(self, islands, group_offset):
         offset = group_offset.copy()
-        max_size = Vector((0, 0))
         spacing = 0 if self.aling_mode == "FIXED" else self.item_spacing
         line_spacing = self.line_spacing
 
@@ -398,6 +396,9 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         row_start = offset.copy()
         items_in_row = 0
         row_islands = []
+
+        max_x = offset.x
+        min_y = offset.y
 
         for island in islands:
             original_size = Vector((island.width, island.height))
@@ -417,12 +418,10 @@ class MIO3UV_OT_sort(Mio3UVOperator):
                 if self.align_uv == "X":
                     offset.x = group_offset.x
                     offset.y -= row_size.y + line_spacing
-                    max_size.y = max(max_size.y, group_offset.y - offset.y)
                     row_size.y = 0
                 else:
                     offset.y = group_offset.y
                     offset.x += row_size.x + line_spacing
-                    max_size.x = max(max_size.x, offset.x - group_offset.x)
                     row_size.x = 0
                 items_in_row = 0
                 row_start = offset.copy()
@@ -430,11 +429,11 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             if self.align_uv == "X":
                 offset.x += island_size.x
                 row_size.y = max(row_size.y, island_size.y)
-                max_size.x = max(max_size.x, offset.x - row_start.x)
+                max_x = max(max_x, offset.x)
             else:
                 offset.y -= island_size.y
                 row_size.x = max(row_size.x, island_size.x)
-                max_size.y = max(max_size.y, row_start.y - offset.y)
+                min_y = min(min_y, offset.y)
 
             row_islands.append((island, island_size, original_size))
             items_in_row += 1
@@ -443,11 +442,10 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             self.align_row(row_islands, row_start, row_size)
 
         if self.align_uv == "X":
-            max_size.y = max(max_size.y, row_start.y - offset.y + row_size.y)
+            group_end = Vector((max_x, group_offset.y))
         else:
-            max_size.x = max(max_size.x, offset.x - row_start.x + row_size.x)
-
-        return offset, max_size
+            group_end = Vector((group_offset.x, min_y))
+        return group_end
 
     def align_row(self, row_islands, row_start, row_size):
         max_height = max(original_size.y for _, _, original_size in row_islands)
