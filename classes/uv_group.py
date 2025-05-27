@@ -11,6 +11,7 @@ class UVNode:
     uv: Vector
     vert: BMVert
     loops: list[BMLoop] = field(default_factory=list)
+    select: bool = False
     neighbors: set["UVNode"] = field(default_factory=set, repr=False, compare=False)
 
     def __hash__(self):
@@ -27,18 +28,21 @@ class UVNode:
         return (tuple(self.uv), self.vert.index) < (tuple(other.uv), other.vert.index)
 
     def update_uv(self, uv_layer):
+        "UVノードのUVを更新"
         for loop in self.loops:
             loop[uv_layer].uv = self.uv
 
     def is_break(self):
+        "UVノードのループがすべてシームかどうかを確認"
         for loop in self.loops:
             if not loop.edge.seam:
                 return False
         return True
 
+
 @dataclass
 class UVNodeGroup:
-    nodes: set["UVNode"] = field(default_factory=set)
+    nodes: list["UVNode"] = field(default_factory=list)
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
@@ -50,37 +54,27 @@ class UVNodeGroup:
     selection_states: dict[int, bool] = field(default_factory=dict)
 
     def __hash__(self):
-        return hash(frozenset(self.nodes))
+        return hash((tuple(self.uv), self.vert))
 
     def __eq__(self, other):
-        if not isinstance(other, UVNodeGroup):
+        if not isinstance(other, UVNode):
             return NotImplemented
-        return frozenset(self.nodes) == frozenset(other.nodes)
-
-    def update_bounds(self):
-        uv_points = [node.uv for node in self.nodes]
-        if uv_points:
-            x_coords = [uv.x for uv in uv_points]
-            y_coords = [uv.y for uv in uv_points]
-            self.min_uv = Vector((min(x_coords), min(y_coords)))
-            self.max_uv = Vector((max(x_coords), max(y_coords)))
-            self.center = Vector((sum(x_coords) / len(x_coords), sum(y_coords) / len(y_coords)))
-        else:
-            self.min_uv = Vector((0, 0))
-            self.max_uv = Vector((0, 0))
-            self.center = Vector((0, 0))
+        return self.uv == other.uv and self.vert == other.vert
 
     def update_uvs(self):
+        "UVノードのUVを更新"
         for node in self.nodes:
             node.update_uv(self.uv_layer)
 
     def deselect_all_uv(self):
+        "すべてのUVを非選択にする"
         for node in self.nodes:
             for loop in node.loops:
                 loop[self.uv_layer].select = False
                 loop[self.uv_layer].select_edge = False
 
     def store_selection(self):
+        "現在のUV選択状態を保存"
         self.selection_states.clear()
         for node in self.nodes:
             for loop in node.loops:
@@ -88,6 +82,7 @@ class UVNodeGroup:
                 self.selection_states[loop.index] = (uv.select, uv.select_edge)
 
     def restore_selection(self):
+        "保存したUV選択状態を復元"
         for node in self.nodes:
             for loop in node.loops:
                 if loop.index in self.selection_states:
@@ -95,10 +90,18 @@ class UVNodeGroup:
                     loop[self.uv_layer].select = select
                     loop[self.uv_layer].select_edge = select_edge
 
-    # 順序付けしたリストを取得
-    def get_ordered_nodes(self):
-        uv_nodes = self.nodes
+    def update_bounds(self):
+        "バウンディングボックス・中心・min/maxを計算"
+        uv_points = [node.uv for node in self.nodes]
+        x_coords = [uv.x for uv in uv_points]
+        y_coords = [uv.y for uv in uv_points]
+        self.min_uv = Vector((min(x_coords), min(y_coords)))
+        self.max_uv = Vector((max(x_coords), max(y_coords)))
+        self.center = Vector((sum(x_coords) / len(x_coords), sum(y_coords) / len(y_coords)))
 
+    def get_ordered_nodes(self):
+        "順序付けしたノードリストを取得"
+        uv_nodes = self.nodes
         start_node = None
         if start_node is None:
             start_node = next((node for node in uv_nodes if len(node.neighbors) == 1), None)
@@ -141,20 +144,57 @@ class UVNodeManager:
     def add_group(self, group, obj, bm, uv_layer):
         self.groups.append(UVNodeGroup(nodes=group, obj=obj, bm=bm, uv_layer=uv_layer))
 
-    def find_uv_nodes(self, bm, uv_layer, selected=None):
+    def find_uv_nodes(self, bm, uv_layer, edges=None, faces=None, sub_faces=None):
         uv_nodes = {}
 
-        # 選択されているループを座標をキーにしたノードグループにする（sync_uv_from_meshしていること）
+        def add_uv_node(loop):
+            key = self.get_key(loop[uv_layer].uv)
+            if key not in uv_nodes:
+                uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert, select=loop[uv_layer].select)
+            else:
+                if loop[uv_layer].select and not uv_nodes[key].select:
+                    uv_nodes[key].select = True
+            uv_nodes[key].loops.append(loop)
+
+        # 選択されているループを座標をキーにしたノードグループにする（!!sync_uv_from_meshしていること）
         # ToDo: 座標をキーにすると閉じたループの場合一緒に始点と終点のノードができない
-        edges = selected if selected else bm.edges
-        for edge in edges:
-            if any(v.select for v in edge.verts):
-                for loop in edge.link_loops:
-                    if loop[uv_layer].select:
-                        key = self.get_key(loop[uv_layer].uv)
-                        if key not in uv_nodes:
-                            uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert)
-                        uv_nodes[key].loops.append(loop)
+
+        # !!共有頂点の除外に影響が出るのでfaces検索は消さないこと
+        if faces:
+            target_edges = {edge for face in faces for edge in face.edges}
+        else:
+            target_edges = edges if edges else bm.edges
+        if self.sync:
+            target_verts = {vert for edge in target_edges for vert in edge.verts}
+            if sub_faces:
+                # sub_facesは選択とは無関係
+                for vert in target_verts:
+                    if vert.select:
+                        for loop in vert.link_loops:
+                            if loop[uv_layer].select and loop.face in sub_faces:
+                                add_uv_node(loop)
+            else:
+                for vert in target_verts:
+                    if vert.select:
+                        sub_faces = {face for face in vert.link_faces if face.select}
+                        for loop in vert.link_loops:
+                            if loop[uv_layer].select and loop.face in sub_faces:
+                                add_uv_node(loop)
+        else:
+            if faces:
+                # facesが指定されている場合は、選択された面のループを対象にする
+                for face in faces:
+                    if face.select:
+                        for loop in face.loops:
+                            if loop[uv_layer].select:
+                                add_uv_node(loop)
+            else:
+                for edge in target_edges:
+                    if edge.select:
+                        selected_faces = {face for face in edge.link_faces if face.select}
+                        for loop in edge.link_loops:
+                            if loop[uv_layer].select and loop.face in selected_faces:
+                                add_uv_node(loop)
 
         # UVノードの隣接リストを作成
         for node in uv_nodes.values():
@@ -206,12 +246,12 @@ class UVNodeManager:
             bmesh.update_edit_mesh(obj.data)
 
     @classmethod
-    def from_object(cls, obj, bm, uv_layer, selected=None):
-        manager = cls(objects=[])
+    def from_object(cls, obj, bm, uv_layer, sync=False, edges=None, faces=None, sub_faces=None):
+        manager = cls(objects=[], sync=sync)
         if not bm and not uv_layer:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-        uv_groups = manager.find_uv_nodes(bm, uv_layer, selected)
+        uv_groups = manager.find_uv_nodes(bm, uv_layer, edges=edges, faces=faces, sub_faces=sub_faces)
         if uv_groups:
             for group in uv_groups:
                 manager.add_group(group, obj, bm, uv_layer)

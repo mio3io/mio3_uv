@@ -33,7 +33,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, sync_any=True)
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 

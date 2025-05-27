@@ -31,8 +31,6 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             self.sync_uv_from_mesh(context, self.objects)
         island_manager = UVIslandManager(self.objects, extend=False, sync=use_uv_select_sync)
 
-        original_mesh_selected_faces = {}
-
         for island in island_manager.islands:
             island.store_selection()
             island.deselect_all_uv()
@@ -41,9 +39,6 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             islands = island_manager.islands_by_object[obj]
             bm = island_manager.bmesh_dict[obj]
             uv_layer = bm.loops.layers.uv.verify()
-
-            for face in bm.faces:
-                original_mesh_selected_faces.setdefault(obj, []).append(face.select)
 
             for island in islands:
                 island.restore_selection()
@@ -70,6 +65,9 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
         # Sync アイランドのメッシュだけ全選択
         if use_uv_select_sync:
+            context.scene.mio3uv.auto_uv_sync_skip = True
+            context.tool_settings.use_uv_select_sync = False
+
             for obj in self.objects:
                 islands = island_manager.islands_by_object[obj]
                 bm = island_manager.bmesh_dict[obj]
@@ -81,22 +79,12 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                         face.select = True
                 bm.select_flush(True)
 
-            context.tool_settings.use_uv_select_sync = False
-            context.scene.mio3uv.auto_uv_sync_skip = True
-
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
         bpy.ops.uv.pin(clear=True)
 
         # Sync 選択を戻す
         if use_uv_select_sync:
-            for obj in self.objects:
-                bm = island_manager.bmesh_dict[obj]
-                uv_layer = bm.loops.layers.uv.verify()
-                bm.select_mode = {"FACE"}
-                for face, selected in zip(bm.faces, original_mesh_selected_faces[obj]):
-                    face.select = selected
-                bm.select_flush(True)
-
+            island_manager.restore_vertex_selection()
             context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()

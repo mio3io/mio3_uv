@@ -111,7 +111,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
                 pass
             return {"FINISHED"}
 
-        island_manager = UVIslandManager(self.objects, find_all=True, uv_select=False)
+        island_manager = UVIslandManager(self.objects, find_all=True)
 
         base_island = None
         for island in island_manager.islands:

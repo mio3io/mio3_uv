@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
 from ..utils import straight_uv_nodes
-from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
+from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator, UVIsland
 
 
 class MIO3UV_OT_rectify(Mio3UVOperator):
@@ -63,23 +63,25 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
-        if context.tool_settings.uv_select_mode not in ["VERTEX", "ISLAND"]:
-            context.tool_settings.uv_select_mode = "VERTEX"
-
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
-            island_manager = UVIslandManager(self.objects, mesh_link_uv=True)
-        else:
-            island_manager = UVIslandManager(self.objects)
+        
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
-        valid_islands = set()
+        valid_islands: set[UVIsland] = set()
         for island in island_manager.islands:
             island.store_selection()
             island.deselect_all_uv()
-            if island.selection_uv_count >= 3:
-                valid_islands.add(island)
+            if use_uv_select_sync:
+                for face in island.faces:
+                    if face.select:
+                        valid_islands.add(island)
+                        break
+            else:
+                if island.selection_uv_count >= 3:
+                    valid_islands.add(island)
 
         for island in valid_islands:
             island.restore_selection()
@@ -96,8 +98,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                             selected_uvs[key] = []
                         selected_uvs[key].append(loop)
 
-            bbox_vectors = [Vector(uv) for uv in selected_uvs.keys()]
-            if not bbox_vectors:
+            if not (bbox_vectors := [Vector(uv) for uv in selected_uvs.keys()]):
                 continue
             min_u = min(v.x for v in bbox_vectors)
             max_u = max(v.x for v in bbox_vectors)
@@ -155,14 +156,13 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                     if new_uv_bbox.to_tuple() in (uv1.to_tuple(), uv2.to_tuple()):
                         for loop in loops:
                             loop[uv_layer].select = True
-
                 try:
                     bpy.ops.uv.shortest_path_select()
                 except:
                     pass
 
-                selected_edges = {edge for face in island.faces for edge in face.edges if edge.select}
-                node_manager = UVNodeManager.from_object(island.obj, bm, uv_layer, selected=selected_edges)
+                edges = {edge for face in island.faces for edge in face.edges if edge.select}
+                node_manager = UVNodeManager.from_object(island.obj, bm, uv_layer, edges=edges, sub_faces=island.faces, sync=use_uv_select_sync)
                 if len(node_manager.groups):
                     group = node_manager.groups[0]
                     for node in group.nodes:
@@ -188,6 +188,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         if self.unwrap:
             for island in valid_islands:
                 island.select_all_uv()
+                for face in island.faces:
+                    face.select = True
             bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         if self.stretch and self.unwrap:
