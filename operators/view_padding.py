@@ -95,36 +95,34 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
     def update_mesh(cls, context):
         cls._vertices = []
         selected_objects = [obj for obj in context.selected_objects if obj.type == "MESH" and obj.mode == "EDIT"]
+        padding = cls._padding
 
         for obj in selected_objects:
             obj.data.update()
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-            padding = cls._padding
-
+            
             vertex_to_padded = {}
-            original_uvs = set()
 
             for face in bm.faces:
                 for loop in face.loops:
-                    uv = loop[uv_layer].uv
-                    uv_next = loop.link_loop_next[uv_layer].uv
+                    curr_uv = loop[uv_layer].uv
+                    next_uv = loop.link_loop_next[uv_layer].uv
 
-                    uv_tuple = uv.to_tuple(5)
-                    uv_next_tuple = uv_next.to_tuple(5)
-                    original_uvs.update([uv_tuple, uv_next_tuple])
+                    curr_key = curr_uv.to_tuple(5)
+                    next_key = next_uv.to_tuple(5)
 
                     if loop.edge.is_boundary or loop.edge.seam:
-                        edge_vec = uv_next - uv
+                        edge_vec = next_uv - curr_uv
                         normal = Vector((edge_vec.y, -edge_vec.x)).normalized()
 
-                        pad_uv1 = uv + normal * padding
-                        pad_uv2 = uv_next + normal * padding
+                        pad_uv1 = curr_uv + normal * padding
+                        pad_uv2 = next_uv + normal * padding
 
                         cls._vertices.extend([pad_uv1, pad_uv2])
 
-                        vertex_to_padded.setdefault(uv_tuple, []).append(pad_uv1)
-                        vertex_to_padded.setdefault(uv_next_tuple, []).append(pad_uv2)
+                        vertex_to_padded.setdefault(curr_key, []).append(pad_uv1)
+                        vertex_to_padded.setdefault(next_key, []).append(pad_uv2)
 
             for uv_key, padded_list in vertex_to_padded.items():
                 for i in range(len(padded_list)):
@@ -149,8 +147,6 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
 
 @bpy.app.handlers.persistent
 def load_handler(dummy):
-    # print("load_handler")
-    # print(dummy)
     UV_OT_mio3_guide_padding.remove_handler()
 
 

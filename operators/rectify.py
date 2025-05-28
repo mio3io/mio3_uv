@@ -67,142 +67,114 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
-        
+
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        if not island_manager.islands:
+            return {"CANCELLED"}
 
-        valid_islands: set[UVIsland] = set()
+        valid_islands: list[tuple[UVIsland, dict]] = []
         for island in island_manager.islands:
+            bm, uv_layer = island.bm, island.uv_layer
             island.store_selection()
-            island.deselect_all_uv()
-            if use_uv_select_sync:
-                for face in island.faces:
-                    if face.select:
-                        valid_islands.add(island)
-                        break
-            else:
-                if island.selection_uv_count >= 3:
-                    valid_islands.add(island)
-
-        for island in valid_islands:
-            island.restore_selection()
-            bm = island.bm
-            uv_layer = island.uv_layer
 
             selected_uvs = {}
             for face in island.faces:
                 for loop in face.loops:
                     if loop[uv_layer].select:
                         uv = loop[uv_layer].uv
-                        key = (round(uv.x, 6), round(uv.y, 6))
-                        if key not in selected_uvs:
-                            selected_uvs[key] = []
-                        selected_uvs[key].append(loop)
+                        uvkey = (round(uv.x, 6), round(uv.y, 6))
+                        if uvkey not in selected_uvs:
+                            selected_uvs[uvkey] = []
+                        selected_uvs[uvkey].append(loop)
 
-            if not (bbox_vectors := [Vector(uv) for uv in selected_uvs.keys()]):
-                continue
-            min_u = min(v.x for v in bbox_vectors)
-            max_u = max(v.x for v in bbox_vectors)
-            min_v = min(v.y for v in bbox_vectors)
-            max_v = max(v.y for v in bbox_vectors)
-            bbox_uv = [  # 時計回り
-                Vector((min_u, max_v)),
-                Vector((max_u, max_v)),
-                Vector((max_u, min_v)),
-                Vector((min_u, min_v)),
-            ]
+            if len(selected_uvs) >= 4:
+                valid_islands.append((island, selected_uvs))
 
-            # 範囲選択 コーナーUVを検出
-            if len(selected_uvs) > 4:
-                target_uvs = {}
-                for bbox_point in bbox_uv:
-                    corner_candidates = []
-                    for uv, loops in selected_uvs.items():
-                        diff_x = abs(uv[0] - bbox_point[0])
-                        diff_y = abs(uv[1] - bbox_point[1])
-                        total_diff = diff_x + diff_y
-                        corner_candidates.append((uv, loops, total_diff))
-                    if corner_candidates:
-                        closest_uv, loops, _ = min(corner_candidates, key=lambda x: x[2])
-                        target_uvs[closest_uv] = loops
-            else:  # 頂点指定
-                target_uvs = selected_uvs
+            island.deselect_all_uv()
+
+        for island, selected_uvs in valid_islands:
+            island.restore_selection()
+            bm, uv_layer = island.bm, island.uv_layer
+
+            bbox_vectors = [Vector(uvkey) for uvkey in selected_uvs.keys()]
+            bbox_uvs = self.get_bbox_uvs(bbox_vectors)
+
+            # コーナーUVを検出
+            corners = []
+            for bbox_point in bbox_uvs:
+                corner_candidates = []
+                for uvkey, loops in selected_uvs.items():
+                    diff_x = abs(uvkey[0] - bbox_point[0])
+                    diff_y = abs(uvkey[1] - bbox_point[1])
+                    total_diff = diff_x + diff_y
+                    corner_candidates.append((uvkey, loops, total_diff))
+                if corner_candidates:
+                    closest_uv, loops, _ = min(corner_candidates, key=lambda x: x[2])
+                    corners.append((loops, closest_uv))
 
             # 調整したサイズ
             if self.bbox_type == "AVERAGE":
-                abbox_vectors = [Vector(uv) for uv in target_uvs.keys()]
-                adjustbox = self.get_adjustbox(abbox_vectors)
+                new_bbox = self.get_bbox_average([Vector(uvkey) for _, uvkey in corners])
             else:
-                adjustbox = bbox_uv
+                new_bbox = bbox_uvs
 
-            corner_mapping = []
-            for old_uv, loops in target_uvs.items():
-                old_vector = Vector(old_uv)
-                new_uv_bbox = min(bbox_uv, key=lambda c: (c - old_vector).length)
-                new_uv_adjust = adjustbox[bbox_uv.index(new_uv_bbox)]
-                corner_mapping.append((old_vector, new_uv_bbox, new_uv_adjust, loops))
+            for (loops, _), bbox_uv in zip(corners, new_bbox):
                 for loop in loops:
-                    loop[uv_layer].uv = new_uv_bbox
+                    loop[uv_layer].uv = bbox_uv
                     if self.pin:
                         loop[uv_layer].pin_uv = True
 
             island.deselect_all_uv()
 
-            num_uvs = len(bbox_uv)
-            all_loops = set()
-            for i in range(num_uvs):
-                uv1 = bbox_uv[i]
-                uv2 = bbox_uv[(i + 1) % len(bbox_uv)]
-                for _, new_uv_bbox, _, loops in corner_mapping:
-                    if new_uv_bbox.to_tuple() in (uv1.to_tuple(), uv2.to_tuple()):
-                        for loop in loops:
-                            loop[uv_layer].select = True
-                try:
-                    bpy.ops.uv.shortest_path_select()
-                except:
-                    pass
+            for (curr_loops, _), (next_loops, _) in zip(corners, corners[1:] + [corners[0]]):
+                self.select_uv(curr_loops, uv_layer, True)
+                self.select_uv(next_loops, uv_layer, True)
+
+                # 隣接している場合はスキップ
+                if not any(
+                    (loop.link_loop_next in next_loops or loop.link_loop_prev in next_loops) for loop in curr_loops
+                ):
+                    try:
+                        bpy.ops.uv.shortest_path_select()
+                    except:
+                        pass
 
                 edges = {edge for face in island.faces for edge in face.edges if edge.select}
-                node_manager = UVNodeManager.from_object(island.obj, bm, uv_layer, edges=edges, sub_faces=island.faces, sync=use_uv_select_sync)
+                node_manager = UVNodeManager.from_object(
+                    island.obj, bm, uv_layer, edges=edges, sub_faces=island.faces, sync=use_uv_select_sync
+                )
                 if len(node_manager.groups):
                     group = node_manager.groups[0]
-                    for node in group.nodes:
-                        for loop in node.loops:
-                            loop[uv_layer].pin_uv = True
-                            all_loops.add(loop)
-
                     straight_uv_nodes(group, self.distribute)
                     for node in group.nodes:
-                        node.update_uv(group.uv_layer)
                         for loop in node.loops:
                             loop[uv_layer].select = False
-
-            self.adjust_aspect_ratio(island, bbox_uv, adjustbox, all_loops)
-
-            # 隣接しているUVがshortest_path_selectで選択解除されるため
-            for _, _, _, loops in corner_mapping:
-                for loop in loops:
-                    loop[uv_layer].pin_uv = True
+                            loop[uv_layer].pin_uv = True
+                    group.update_uvs()
+                else:
+                    self.select_uv(curr_loops, uv_layer, False)
+                    self.select_uv(next_loops, uv_layer, False)
 
             # end valid_islands:
 
         if self.unwrap:
-            for island in valid_islands:
+            for island, _ in valid_islands:
                 island.select_all_uv()
                 for face in island.faces:
                     face.select = True
             bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         if self.stretch and self.unwrap:
-            for island in valid_islands:
+            for island, _ in valid_islands:
                 island.restore_selection()
             bpy.ops.uv.minimize_stretch(fill_holes=False, iterations=50)
 
         if not self.pin:
-            for island in valid_islands:
+            for island, _ in valid_islands:
                 island.select_all_uv()
             bpy.ops.uv.pin(clear=True)
 
-        for island in valid_islands:
+        for island, _ in valid_islands:
             island.restore_selection()
 
         if use_uv_select_sync:
@@ -214,50 +186,42 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def get_adjustbox(self, bbox_vectors):
-        center_u = sum(v.x for v in bbox_vectors) / len(bbox_vectors)
-        center_v = sum(v.y for v in bbox_vectors) / len(bbox_vectors)
+    @staticmethod
+    def select_uv(loops, uv_layer, select):
+        for loop in loops:
+            loop[uv_layer].select = select
 
-        avg_distance_u = sum(abs(v.x - center_u) for v in bbox_vectors) / len(bbox_vectors)
-        avg_distance_v = sum(abs(v.y - center_v) for v in bbox_vectors) / len(bbox_vectors)
+    @staticmethod
+    def get_bbox_uvs(uvs):
+        x_coords = [uv.x for uv in uvs]
+        y_coords = [uv.y for uv in uvs]
+        min_uv = Vector((min(x_coords), min(y_coords)))
+        max_uv = Vector((max(x_coords), max(y_coords)))
+        bbox_uv = [
+            Vector((min_uv.x, max_uv.y)),
+            Vector((max_uv.x, max_uv.y)),
+            Vector((max_uv.x, min_uv.y)),
+            Vector((min_uv.x, min_uv.y)),
+        ]
+        return bbox_uv
 
+    @staticmethod
+    def get_bbox_average(uvs):
+        center_u = sum(uv.x for uv in uvs) / len(uvs)
+        center_v = sum(uv.y for uv in uvs) / len(uvs)
+        avg_distance_u = sum(abs(uv.x - center_u) for uv in uvs) / len(uvs)
+        avg_distance_v = sum(abs(uv.y - center_v) for uv in uvs) / len(uvs)
         j_min_u = center_u - avg_distance_u
         j_max_u = center_u + avg_distance_u
         j_min_v = center_v - avg_distance_v
         j_max_v = center_v + avg_distance_v
-
-        adjustbox = [
+        average = [
             Vector((j_min_u, j_max_v)),
             Vector((j_max_u, j_max_v)),
             Vector((j_max_u, j_min_v)),
             Vector((j_min_u, j_min_v)),
         ]
-        return adjustbox
-
-    def adjust_aspect_ratio(self, island, bbox_uv, adjustbox, all_loops):
-        uv_layer = island.uv_layer
-
-        bbox_width = bbox_uv[1].x - bbox_uv[0].x
-        bbox_height = bbox_uv[0].y - bbox_uv[3].y
-        adjust_width = adjustbox[1].x - adjustbox[0].x
-        adjust_height = adjustbox[0].y - adjustbox[3].y
-
-        if bbox_width == 0 or bbox_height == 0:
-            return
-
-        scale_x = adjust_width / bbox_width
-        scale_y = adjust_height / bbox_height
-
-        bbox_center = (bbox_uv[0] + bbox_uv[2]) / 2
-        adjust_center = (adjustbox[0] + adjustbox[2]) / 2
-        translation = adjust_center - bbox_center
-
-        for loop in all_loops:
-            uv = loop[uv_layer].uv
-            scaled_uv = Vector(
-                ((uv.x - bbox_center.x) * scale_x + bbox_center.x, (uv.y - bbox_center.y) * scale_y + bbox_center.y)
-            )
-            loop[uv_layer].uv = scaled_uv + translation
+        return average
 
 
 def register():
