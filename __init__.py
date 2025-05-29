@@ -5,6 +5,7 @@ from . import translation
 
 from .operators import unwrap
 from .operators import unwrap_project
+from .operators import unwrap_mirrored
 from .operators import straight
 from .operators import rectify
 from .operators import gridify
@@ -61,6 +62,7 @@ modules = [
     icons,
     unwrap,
     unwrap_project,
+    unwrap_mirrored,
     straight,
     rectify,
     gridify,

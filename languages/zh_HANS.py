@@ -45,6 +45,8 @@ translation_dict = {
         ("*", "Projection Unwrap"): "投影展开",
         ("*", "Unwrap linked faces"): "展开连接的面",
         ("*", "Unwrap by linked mesh"): "按链接的网格展开",
+        ("Operator", "Mirror-applied Unwrap"): "镜像展开",
+        ("*", "Unwrap as if the mirror modifier is applied"): "如同应用了镜像修改器一样展开",
 
         ("Operator", "Mark Seam by Angle"): "按角度标记缝线",
         ("Operator", "Mark Seam by Boundary"): "按边界标记缝线",
