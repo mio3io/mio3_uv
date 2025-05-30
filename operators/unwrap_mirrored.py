@@ -23,6 +23,9 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
         self.start_time()
         obj = context.active_object
 
+        show_only_shape_key = obj.show_only_shape_key
+        obj.show_only_shape_key = True
+
         bpy.ops.object.mode_set(mode="OBJECT")
 
         for o in context.selected_objects:
@@ -64,6 +67,7 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
                 kd.insert(face_center, i)
         kd.balance()
 
+
         bm = bmesh.from_edit_mesh(obj.data)
         uv_layer = bm.loops.layers.uv.verify()
 
@@ -87,6 +91,8 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
                             break
 
         bmesh.update_edit_mesh(obj.data)
+
+        obj.use_shape_key_edit_mode = show_only_shape_key
 
         bpy.data.objects.remove(copy_obj, do_unlink=True)
         bpy.data.meshes.remove(copy_mesh, do_unlink=True)
