@@ -3,7 +3,6 @@ import bmesh
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from bpy.app.translations import pgettext_iface as tt_iface
 from ..icons import preview_collections
 from ..classes import Mio3UVOperator
 
@@ -314,12 +313,12 @@ def menu_context(self, context):
     icons = preview_collections["icons"]
     self.layout.operator(
         "uv.mio3_seam",
-        text=tt_iface(MIO3UV_OT_seam.bl_label),
+        text=MIO3UV_OT_seam.bl_label,
         icon_value=icons["SEAM"].icon_id,
     )
     self.layout.operator(
         "uv.mio3_seam_boundary",
-        text=tt_iface(MIO3UV_OT_seam_boundary.bl_label),
+        text=MIO3UV_OT_seam_boundary.bl_label,
         icon_value=icons["SEAM"].icon_id,
     )
 

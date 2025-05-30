@@ -42,7 +42,7 @@ translation_dict = {
         ("*", "Unwrap boundary to rectangle using four corners or a range as reference"): "使用四个角或范围作为参考将边界展开为矩形",
         ("Operator", "Gridify"): "网格化",
         ("*", "Align UVs of a quadrangle in a grid"): "将四边形的UV在网格中对齐",
-        ("*", "Projection Unwrap"): "投影展开",
+        ("Operator", "Projection Unwrap"): "投影展开",
         ("*", "Unwrap linked faces"): "展开连接的面",
         ("*", "Unwrap by linked mesh"): "按链接的网格展开",
         ("Operator", "Mirror-applied Unwrap"): "镜像展开",

@@ -35,12 +35,11 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             island.store_selection()
             island.deselect_all_uv()
 
-        for obj in self.objects:
-            islands = island_manager.islands_by_object[obj]
-            bm = island_manager.bmesh_dict[obj]
-            uv_layer = bm.loops.layers.uv.verify()
+        for colle in island_manager.collections:
+            bm = colle.bm
+            uv_layer = colle.uv_layer
 
-            for island in islands:
+            for island in colle.islands:
                 island.restore_selection()
 
                 quad = self.get_base_face(uv_layer, island.faces)
@@ -68,13 +67,11 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             context.scene.mio3uv.auto_uv_sync_skip = True
             context.tool_settings.use_uv_select_sync = False
 
-            for obj in self.objects:
-                islands = island_manager.islands_by_object[obj]
-                bm = island_manager.bmesh_dict[obj]
-                uv_layer = bm.loops.layers.uv.verify()
+            for colle in island_manager.collections:
+                bm = colle.bm
                 for face in bm.faces:
                     face.select = False
-                for island in islands:
+                for island in colle.islands:
                     for face in island.faces:
                         face.select = True
                 bm.select_flush(True)

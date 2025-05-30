@@ -18,7 +18,7 @@ class Mio3UVDebug:
         self._start_time = time.time()
 
     def print_time(self):
-        # print("Time: {}".format(time.time() - self._start_time))
+        # print("Time: {:.5f}".format(time.time() - self._start_time))
         pass
 
 

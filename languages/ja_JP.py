@@ -42,7 +42,7 @@ translation_dict = {
         ("*", "Unwrap boundary to rectangle using four corners or a range as reference"): "基準のコーナー4点または範囲を選択し境界が矩形になるように展開する",
         ("Operator", "Gridify"): "グリッド",
         ("*", "Align UVs of a quadrangle in a grid"): "四角形のUVをグリッド状に整列させる",
-        ("*", "Projection Unwrap"): "投影展開",
+        ("Operator", "Projection Unwrap"): "投影展開",
         ("*", "Unwrap linked faces"): "リンク面を展開",
         ("*", "Unwrap by linked mesh"): "メッシュごとに投影",
         ("Operator", "Mirror-applied Unwrap"): "ミラー適用したかのように展開",

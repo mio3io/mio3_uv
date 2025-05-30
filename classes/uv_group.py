@@ -4,6 +4,7 @@ from mathutils import Vector
 from dataclasses import dataclass, field
 from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
+from functools import cached_property
 
 
 @dataclass
@@ -49,7 +50,7 @@ class UVNodeGroup:
 
     min_uv: Vector = field(default_factory=lambda: Vector((float("inf"), float("inf"))))
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
-    center: Vector = field(init=False)
+    center: Vector = field(default_factory=lambda: Vector((0.0, 0.0)))
 
     selection_states: dict[int, bool] = field(default_factory=dict)
 
@@ -127,22 +128,36 @@ class UVNodeGroup:
 
 
 @dataclass
+class UVNodeGroupCollection:
+    obj: Object = None
+    bm: BMesh = None
+    uv_layer: BMLayerItem = None
+    groups: list[UVNodeGroup] = field(default_factory=list)
+
+
+@dataclass
 class UVNodeManager:
     objects: list[Object]
     sync: bool = False
+    obj: Object = None
+    bm: BMesh = None
+    uv_layer: BMLayerItem = None
 
-    groups: list[UVNodeGroup] = field(default_factory=list)
+    collections: list[UVNodeGroupCollection] = field(default_factory=list)
+
+    @cached_property
+    def groups(self) -> list[UVNodeGroup]:
+        return [item for colle in self.collections for item in colle.groups]
 
     def __post_init__(self):
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-            uv_groups = self.find_uv_nodes(bm, uv_layer)
-            for group in uv_groups:
-                self.add_group(group, obj, bm, uv_layer)
-
-    def add_group(self, group, obj, bm, uv_layer):
-        self.groups.append(UVNodeGroup(nodes=group, obj=obj, bm=bm, uv_layer=uv_layer))
+            if uv_groups := self.find_uv_nodes(bm, uv_layer):
+                colle = UVNodeGroupCollection(obj, bm, uv_layer)
+                self.collections.append(colle)
+                for group in uv_groups:
+                    colle.groups.append(UVNodeGroup(group, obj, bm, uv_layer))
 
     def find_uv_nodes(self, bm, uv_layer, edges=None, faces=None, sub_faces=None):
         uv_nodes = {}
@@ -240,19 +255,15 @@ class UVNodeManager:
             self.groups.remove(group_to_remove)
 
     def update_uvmeshes(self):
-        unique_bms = {group.bm for group in self.groups if group.bm is not None}
-        for bm in unique_bms:
-            obj = next(group.obj for group in self.groups if group.bm == bm)
-            bmesh.update_edit_mesh(obj.data)
+        for colle in self.collections:
+            bmesh.update_edit_mesh(colle.obj.data)
 
     @classmethod
     def from_object(cls, obj, bm, uv_layer, sync=False, edges=None, faces=None, sub_faces=None):
         manager = cls(objects=[], sync=sync)
-        if not bm and not uv_layer:
-            bm = bmesh.from_edit_mesh(obj.data)
-            uv_layer = bm.loops.layers.uv.verify()
-        uv_groups = manager.find_uv_nodes(bm, uv_layer, edges=edges, faces=faces, sub_faces=sub_faces)
-        if uv_groups:
+        if uv_groups := manager.find_uv_nodes(bm, uv_layer, edges=edges, faces=faces, sub_faces=sub_faces):
+            colle = UVNodeGroupCollection(obj, bm, uv_layer)
+            manager.collections.append(colle)
             for group in uv_groups:
-                manager.add_group(group, obj, bm, uv_layer)
+                colle.groups.append(UVNodeGroup(group, obj, bm, uv_layer))
         return manager

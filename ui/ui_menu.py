@@ -1,7 +1,6 @@
 import bpy
 from bpy.types import Menu, Panel
 from ..icons import preview_collections
-from bpy.app.translations import pgettext_iface as tt_iface
 from ..globals import get_preferences
 
 

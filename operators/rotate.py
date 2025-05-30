@@ -79,9 +79,9 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
 
                 for face in island.faces:
                     for loop in face.loops:
-                        uv = loop[uv_layer]
-                        relative_pos = uv.uv - center
-                        uv.uv = rot_matrix @ relative_pos + center
+                        loop_uv = loop[uv_layer]
+                        relative_pos = loop_uv.uv - center
+                        loop_uv.uv = rot_matrix @ relative_pos + center
 
                 island.update_bounds()
 

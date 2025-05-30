@@ -28,10 +28,10 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         name="Align UVs",
         items=[("GEOMETRY", "Geometry", ""), ("EVEN", "Even", ""), ("NONE", "None", "")],
     )
-    pin: BoolProperty(name="Pinned", default=True)
-    unwrap: BoolProperty(name="Unwrap", default=True)
     method: EnumProperty(name="Unwrap Method", items=unwrap_method_items)
+    unwrap: BoolProperty(name="Unwrap", default=True)
     stretch: BoolProperty(name="Stretch", default=False)
+    pin: BoolProperty(name="Pinned", default=True)
 
     def draw(self, context):
         layout = self.layout
@@ -55,7 +55,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
-        layout.prop(self, "stretch", expand=True)
+        layout.prop(self, "stretch")
         layout.prop(self, "pin")
 
     def execute(self, context):
@@ -83,9 +83,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                     if loop[uv_layer].select:
                         uv = loop[uv_layer].uv
                         uvkey = (round(uv.x, 6), round(uv.y, 6))
-                        if uvkey not in selected_uvs:
-                            selected_uvs[uvkey] = []
-                        selected_uvs[uvkey].append(loop)
+                        selected_uvs.setdefault(uvkey, []).append(loop)
 
             if len(selected_uvs) >= 4:
                 valid_islands.append((island, selected_uvs))
@@ -112,13 +110,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                     closest_uv, loops, _ = min(corner_candidates, key=lambda x: x[2])
                     corners.append((loops, closest_uv))
 
-            # 調整したサイズ
-            if self.bbox_type == "AVERAGE":
-                new_bbox = self.get_bbox_average([Vector(uvkey) for _, uvkey in corners])
-            else:
-                new_bbox = bbox_uvs
-
-            for (loops, _), bbox_uv in zip(corners, new_bbox):
+            for (loops, _), bbox_uv in zip(corners, bbox_uvs):
                 for loop in loops:
                     loop[uv_layer].uv = bbox_uv
                     if self.pin:
@@ -126,18 +118,15 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
             island.deselect_all_uv()
 
+            boundary_loops = set()
             for (curr_loops, _), (next_loops, _) in zip(corners, corners[1:] + [corners[0]]):
                 self.select_uv(curr_loops, uv_layer, True)
                 self.select_uv(next_loops, uv_layer, True)
 
-                # 隣接している場合はスキップ
-                if not any(
-                    (loop.link_loop_next in next_loops or loop.link_loop_prev in next_loops) for loop in curr_loops
-                ):
-                    try:
-                        bpy.ops.uv.shortest_path_select()
-                    except:
-                        pass
+                try:
+                    bpy.ops.uv.shortest_path_select()
+                except:
+                    pass
 
                 edges = {edge for face in island.faces for edge in face.edges if edge.select}
                 node_manager = UVNodeManager.from_object(
@@ -150,10 +139,15 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                         for loop in node.loops:
                             loop[uv_layer].select = False
                             loop[uv_layer].pin_uv = True
+                            boundary_loops.add(loop)
                     group.update_uvs()
                 else:
                     self.select_uv(curr_loops, uv_layer, False)
                     self.select_uv(next_loops, uv_layer, False)
+
+            if self.bbox_type == "AVERAGE":
+                bboox_ave = self.get_bbox_average([Vector(uvkey) for _, uvkey in corners])
+                self.remap_bbox(uv_layer, bbox_uvs, bboox_ave, boundary_loops)
 
             # end valid_islands:
 
@@ -207,14 +201,14 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
     @staticmethod
     def get_bbox_average(uvs):
-        center_u = sum(uv.x for uv in uvs) / len(uvs)
-        center_v = sum(uv.y for uv in uvs) / len(uvs)
-        avg_distance_u = sum(abs(uv.x - center_u) for uv in uvs) / len(uvs)
-        avg_distance_v = sum(abs(uv.y - center_v) for uv in uvs) / len(uvs)
-        j_min_u = center_u - avg_distance_u
-        j_max_u = center_u + avg_distance_u
-        j_min_v = center_v - avg_distance_v
-        j_max_v = center_v + avg_distance_v
+        center_x = sum(uv.x for uv in uvs) / len(uvs)
+        center_y = sum(uv.y for uv in uvs) / len(uvs)
+        avg_distance_x = sum(abs(uv.x - center_x) for uv in uvs) / len(uvs)
+        avg_distance_y = sum(abs(uv.y - center_y) for uv in uvs) / len(uvs)
+        j_min_u = center_x - avg_distance_x
+        j_max_u = center_x + avg_distance_x
+        j_min_v = center_y - avg_distance_y
+        j_max_v = center_y + avg_distance_y
         average = [
             Vector((j_min_u, j_max_v)),
             Vector((j_max_u, j_max_v)),
@@ -222,6 +216,28 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
             Vector((j_min_u, j_min_v)),
         ]
         return average
+
+    @staticmethod
+    def remap_bbox(uv_layer, bbox_uvs, bbox_ajs, loops):
+        old_width = bbox_uvs[1].x - bbox_uvs[0].x
+        old_height = bbox_uvs[0].y - bbox_uvs[3].y
+        new_width = bbox_ajs[1].x - bbox_ajs[0].x
+        new_height = bbox_ajs[0].y - bbox_ajs[3].y
+        if old_width == 0 or old_height == 0:
+            return
+
+        scale_x = new_width / old_width
+        scale_y = new_height / old_height
+
+        old_origin = bbox_uvs[0]
+        new_origin = bbox_ajs[0]
+
+        for loop in loops:
+            uv = loop[uv_layer].uv
+            scaled_uv = Vector(
+                ((uv.x - old_origin.x) * scale_x + new_origin.x, (uv.y - old_origin.y) * scale_y + new_origin.y)
+            )
+            loop[uv_layer].uv = scaled_uv
 
 
 def register():

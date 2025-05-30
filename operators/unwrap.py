@@ -107,12 +107,12 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 for face in island.faces:
                     for loop in face.loops:
                         if loop in original_uvs_island:
-                            current_uv = loop[uv_layer].uv
-                            original_uv = original_uvs_island[loop]
+                            curr_uv = loop[uv_layer].uv
+                            orig_uv = original_uvs_island[loop]
                             if axis == "X":
-                                loop[uv_layer].uv = Vector((current_uv.x, original_uv.y))
+                                loop[uv_layer].uv = Vector((curr_uv.x, orig_uv.y))
                             elif axis == "Y":
-                                loop[uv_layer].uv = Vector((original_uv.x, current_uv.y))
+                                loop[uv_layer].uv = Vector((orig_uv.x, curr_uv.y))
             if island.ajast:
                 island.update_bounds()
                 offset = island.original_center - island.center
@@ -122,7 +122,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                         uv.select = True
 
         if use_uv_select_sync:
-            # island_manager.restore_vertex_selection()
+            island_manager.restore_vertex_selection()
             context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()
@@ -171,12 +171,10 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         selected_nodes = {}
         for face in island.faces:
             for loop in face.loops:
-                uv = loop[uv_layer]
-                if uv.select:
-                    key = (uv.uv.x, uv.uv.y, loop.vert.index)
-                    if key not in selected_nodes:
-                        selected_nodes[key] = []
-                    selected_nodes[key].append(uv)
+                loop_uv = loop[uv_layer]
+                if loop_uv.select:
+                    key = (loop_uv.uv.x, loop_uv.uv.y, loop.vert.index)
+                    selected_nodes.setdefault(key, []).append(loop_uv)
 
         sorted_keys = sorted(selected_nodes.keys())
         nodes_to_process = []
@@ -187,10 +185,10 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
         additional_deselect_needed = 2 - deselect_count
         for uvs in nodes_to_process:
-            for uv in uvs:
+            for loop_uv in uvs:
                 if self.keep == "ALL":
-                    uv.select = False
-                island.tmp_uv_list.append(uv)
+                    loop_uv.select = False
+                island.tmp_uv_list.append(loop_uv)
             additional_deselect_needed -= 1
             if additional_deselect_needed == 0:
                 break

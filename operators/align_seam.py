@@ -83,9 +83,7 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
         vert_to_uv_nodes = {}
         for group in [group_a, group_b]:
             for node in group.nodes:
-                if node.vert not in vert_to_uv_nodes:
-                    vert_to_uv_nodes[node.vert] = []
-                vert_to_uv_nodes[node.vert].append(node)
+                vert_to_uv_nodes.setdefault(node.vert, []).append(node)
 
         for vert, nodes in vert_to_uv_nodes.items():
             if len(nodes) < 2:
@@ -93,20 +91,20 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
 
             if self.align == "A":
                 source_nodes = [n for n in nodes if n in group_a.nodes]
-                move_nodes = [n for n in nodes if n in group_b.nodes]
+                target_nodes = [n for n in nodes if n in group_b.nodes]
             elif self.align == "B":
                 source_nodes = [n for n in nodes if n in group_b.nodes]
-                move_nodes = [n for n in nodes if n in group_a.nodes]
+                target_nodes = [n for n in nodes if n in group_a.nodes]
             else:
                 source_nodes = nodes
-                move_nodes = nodes
+                target_nodes = nodes
 
             if not source_nodes:
                 continue
 
             pos = sum(node.uv[axis_index] for node in source_nodes) / len(source_nodes)
 
-            for node in move_nodes:
+            for node in target_nodes:
                 node.uv[axis_index] = pos
 
         for group in groups:

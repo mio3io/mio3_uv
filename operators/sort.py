@@ -182,8 +182,8 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         if self.group_type == "NONE":
             return [island_manager.islands]
         elif self.group_type == "OBJECT":
-            for obj, islands in island_manager.islands_by_object.items():
-                groups.append(islands)
+            for colle in island_manager.collections:
+                groups.append(colle.islands)
             groups.sort(key=lambda x: x[0].obj.name, reverse=self.reverse)
         elif self.group_type == "DISTANCE":
 
@@ -226,9 +226,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             material_groups = {}
             for island in island_manager.islands:
                 material = get_island_material(island)
-                if material not in material_groups:
-                    material_groups[material] = []
-                material_groups[material].append(island)
+                material_groups.setdefault(material, []).append(island)
             groups = list(material_groups.values())
             groups.sort(key=lambda x: get_island_material(x[0]).name if get_island_material(x[0]) else "")
         elif self.group_type == "SIMILAR":

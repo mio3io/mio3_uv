@@ -36,9 +36,9 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         island_manager.set_orientation_mode("LOCAL")
 
         groups = []
-        for obj in self.objects:
-            islands = island_manager.islands_by_object[obj]
-            bm = island_manager.bmesh_dict[obj]
+        for colle in island_manager.collections:
+            islands = colle.islands
+            bm = colle.bm
             if islands:
                 if self.group:
                     face_groups = self.find_groups(bm)

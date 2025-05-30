@@ -183,6 +183,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 if not sym_face:
                     continue
                 for loop in face.loops:
+                    loop_uv = loop[uv_layer].uv
                     if loop[uv_layer].select:
                         sym_vert = min(
                             sym_face.verts,
@@ -190,8 +191,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                         )
                         for sym_loop in sym_face.loops:
                             if sym_loop.vert == sym_vert:
-                                source_uv = loop[uv_layer].uv
-                                new_uv = self.get_symmetric_uv_point(source_uv, sym_center_uv)
+                                new_uv = self.get_symmetric_uv_point(loop_uv, sym_center_uv)
                                 sym_loop[uv_layer].uv = new_uv
 
     # 対称化化するか判定

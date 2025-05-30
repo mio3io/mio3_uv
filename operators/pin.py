@@ -42,12 +42,12 @@ class MIO3UV_OT_pin(Mio3UVOperator):
                     continue
 
                 for loop in face.loops:
-                    uv = loop[uv_layer]
-                    if uv.select:
+                    loop_uv = loop[uv_layer]
+                    if loop_uv.select:
                         if self.clear:
-                            uv.pin_uv = False
+                            loop_uv.pin_uv = False
                         else:
-                            uv.pin_uv = True
+                            loop_uv.pin_uv = True
 
             bmesh.update_edit_mesh(me)
 

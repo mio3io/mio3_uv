@@ -1,6 +1,5 @@
 import bpy
 from bpy.types import Panel
-from bpy.app.translations import pgettext_iface as tt_iface
 from ..operators.view_padding import UV_OT_mio3_guide_padding
 from ..icons import preview_collections
 
@@ -57,13 +56,13 @@ class MIO3UV_PT_UVMesh(Panel):
             row = col.row(align=True)
             row.operator(
                 "mesh.mio3_uvmesh_control",
-                text=tt_iface("Mesh"),
+                text="Mesh",
                 icon_value=icons["CUBE"].icon_id,
                 depress=False if props_object.uvmesh_factor > 0 else True,
             ).mode = "MESH"
             row.operator(
                 "mesh.mio3_uvmesh_control",
-                text=tt_iface("UV"),
+                text="UV",
                 icon_value=icons["UNFOLDIFY"].icon_id,
                 depress=True if props_object.uvmesh_factor > 0 else False,
             ).mode = "UV"

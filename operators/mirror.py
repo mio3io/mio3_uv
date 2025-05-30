@@ -75,11 +75,11 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
 
                 for face in island.faces:
                     for loop in face.loops:
-                        uv = loop[uv_layer]
+                        loop_uv = loop[uv_layer]
                         if self.axis == "X":
-                            uv.uv.x = 2 * center.x - uv.uv.x
+                            loop_uv.uv.x = 2 * center.x - loop_uv.uv.x
                         else:
-                            uv.uv.y = 2 * center.y - uv.uv.y
+                            loop_uv.uv.y = 2 * center.y - loop_uv.uv.y
 
                 island.update_bounds()
 

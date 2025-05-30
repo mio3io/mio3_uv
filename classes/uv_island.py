@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from typing import Literal
 from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
-from collections import defaultdict
 from functools import cached_property
 import time
 
@@ -33,10 +32,10 @@ class UVIsland:
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
     width: float = field(init=False)
     height: float = field(init=False)
-    center: Vector = field(init=False)
+    center: Vector = field(init=False, default_factory=lambda: Vector((0.0, 0.0)))
 
     selection_loops: dict[int, bool] = field(default_factory=dict)
-    selection_uv_count: int = field(init=False, default=0) # 削除予定
+    selection_uv_count: int = field(init=False, default=0)  # 削除予定
     all_uv_count: int = field(init=False, default=0)
 
     @property
@@ -131,30 +130,51 @@ class UVIsland:
                 loop[self.uv_layer].select = False
                 loop[self.uv_layer].select_edge = False
 
+    @cached_property
     def is_any_uv_selected(self):
+        uv_layer = self.uv_layer
         for face in self.faces:
             for loop in face.loops:
-                if loop[self.uv_layer].select:
+                if loop[uv_layer].select:
                     return True
         return False
+
+    @cached_property
+    def is_face_selected(self):
+        uv_layer = self.uv_layer
+        selected_face = False
+        for face in self.faces:
+            if face.select:
+                if all([l[uv_layer].select for l in face.loops]): # select_edge -> 三角に割った面を許容しない
+                    selected_face = True
+                    break
+        return selected_face
+
+
+@dataclass
+class UVIslandCollection:
+    obj: Object = None
+    bm: BMesh = None
+    uv_layer: BMLayerItem = None
+    islands: list[UVIsland] = field(default_factory=list)
+    original_selected_verts: dict[BMVert, bool] = field(default_factory=dict)
 
 
 @dataclass
 class UVIslandManager:
     objects: list[Object]
-    islands: list[UVIsland] = field(default_factory=list, init=False)
-    bmesh_dict: dict[Object, BMesh] = field(default_factory=dict, init=False)
-    uv_layer_dict: dict[Object, BMLayerItem] = field(default_factory=dict, init=False)
 
     sync: bool = False  # 選択同期
     sync_any: bool = False  # 頂点選択のみを含む
     extend: bool = True  # 選択しているUVを境界まで拡張する
     find_all: bool = False  # すべてのアイランドを対象にする
 
-    islands_by_object: dict[Object, list[UVIsland]] = field(default_factory=lambda: defaultdict(list), init=False)
     orientation_mode: Literal["WORLD", "LOCAL"] = "WORLD"
+    collections: list[UVIslandCollection] = field(default_factory=list)
 
-    original_selected_verts: dict[Object, dict[BMVert, bool]] = field(default_factory=dict, init=False)
+    @cached_property
+    def islands(self) -> list[UVIsland]:
+        return [item for colle in self.collections for item in colle.islands]
 
     def __post_init__(self):
         self.find_all_islands()
@@ -162,6 +182,9 @@ class UVIslandManager:
     def find_all_islands(self):
         original_edge_seam = {}
         original_uv_select = {}
+        bmesh_dict = {}
+        uv_layer_dict = {}
+        original_selected_verts = {}
 
         # シームを区切る 元の選択を保存
         for obj in self.objects:
@@ -169,22 +192,23 @@ class UVIslandManager:
             uv_layer = bm.loops.layers.uv.verify()
             if not uv_layer:
                 continue
-            self.bmesh_dict[obj] = bm
-            self.uv_layer_dict[obj] = uv_layer
+            bmesh_dict[obj] = bm
+            uv_layer_dict[obj] = uv_layer
 
             original_edge_seam[obj] = {edge: edge.seam for edge in bm.edges}
             original_uv_select[obj] = {}
-            self.original_selected_verts[obj] = {vert: vert.select for vert in bm.verts}
+            original_selected_verts[obj] = {vert: vert.select for vert in bm.verts}
 
             for face in bm.faces:
                 for loop in face.loops:
-                    uv = loop[uv_layer]
-                    original_uv_select[obj][uv] = (uv.select, uv.select_edge)
+                    loop_uv = loop[uv_layer]
+                    original_uv_select[obj][loop_uv] = (loop_uv.select, loop_uv.select_edge)
 
-        if self.find_all:
-            bpy.ops.mesh.select_all(action="SELECT")
-        elif self.sync:
-            bpy.ops.mesh.select_linked(delimit={"UV"})
+        if self.sync:
+            if self.find_all:
+                bpy.ops.mesh.select_all(action="SELECT")
+            else:
+                bpy.ops.mesh.select_linked(delimit={"UV"})
 
         if self.find_all:
             bpy.ops.uv.select_all(action="SELECT")  # シームを切る
@@ -194,15 +218,17 @@ class UVIslandManager:
         bpy.ops.uv.seams_from_islands(mark_seams=True)
 
         for obj in self.objects:
-            bm = self.bmesh_dict[obj]
-            uv_layer = self.uv_layer_dict[obj]
-            if self.sync:
-                self.sync_uv_from_mesh(bm, uv_layer)
+            bm = bmesh_dict[obj]
+            uv_layer = uv_layer_dict[obj]
+            # if self.sync:
+            #     self.sync_uv_from_mesh(bm, uv_layer)
 
             obj_islands = self.find_islands(bm, uv_layer, obj)
             if obj_islands:
-                self.islands.extend(obj_islands)
-                self.islands_by_object[obj] = obj_islands
+                colle = UVIslandCollection(obj, bm, uv_layer)
+                colle.original_selected_verts = original_selected_verts[obj]
+                self.collections.append(colle)
+                colle.islands.extend(obj_islands)
 
             # 元の選択に戻す
             for uv, (select, select_edge) in original_uv_select[obj].items():
@@ -211,7 +237,7 @@ class UVIslandManager:
             for edge, seam in original_edge_seam[obj].items():
                 edge.seam = seam
             if self.sync:
-                for vert, select in self.original_selected_verts[obj].items():
+                for vert, select in original_selected_verts[obj].items():
                     vert.select = select
                 bm.select_flush(False)
 
@@ -234,8 +260,8 @@ class UVIslandManager:
                     for face in bm.faces:
                         if face.select:
                             for loop in face.loops:
-                                uv = loop[uv_layer]
-                                if uv.select and face not in target_faces:
+                                loop_uv = loop[uv_layer]
+                                if loop_uv.select and face not in target_faces:
                                     target_faces.add(face)
                                     break
             else:
@@ -301,9 +327,9 @@ class UVIslandManager:
                     loop[uv_layer].select_edge = True
 
     def restore_vertex_selection(self):
-        for obj, original_selection in self.original_selected_verts.items():
-            bm = self.bmesh_dict[obj]
-            for vert, was_selected in original_selection.items():
+        for colle in self.collections:
+            bm = colle.bm
+            for vert, was_selected in colle.original_selected_verts.items():
                 vert.select = was_selected
             bm.select_flush(False)
 
@@ -324,8 +350,8 @@ class UVIslandManager:
 
     def sort_all_islands(self, key, reverse=False):
         self.islands.sort(key=key, reverse=reverse)
-        for obj in self.islands_by_object:
-            self.islands_by_object[obj].sort(key=key, reverse=reverse)
+        for colle in self.collections:
+            colle.islands.sort(key=key, reverse=reverse)
 
     def set_orientation_mode(self, mode):
         if self.orientation_mode != mode:
@@ -334,15 +360,5 @@ class UVIslandManager:
                 island.orientation_mode = mode
 
     def update_uvmeshes(self):
-        unique_bms = {island.bm for island in self.islands if island.bm is not None}
-        for bm in unique_bms:
-            obj = next(island.obj for island in self.islands if island.bm == bm)
-            bmesh.update_edit_mesh(obj.data)
-
-    def remove_island(self, island):
-        if island in self.islands:
-            self.islands.remove(island)
-            for obj, obj_islands in self.islands_by_object.items():
-                if island in obj_islands:
-                    obj_islands.remove(island)
-                    break
+        for colle in self.collections:
+            bmesh.update_edit_mesh(colle.obj.data)

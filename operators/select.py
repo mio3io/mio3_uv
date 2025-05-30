@@ -104,60 +104,45 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
-            context.tool_settings.mesh_select_mode = (False, False, True)
-            try:
-                bpy.ops.mesh.select_similar_region()
-            except:
-                pass
-            return {"FINISHED"}
+            self.sync_uv_from_mesh(context, self.objects)
 
-        island_manager = UVIslandManager(self.objects, find_all=True)
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True)
 
-        base_island = None
+        source_island = None
+        source_face_count = 0
+        source_edge_count = 0
         for island in island_manager.islands:
             if any(all(loop[island.uv_layer].select for loop in face.loops) for face in island.faces):
-                base_island = island
-                base_face_count = len(base_island.faces)
-                base_uv_count = self.get_island_uv_count(base_island)
-                base_edge_count = self.get_island_edge_count(base_island) if self.check_edges else None
-                base_island.select_all_uv()
+                source_island = island
+                source_face_count = len(source_island.faces)
+                source_edge_count = self.get_island_edge_count(source_island) if self.check_edges else None
                 break
 
-        if not base_island:
-            return self.cancel_operator(context, use_uv_select_sync, island_manager)
+        if not source_island:
+            return {"CANCELLED"}
+
+        source_island.select_all_uv()
 
         for island in island_manager.islands:
-            if island == base_island:
+            if island == source_island:
                 continue
             island.deselect_all_uv()
-            if not self.is_different(island, base_face_count, base_uv_count, base_edge_count):
+            if not self.is_different(island, source_face_count, source_edge_count):
                 island.select_all_uv()
 
         island_manager.update_uvmeshes()
 
         if use_uv_select_sync:
             self.sync_mesh_from_uv(context, self.objects)
-            context.tool_settings.use_uv_select_sync = True
+
         self.print_time()
         return {"FINISHED"}
-
-    def cancel_operator(self, context, use_uv_select_sync, island_manager):
-        if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-            island_manager.update_uvmeshes()
-            context.tool_settings.use_uv_select_sync = True
-        return {"CANCELLED"}
-
-    def get_island_uv_count(self, island):
-        return sum(len(face.loops) for face in island.faces)
 
     def get_island_edge_count(self, island):
         return len({edge for face in island.faces for edge in face.edges})
 
-    def is_different(self, island, base_face_count, base_uv_count, base_edge_count):
+    def is_different(self, island, base_face_count, base_edge_count):
         if len(island.faces) != base_face_count:
-            return True
-        if self.get_island_uv_count(island) != base_uv_count:
             return True
         if self.check_edges and self.get_island_edge_count(island) != base_edge_count:
             return True
@@ -349,11 +334,10 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
 
         island_manager = UVIslandManager(self.objects)
 
-        for obj, islands in island_manager.islands_by_object.items():
-            bm = island_manager.bmesh_dict[obj]
-            uv_layer = island_manager.uv_layer_dict[obj]
+        for colle in island_manager.collections:
+            uv_layer = colle.uv_layer
 
-            for island in islands:
+            for island in colle.islands:
                 original_selected_loops = {
                     loop for face in island.faces for loop in face.loops if loop[uv_layer].select
                 }
@@ -361,7 +345,7 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
                 island.deselect_all_uv()
                 for face in island.faces:
                     for loop in face.loops:
-                        uv = loop[uv_layer]
+                        loop_uv = loop[uv_layer]
                         if loop in original_selected_loops:
                             is_boundary = False
                             if self.use_mesh_boundary and loop.edge.is_boundary:
@@ -372,8 +356,8 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
                                 is_boundary = True
 
                             if is_boundary:
-                                uv.select = True
-                                uv.select_edge = True
+                                loop_uv.select = True
+                                loop_uv.select_edge = True
 
         island_manager.update_uvmeshes()
 
