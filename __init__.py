@@ -34,6 +34,7 @@ from .operators import stack
 from .operators import shuffle
 
 from .operators import symmetrize
+from .operators import symmetrize_snap
 from .operators import unfoldify
 from .operators import body_preset
 
@@ -88,6 +89,7 @@ modules = [
     stack,
     shuffle,
     symmetrize,
+    symmetrize_snap,
     unfoldify,
     body_preset,
     view_padding,
