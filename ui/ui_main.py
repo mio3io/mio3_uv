@@ -26,7 +26,8 @@ class MIO3UV_PT_main(Mio3UVPanel):
         row2.alignment = "RIGHT"
 
         row3 = row.row(align=True)
-        row3.operator("ed.undo", text="", icon="LOOP_BACK")
+        row3.operator("uv.snap_cursor", text="", icon="CURSOR").target="SELECTED"
+        # row3.operator("ed.undo", text="", icon="LOOP_BACK")
         row3.separator(factor=0.5)
         row3.operator("uv.mio3_pin", text="", icon="PINNED").clear = False
         row3.operator("uv.mio3_pin", text="", icon="UNPINNED").clear = True
@@ -42,6 +43,8 @@ class MIO3UV_PT_main(Mio3UVPanel):
         row.operator("uv.mio3_unwrap", text="X").axis = "X"
         row.operator("uv.mio3_unwrap", text="Y").axis = "Y"
         row.scale_x=1
+        row.separator(factor=0.2)
+        row.operator("uv.mio3_unwrap_mirrored", text="", icon="MOD_MIRROR")
 
         col_unwrap = layout.column(align=True)
 

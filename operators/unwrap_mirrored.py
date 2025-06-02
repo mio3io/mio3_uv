@@ -1,6 +1,6 @@
 import bpy
 import bmesh
-from bpy.props import EnumProperty
+from bpy.props import BoolProperty
 from mathutils import kdtree
 from ..classes import Mio3UVOperator
 
@@ -11,12 +11,9 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
     bl_description = "Unwrap as if the mirror modifier is applied"
     bl_options = {"REGISTER", "UNDO"}
 
-    method: EnumProperty(
-        name="Method",
-        items=[
-            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
-            ("CONFORMAL", "Conformal", "Conformal mapping method"),
-        ],
+    orient_world: BoolProperty(
+        name="Orient World",
+        default=True,
     )
 
     def execute(self, context):
@@ -47,7 +44,9 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
         context.view_layer.objects.active = copy_obj
         bpy.ops.object.mode_set(mode="EDIT")
 
-        bpy.ops.uv.unwrap(method=self.method, margin=0.001)
+        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
+        if self.orient_world:
+            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
 
         obj.select_set(True)
 
@@ -70,8 +69,6 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
         bm = bmesh.from_edit_mesh(obj.data)
         uv_layer = bm.loops.layers.uv.verify()
 
-        is_editor = context.area.type == "IMAGE_EDITOR"
-
         for face in bm.faces:
             if not face.select:
                 continue
@@ -82,7 +79,7 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
             for loop in face.loops:
                 loop_uv = loop[uv_layer]
                 v_co = loop.vert.co
-                if loop_uv.select or not is_editor:
+                if loop_uv.select:
                     closest_vert = min(face_src.verts, key=lambda v: (v.co - v_co).length_squared)
                     for loop_src in face_src.loops:
                         if loop_src.vert == closest_vert:
@@ -104,8 +101,15 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
         modifier_states = {}
         for mod in obj.modifiers:
             if mod.type == "MIRROR":
-                modifier_states[mod.name] = (mod.show_viewport, mod.use_mirror_merge)
+                modifier_states[mod.name] = (
+                    mod.show_viewport,
+                    mod.use_mirror_merge,
+                    mod.use_mirror_u,
+                    mod.use_mirror_v,
+                )
                 mod.use_mirror_merge = True
+                mod.use_mirror_u = False
+                mod.use_mirror_v = False
             else:
                 modifier_states[mod.name] = (mod.show_viewport, None)
         for mod in obj.modifiers:
@@ -116,21 +120,17 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
     def restore_state(obj, modifier_states):
         for mod in obj.modifiers:
             if mod.name in modifier_states:
-                mod.show_viewport = modifier_states[mod.name][0]
+                mod_state = modifier_states[mod.name]
+                mod.show_viewport = mod_state[0]
                 if mod.type == "MIRROR":
-                    mod.use_mirror_merge = modifier_states[mod.name][1]
-
-
-def menu_context(self, context):
-    self.layout.separator()
-    self.layout.operator(MIO3UV_OT_unwrap_mirror.bl_idname)
+                    mod.use_mirror_merge = mod_state[1]
+                    mod.use_mirror_u = mod_state[2]
+                    mod.use_mirror_v = mod_state[3]
 
 
 def register():
     bpy.utils.register_class(MIO3UV_OT_unwrap_mirror)
-    bpy.types.IMAGE_MT_uvs_unwrap.append(menu_context)
 
 
 def unregister():
     bpy.utils.unregister_class(MIO3UV_OT_unwrap_mirror)
-    bpy.types.IMAGE_MT_uvs_unwrap.remove(menu_context)
