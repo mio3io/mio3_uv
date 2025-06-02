@@ -31,16 +31,23 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
         island_manager = UVIslandManager(self.objects, extend=False, sync=use_uv_select_sync)
+        if not island_manager.islands:
+            self.report({"WARNING"}, "No UV islands found")
+            return {"CANCELLED"}
 
         for island in island_manager.islands:
             island.store_selection()
             island.deselect_all_uv()
 
-        for colle in island_manager.collections:
-            bm = colle.bm
-            uv_layer = colle.uv_layer
+        # オブジェクトで並行処理
+        max_length = max(len(colle.islands) for colle in island_manager.collections)
+        for i in range(max_length):
+            islands = [colle.islands[i] for colle in island_manager.collections if len(colle.islands) > i]
 
-            for island in colle.islands:
+            for island in islands:
+                bm = island.bm
+                uv_layer = island.uv_layer
+
                 island.restore_selection()
 
                 quad = self.get_base_face(uv_layer, island.faces)
@@ -58,10 +65,13 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                     else:
                         for loop in face.loops:
                             loop[uv_layer].pin_uv = False
-                try:
-                    bpy.ops.uv.follow_active_quads(mode=self.mode)
-                except:
-                    pass
+            try:
+                bpy.ops.uv.follow_active_quads(mode=self.mode)
+            except:
+                pass
+
+            for island in islands:
+                island.deselect_all_uv()
 
         # Sync アイランドのメッシュだけ全選択
         if use_uv_select_sync:
@@ -76,6 +86,9 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                     for face in island.faces:
                         face.select = True
                 bm.select_flush(True)
+
+        for island in island_manager.islands:
+            island.restore_selection()
 
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
         bpy.ops.uv.pin(clear=True)
