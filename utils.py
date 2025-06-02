@@ -1,7 +1,7 @@
 import bpy
 import bmesh
-from mathutils import Vector
-
+import math
+from mathutils import Vector, Matrix
 
 def sync_uv_from_mesh(context, selected_objects):
     objects = selected_objects if selected_objects else context.objects_in_mode
@@ -52,6 +52,30 @@ def sync_mesh_from_uv_obj(obj):
             face.select = True
     bm.select_flush(True)
     bmesh.update_edit_mesh(obj.data)
+
+
+def get_uv_from_mirror_offset(obj, is_vertical):
+    "ミラーモディファイアのオフセット設定を取得する"
+    for mod in obj.modifiers:
+        if mod.type != "MIRROR" or not mod.show_viewport:
+            continue
+        if is_vertical and mod.use_mirror_u and mod.mirror_offset_u:
+            offset_u = 0.5 + mod.mirror_offset_u * 0.5
+            return Vector((offset_u, 0))
+        if not is_vertical and mod.use_mirror_v and mod.mirror_offset_v:
+            offset_v = 0.5 + mod.mirror_offset_v * 0.5
+            return Vector((0, offset_v))
+    return None
+
+def rotate_uv_faces(faces, angle, uv_layer, center):
+    sin_a = math.sin(angle)
+    cos_a = math.cos(angle)
+    rot_matrix = Matrix(((cos_a, -sin_a), (sin_a, cos_a)))
+    for face in faces:
+        for loop in face.loops:
+            loop_uv = loop[uv_layer]
+            local = loop_uv.uv - center
+            loop_uv.uv = rot_matrix @ local + center
 
 
 def get_tile_co(offset_vector, uv_layer, loops):

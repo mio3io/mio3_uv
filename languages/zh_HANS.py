@@ -29,6 +29,9 @@ translation_dict = {
         ("*", "Keep Pin"): "保持钉住",
         ("*", "Keep Seam"): "保持缝线",
         ("*", "Keep Boundary"): "保持边界",
+        ("*", "Original Position"): "原始位置",
+        ("*", "Mirror U/V"): "镜像 U/V",
+        ("*", "Refers to the Mirror setting of the Mirror Modifier"): "参考镜像修改器的镜像设置",
 
         # Unwrap
         ("Operator", "UV Unwrap"): "UV 展开",

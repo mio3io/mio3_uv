@@ -1,8 +1,9 @@
 import bpy
 import math
-from mathutils import Vector
-from bpy.props import BoolProperty
+from mathutils import Vector, Matrix
+from bpy.props import BoolProperty, EnumProperty
 from ..classes import UVIslandManager, Mio3UVOperator
+from ..utils import get_uv_from_mirror_offset, rotate_uv_faces
 
 
 class MIO3UV_OT_orient(Mio3UVOperator):
@@ -11,8 +12,16 @@ class MIO3UV_OT_orient(Mio3UVOperator):
     bl_description = "Align the selected edge or island to an axis"
     bl_options = {"REGISTER", "UNDO"}
 
-    center: BoolProperty(name="Center", default=False)
     island: BoolProperty(name="Island Mode", default=False)
+    center_axis: EnumProperty(
+        name="Alignment",
+        items=[
+            ("NONE", "Original Position", ""),
+            ("CENTER", "Center", ""),
+            ("MIRROR", "Mirror U/V", "Refers to the Mirror setting of the Mirror Modifier"),
+        ],
+        default="NONE",
+    )
 
     def invoke(self, context, event):
         self.objects = self.get_selected_objects(context)
@@ -26,7 +35,16 @@ class MIO3UV_OT_orient(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
+
+        # アイランド
+        if self.island:
+            bpy.ops.uv.align_rotation(method="AUTO")
+            return {"FINISHED"}
+
+        # UVグループ
+
         self.objects = self.get_selected_objects(context)
+        udim = context.scene.mio3uv.udim
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
@@ -36,79 +54,83 @@ class MIO3UV_OT_orient(Mio3UVOperator):
         if not island_manager.islands:
             return {"CANCELLED"}
 
-        if self.island:
-            for island in island_manager.islands:
-                island.select_all_uv()
-            bpy.ops.uv.align_rotation(method="AUTO")
-        else:
-            for island in island_manager.islands:
-                uv_layer = island.uv_layer
-                selected_edges = self.get_selected_edges(island, uv_layer)
-                if not selected_edges:
+        for island in island_manager.islands:
+            uv_layer = island.uv_layer
+            loop_uv1, loop_uv2 = self.get_selected_edge_loop(island)
+            if not loop_uv1:
+                continue
+
+            edge_uv = loop_uv1.uv - loop_uv2.uv  # エッジのUV座標差分
+            current_angle = math.atan2(edge_uv.y, edge_uv.x)  # 現在の角度
+            target_angle = round(current_angle / (math.pi / 2)) * (math.pi / 2)  # 90度単位
+            angle_diff = target_angle - current_angle
+
+            rotate_uv_faces(island.faces, angle_diff, island.uv_layer, island.center)
+
+            is_vertical = loop_uv1.uv.x == loop_uv2.uv.x  # 縦向きに整列した
+
+            if self.center_axis == "MIRROR":
+                center_uv = get_uv_from_mirror_offset(island.obj, is_vertical)
+                if not center_uv:
                     continue
+            elif self.center_axis == "CENTER":
+                center_uv = Vector((0.5, 0.5))
+            else:
+                continue
 
-                edge_uv = selected_edges[0][1][uv_layer].uv - selected_edges[0][0][uv_layer].uv
-                current_angle = math.atan2(edge_uv.y, edge_uv.x)
-                target_angle = round(current_angle / (math.pi / 2)) * (math.pi / 2)
-                rotation_angle = target_angle - current_angle
-                rotation_rad = rotation_angle
+            center_uv = self.get_udim_co(udim, center_uv, island)
 
-                self.rotate_island(island, rotation_rad, uv_layer, island.center)
+            if is_vertical:
+                move_delta = center_uv.x - loop_uv1.uv.x
+                for face in island.faces:
+                    for l in face.loops:
+                        l[uv_layer].uv.x += move_delta
+            else:
+                move_delta = center_uv.y - loop_uv1.uv.y
+                for face in island.faces:
+                    for l in face.loops:
+                        l[uv_layer].uv.y += move_delta
 
-                if self.center:
-                    target_x = self.get_x(context, 0.5, island, uv_layer)
-                    edge_center_x = sum(
-                        (edge[0][uv_layer].uv.x + edge[1][uv_layer].uv.x) / 2 for edge in selected_edges
-                    ) / len(selected_edges)
-                    move_delta = target_x - edge_center_x
-                    for face in island.faces:
-                        for loop in face.loops:
-                            loop[uv_layer].uv.x += move_delta
+        if use_uv_select_sync:
+            island_manager.restore_vertex_selection()
 
-            island_manager.update_uvmeshes()
+        island_manager.update_uvmeshes()
 
         self.print_time()
         return {"FINISHED"}
 
-    def get_selected_edges(self, island, uv_layer):
-        selected_edges = []
-        for face in island.faces:
-            for loop in face.loops:
-                if loop[uv_layer].select and loop.link_loop_next[uv_layer].select:
-                    selected_edges.append((loop, loop.link_loop_next))
-        return selected_edges
-
-    def rotate_island(self, island, rotation_angle, uv_layer, center_uv):
-        sin_rot = math.sin(rotation_angle)
-        cos_rot = math.cos(rotation_angle)
-        for face in island.faces:
-            for loop in face.loops:
-                uv = loop[uv_layer].uv
-                uv_local = uv - center_uv
-                uv_rotated = (
-                    Vector((uv_local.x * cos_rot - uv_local.y * sin_rot, uv_local.x * sin_rot + uv_local.y * cos_rot))
-                    + center_uv
-                )
-                loop[uv_layer].uv = uv_rotated
-
-    def get_x(self, context, x, island, uv_layer):
-        if context.scene.mio3uv.udim:
-            min_x = min(loop[uv_layer].uv.x for face in island.faces for loop in face.loops)
-            tile_u = int(min_x)
-            udim_x = tile_u + x
-            return udim_x
+    def get_udim_co(self, is_udim, co, island):
+        if is_udim:
+            return Vector((int(island.center.x) + co.x, int(island.center.y) + co.y))
         else:
-            return x
+            return co
+
+    def get_selected_edge_loop(self, island):
+        uv_layer = island.uv_layer
+        if island.sync:
+            for face in island.faces:
+                for edge in face.edges:
+                    if edge.select:
+                        for loop in edge.link_loops:
+                            if loop[uv_layer].select and loop.link_loop_next[uv_layer].select:
+                                return (loop[uv_layer], loop.link_loop_next[uv_layer])
+        else:
+            for face in island.faces:
+                if face.select:
+                    for loop in face.loops:
+                        if loop[uv_layer].select and loop.link_loop_next[uv_layer].select:
+                            return (loop[uv_layer], loop.link_loop_next[uv_layer])
+        return (None, None)
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_decorate = False
-        layout.use_property_split = True
-        layout.prop(self, "island")
-        row = layout.row()
-        row.prop(self, "center")
-        if self.island:
-            row.enabled = False
+        split = layout.split(factor=0.3)
+        split.label(text="")
+        split.prop(self, "island")
+        split = layout.split(factor=0.3)
+        split.label(text="Alignment")
+        split.prop(self, "center_axis", expand=True)
+        split.enabled = not self.island
 
 
 def register():

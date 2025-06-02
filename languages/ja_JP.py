@@ -29,6 +29,9 @@ translation_dict = {
         ("*", "Keep Pin"): "ピンを維持",
         ("*", "Keep Seam"): "シームを維持",
         ("*", "Keep Boundary"): "境界を維持",
+        ("*", "Original Position"): "元の位置",
+        ("*", "Mirror U/V"): "ミラー U/V",
+        ("*", "Refers to the Mirror setting of the Mirror Modifier"): "ミラーモディファイアのミラーオフセット設定を参照します",
 
         # Unwrap
         ("Operator", "UV Unwrap"): "UV展開",
