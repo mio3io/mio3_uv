@@ -19,7 +19,6 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        context.scene.mio3uv.auto_uv_sync_skip = True
 
         if self.align_rotation:
             bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
@@ -75,10 +74,10 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 island.move(offset)
             current_u += bounds["width"] + self.offset_group
 
-        island_manager.update_uvmeshes()
-
         if use_uv_select_sync:
             island_manager.restore_vertex_selection()
+
+        island_manager.update_uvmeshes()
 
         self.print_time()
         return {"FINISHED"}

@@ -30,7 +30,6 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync

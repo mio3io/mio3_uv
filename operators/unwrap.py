@@ -56,7 +56,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
         for obj in self.objects:
@@ -67,7 +66,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
-            # context.tool_settings.use_uv_select_sync = False
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
@@ -123,7 +121,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
         if use_uv_select_sync:
             island_manager.restore_vertex_selection()
-            context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()
 

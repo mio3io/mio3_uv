@@ -15,6 +15,7 @@ class UVIsland:
     bm: BMesh
     uv_layer: BMLayerItem
     obj: Object
+    sync: bool = False
     extend: bool = True
     boundary_edge: set[BMEdge] = field(default_factory=set)
 
@@ -142,13 +143,11 @@ class UVIsland:
     @cached_property
     def is_face_selected(self):
         uv_layer = self.uv_layer
-        selected_face = False
         for face in self.faces:
             if face.select:
-                if all([l[uv_layer].select for l in face.loops]): # select_edge -> 三角に割った面を許容しない
-                    selected_face = True
-                    break
-        return selected_face
+                if all([l[uv_layer].select_edge for l in face.loops]): # select_edge -> エッジ選択時の〼を許容しない
+                    return True
+        return False
 
 
 @dataclass
@@ -267,7 +266,7 @@ class UVIslandManager:
             else:
                 if self.sync:
                     for face in bm.faces:
-                        if face.select and all(loop[uv_layer].select for loop in face.loops):
+                        if face.select and any(loop[uv_layer].select for loop in face.loops):
                             target_faces.add(face)
                 else:
                     for face in bm.faces:
@@ -299,7 +298,7 @@ class UVIslandManager:
                                 boundary_edges.add(edge)
 
                 if island_faces:
-                    new_island = UVIsland(island_faces, bm, uv_layer, obj, self.extend)
+                    new_island = UVIsland(island_faces, bm, uv_layer, obj, self.sync, self.extend)
                     new_island.face_count = face_count
                     new_island.uv_count = uv_count
                     new_island.edge_count = len(island_edges)

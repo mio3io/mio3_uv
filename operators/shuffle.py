@@ -10,14 +10,12 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
 
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
         islands = island_manager.islands

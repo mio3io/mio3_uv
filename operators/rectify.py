@@ -63,7 +63,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        uv_select_mode, use_uv_select_sync = self.store_mode(context)
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
             context.tool_settings.use_uv_select_sync = False
@@ -75,6 +75,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         valid_islands: list[tuple[UVIsland, dict]] = []
         for island in island_manager.islands:
             bm, uv_layer = island.bm, island.uv_layer
+            bm.select_mode = {"VERT"}
             island.store_selection()
 
             selected_uvs = {}
@@ -128,10 +129,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                 except:
                     pass
 
-                edges = {edge for face in island.faces for edge in face.edges if edge.select}
-                node_manager = UVNodeManager.from_object(
-                    island.obj, bm, uv_layer, edges=edges, sub_faces=island.faces, sync=use_uv_select_sync
-                )
+                node_manager = UVNodeManager.from_island(island, sync=use_uv_select_sync, sub_faces=island.faces)
                 if len(node_manager.groups):
                     group = node_manager.groups[0]
                     straight_uv_nodes(group, self.distribute)
@@ -175,10 +173,27 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
             island_manager.restore_vertex_selection()
             context.tool_settings.use_uv_select_sync = True
 
+        self.restore_mode(context, uv_select_mode, use_uv_select_sync)
+
         island_manager.update_uvmeshes()
 
         self.print_time()
         return {"FINISHED"}
+
+    @staticmethod
+    def store_mode(context):
+        uv_select_mode = context.tool_settings.uv_select_mode
+        context.tool_settings.uv_select_mode = "VERTEX"
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        # if use_uv_select_sync:
+        #     context.tool_settings.use_uv_select_sync = False
+        return uv_select_mode, use_uv_select_sync
+
+    @staticmethod
+    def restore_mode(context, uv_select_mode, use_uv_select_sync):
+        context.tool_settings.uv_select_mode = uv_select_mode
+        # if use_uv_select_sync:
+        #     context.tool_settings.use_uv_select_sync = True
 
     @staticmethod
     def select_uv(loops, uv_layer, select):

@@ -7,7 +7,7 @@ from ..classes import Mio3UVOperator
 
 class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
     bl_idname = "uv.mio3_unwrap_mirrored"
-    bl_label = "Mirror-applied Unwrap"
+    bl_label = "Unwrap Virtual Mirror"
     bl_description = "Unwrap as if the mirror modifier is applied"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -67,7 +67,6 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
                 kd.insert(face_center, i)
         kd.balance()
 
-
         bm = bmesh.from_edit_mesh(obj.data)
         uv_layer = bm.loops.layers.uv.verify()
 
@@ -92,7 +91,7 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
 
         bmesh.update_edit_mesh(obj.data)
 
-        obj.use_shape_key_edit_mode = show_only_shape_key
+        obj.show_only_shape_key = show_only_shape_key
 
         bpy.data.objects.remove(copy_obj, do_unlink=True)
         bpy.data.meshes.remove(copy_mesh, do_unlink=True)

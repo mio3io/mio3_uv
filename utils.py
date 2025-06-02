@@ -73,32 +73,6 @@ def get_bounds(uv_layer, faces):
     return min_u, max_u, min_v, max_v
 
 
-# UV空間を基準にアイランドで分割
-def split_uv_islands(uv_layer, selected_faces):
-    islands = []
-
-    def are_uv_connected(face1, face2):
-        uv1 = set(tuple(loop[uv_layer].uv) for loop in face1.loops)
-        uv2 = set(tuple(loop[uv_layer].uv) for loop in face2.loops)
-        return len(uv1.intersection(uv2)) >= 2
-
-    unassigned_faces = set(selected_faces)
-    while unassigned_faces:
-        start_face = unassigned_faces.pop()
-        island = {start_face}
-        to_check = {start_face}
-        while to_check:
-            current_face = to_check.pop()
-            for edge in current_face.edges:
-                for face in edge.link_faces:
-                    if face in unassigned_faces and are_uv_connected(current_face, face):
-                        island.add(face)
-                        unassigned_faces.remove(face)
-                        to_check.add(face)
-        islands.append(list(island))
-    return islands
-
-
 def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=False):
     ordered_nodes = node_group.get_ordered_nodes()
     if len(ordered_nodes) <= 1:

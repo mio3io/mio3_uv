@@ -1,8 +1,7 @@
 import bpy
 import bmesh
-import math
 from mathutils import Vector
-from bpy.props import BoolProperty, EnumProperty, FloatProperty
+from bpy.props import BoolProperty, EnumProperty
 from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
 
 
@@ -49,7 +48,6 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -62,8 +60,6 @@ class MIO3UV_OT_align(Mio3UVOperator):
             except:
                 return {"CANCELLED"}
             return {"FINISHED"}
-
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         if self.island and not self.edge_mode:
             island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
@@ -211,130 +207,9 @@ class MIO3UV_OT_align(Mio3UVOperator):
                     island.move(Vector((0, center.y - island_center.y)))
 
 
-class MIO3UV_OT_align_edges(Mio3UVOperator):
-    bl_idname = "uv.mio3_align_edges"
-    bl_label = "Align Edge Loops"
-    bl_description = "Align Edge Loops"
-    bl_options = {"REGISTER", "UNDO"}
-
-    axis: EnumProperty(
-        name="Direction",
-        items=[
-            ("Y", "Vertical", ""),
-            ("X", "Horizontal", ""),
-        ],
-        default="X",
-    )
-    threshold: FloatProperty(name="Threshold", default=0.3, min=0.01, max=0.8, step=1)
-    blend_factor: FloatProperty(
-        name="Blend Factor",
-        description="",
-        default=1.0,
-        min=0.0,
-        max=1.0,
-    )
-
-    def execute(self, context):
-        self.start_time()
-
-        self.objects = self.get_selected_objects(context)
-
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-
-        self.objests_state = {}
-
-        for obj in self.objects:
-            bm = bmesh.from_edit_mesh(obj.data)
-            uv_layer = bm.loops.layers.uv.verify()
-            self.objests_state[obj] = {
-                "bm": bm,
-                "uv_layer": uv_layer,
-                "selected_verts": ({vert: vert.select for vert in bm.verts} if use_uv_select_sync else None),
-                "selected_loops": {loop: loop[uv_layer].select_edge for face in bm.faces for loop in face.loops},
-            }
-
-        bpy.ops.mesh.select_linked(delimit={"UV"})
-
-        for obj in self.objects:
-            bm = self.objests_state[obj]["bm"]
-            uv_layer = self.objests_state[obj]["uv_layer"]
-            self.process_uv_selection(bm, uv_layer, self.axis)
-            node_manager = UVNodeManager.from_object(obj, bm=bm, uv_layer=uv_layer, sync=use_uv_select_sync)
-            self.align_uv_nodes(node_manager, self.axis)
-            self.restore_selection(self.objests_state[obj], use_uv_select_sync)
-            bmesh.update_edit_mesh(obj.data)
-
-        self.print_time()
-        return {"FINISHED"}
-
-    def restore_selection(self, objests_state, use_uv_select_sync):
-        bm = objests_state["bm"]
-        uv_layer = objests_state["uv_layer"]
-        if use_uv_select_sync:
-            for vert, select in objests_state["selected_verts"].items():
-                vert.select = select
-            bm.select_flush(False)
-        for loop, state in objests_state["selected_loops"].items():
-            loop[uv_layer].select_edge = state
-
-    def process_uv_selection(self, bm, uv_layer, axis):
-        selected_uv_edges = set()
-        for face in bm.faces:
-            if not face.select:
-                continue
-            for loop in face.loops:
-                if loop[uv_layer].select_edge:
-                    edge = loop.edge
-                    selected_uv_edges.add((edge, loop))
-
-        for edge, loop in selected_uv_edges:
-            if not self.is_uv_edge_aligned(edge, loop, axis, uv_layer):
-                for l in edge.link_loops:
-                    l[uv_layer].select_edge = False
-
-    def is_uv_edge_aligned(self, edge, loop, axis, uv_layer):
-        uv1 = loop[uv_layer].uv
-        uv2 = loop.link_loop_next[uv_layer].uv
-        edge_vector = uv2 - uv1
-        angle = math.atan2(edge_vector.y, edge_vector.x)
-        if axis == "X":
-            return abs(math.sin(angle)) < self.threshold
-        else:
-            return abs(math.cos(angle)) < self.threshold
-
-    def align_uv_nodes(self, node_manager, alignment_type="X"):
-        for group in node_manager.groups:
-            nodes = group.nodes
-            original_uvs = [node.uv.copy() for node in nodes]
-            uv_coords = [node.uv for node in nodes]
-
-            if alignment_type == "Y":
-                avg_x = sum(uv.x for uv in uv_coords) / len(uv_coords)
-                for node, original_uv in zip(nodes, original_uvs):
-                    aligned_x = avg_x
-                    node.uv.x = original_uv.x * (1 - self.blend_factor) + aligned_x * self.blend_factor
-            else:
-                avg_y = sum(uv.y for uv in uv_coords) / len(uv_coords)
-                for node, original_uv in zip(nodes, original_uvs):
-                    aligned_y = avg_y
-                    node.uv.y = original_uv.y * (1 - self.blend_factor) + aligned_y * self.blend_factor
-
-            group.update_uvs()
-
-
-classes = [
-    MIO3UV_OT_align,
-    MIO3UV_OT_align_edges,
-]
-
-
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    bpy.utils.register_class(MIO3UV_OT_align)
 
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    bpy.utils.unregister_class(MIO3UV_OT_align)

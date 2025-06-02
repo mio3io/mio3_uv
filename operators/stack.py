@@ -19,6 +19,7 @@ class MIO3UV_OT_paste(Mio3UVOperator):
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
+            mesh_select_mode = self.store_mesh_select_mode(context, (False, False, True))
             self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects)
@@ -36,6 +37,9 @@ class MIO3UV_OT_paste(Mio3UVOperator):
                 offset = island.original_center - island.center
                 island.move(offset)
 
+        if use_uv_select_sync:
+            self.restore_mesh_select_mode(context, mesh_select_mode)
+
         island_manager.update_uvmeshes()
 
         return {"FINISHED"}
@@ -52,8 +56,10 @@ class MIO3UV_OT_stack(Mio3UVOperator):
     def execute(self, context):
         self.start_time()
         self.objects = self.get_selected_objects(context)
+
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
+            mesh_select_mode = self.store_mesh_select_mode(context, (False, False, True))
             self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True)
@@ -82,6 +88,7 @@ class MIO3UV_OT_stack(Mio3UVOperator):
 
         if use_uv_select_sync:
             island_manager.restore_vertex_selection()
+            self.restore_mesh_select_mode(context, mesh_select_mode)
 
         island_manager.update_uvmeshes()
         self.print_time()

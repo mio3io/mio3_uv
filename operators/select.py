@@ -422,26 +422,23 @@ class MIO3UV_OT_select_edge_direction(Mio3UVOperator):
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-            self.process_uv_selection(bm, uv_layer, self.axis)
+            selected_uv_edges = set()
+            for face in bm.faces:
+                if not face.select:
+                    continue
+                for loop in face.loops:
+                    if loop[uv_layer].select_edge:
+                        edge = loop.edge
+                        selected_uv_edges.add((edge, loop))
+
+            for edge, loop in selected_uv_edges:
+                if not self.is_direction(loop, self.axis, uv_layer):
+                    for l in edge.link_loops:
+                        l[uv_layer].select_edge = False
             bmesh.update_edit_mesh(obj.data)
         return {"FINISHED"}
 
-    def process_uv_selection(self, bm, uv_layer, axis):
-        selected_uv_edges = set()
-        for face in bm.faces:
-            if not face.select:
-                continue
-            for loop in face.loops:
-                if loop[uv_layer].select_edge:
-                    edge = loop.edge
-                    selected_uv_edges.add((edge, loop))
-
-        for edge, loop in selected_uv_edges:
-            if not self.is_uv_edge_aligned(loop, axis, uv_layer):
-                for l in edge.link_loops:
-                    l[uv_layer].select_edge = False
-
-    def is_uv_edge_aligned(self, loop, axis, uv_layer):
+    def is_direction(self, loop, axis, uv_layer):
         uv1 = loop[uv_layer].uv
         uv2 = loop.link_loop_next[uv_layer].uv
         edge_vector = uv2 - uv1

@@ -11,7 +11,7 @@ from functools import cached_property
 class UVNode:
     uv: Vector
     vert: BMVert
-    loops: list[BMLoop] = field(default_factory=list)
+    loops: set[BMLoop] = field(default_factory=set)
     select: bool = False
     neighbors: set["UVNode"] = field(default_factory=set, repr=False, compare=False)
 
@@ -159,7 +159,7 @@ class UVNodeManager:
                 for group in uv_groups:
                     colle.groups.append(UVNodeGroup(group, obj, bm, uv_layer))
 
-    def find_uv_nodes(self, bm, uv_layer, edges=None, faces=None, sub_faces=None):
+    def find_uv_nodes(self, bm, uv_layer, sub_faces=None):
         uv_nodes = {}
 
         def add_uv_node(loop):
@@ -169,18 +169,18 @@ class UVNodeManager:
             else:
                 if loop[uv_layer].select and not uv_nodes[key].select:
                     uv_nodes[key].select = True
-            uv_nodes[key].loops.append(loop)
+            uv_nodes[key].loops.add(loop)
 
+        # faces = 面の頂点のループを含めて対象にする
+        # sub_faces = 面のループのみを対象にする
+        
         # 選択されているループを座標をキーにしたノードグループにする（!!sync_uv_from_meshしていること）
         # ToDo: 座標をキーにすると閉じたループの場合一緒に始点と終点のノードができない
 
-        # !!共有頂点の除外に影響が出るのでfaces検索は消さないこと
-        if faces:
-            target_edges = {edge for face in faces for edge in face.edges}
-        else:
-            target_edges = edges if edges else bm.edges
         if self.sync:
-            target_verts = {vert for edge in target_edges for vert in edge.verts}
+            # !!共有頂点の除外に影響が出るのでfaces検索は消さないこと
+            # sub_faces から頂点
+            target_verts = {vert for face in sub_faces for vert in face.verts} if sub_faces else bm.verts
             if sub_faces:
                 # sub_facesは選択とは無関係
                 for vert in target_verts:
@@ -191,25 +191,17 @@ class UVNodeManager:
             else:
                 for vert in target_verts:
                     if vert.select:
-                        sub_faces = {face for face in vert.link_faces if face.select}
                         for loop in vert.link_loops:
-                            if loop[uv_layer].select and loop.face in sub_faces:
-                                add_uv_node(loop)
-        else:
-            if faces:
-                # facesが指定されている場合は、選択された面のループを対象にする
-                for face in faces:
-                    if face.select:
-                        for loop in face.loops:
                             if loop[uv_layer].select:
                                 add_uv_node(loop)
-            else:
-                for edge in target_edges:
-                    if edge.select:
-                        selected_faces = {face for face in edge.link_faces if face.select}
-                        for loop in edge.link_loops:
-                            if loop[uv_layer].select and loop.face in selected_faces:
-                                add_uv_node(loop)
+
+        else:
+            target_faces = sub_faces if sub_faces else bm.faces
+            for face in target_faces:
+                if face.select:
+                    for loop in face.loops:
+                        if loop[uv_layer].select:
+                            add_uv_node(loop)
 
         # UVノードの隣接リストを作成
         for node in uv_nodes.values():
@@ -259,11 +251,11 @@ class UVNodeManager:
             bmesh.update_edit_mesh(colle.obj.data)
 
     @classmethod
-    def from_object(cls, obj, bm, uv_layer, sync=False, edges=None, faces=None, sub_faces=None):
+    def from_island(cls, island, sync=False, sub_faces=None):
         manager = cls(objects=[], sync=sync)
-        if uv_groups := manager.find_uv_nodes(bm, uv_layer, edges=edges, faces=faces, sub_faces=sub_faces):
-            colle = UVNodeGroupCollection(obj, bm, uv_layer)
+        if uv_groups := manager.find_uv_nodes(island.bm, island.uv_layer, sub_faces=sub_faces):
+            colle = UVNodeGroupCollection(island.obj, island.bm, island.uv_layer)
             manager.collections.append(colle)
             for group in uv_groups:
-                colle.groups.append(UVNodeGroup(group, obj, bm, uv_layer))
+                colle.groups.append(UVNodeGroup(group, island.obj, island.bm, island.uv_layer))
         return manager

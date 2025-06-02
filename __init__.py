@@ -19,6 +19,7 @@ from .operators import orient
 from .operators import select
 
 from .operators import align
+from .operators import align_edge
 from .operators import align_seam
 from .operators import circle
 from .operators import stretch
@@ -74,6 +75,7 @@ modules = [
     orient,
     select,
     align,
+    align_edge,
     align_seam,
     circle,
     stretch,

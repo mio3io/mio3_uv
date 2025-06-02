@@ -45,7 +45,7 @@ translation_dict = {
         ("Operator", "Projection Unwrap"): "投影展開",
         ("*", "Unwrap linked faces"): "リンク面を展開",
         ("*", "Unwrap by linked mesh"): "メッシュごとに投影",
-        ("Operator", "Mirror-applied Unwrap"): "ミラー適用したかのように展開",
+        ("Operator", "Unwrap Virtual Mirror"): "仮想ミラー展開",
         ("*", "Unwrap as if the mirror modifier is applied"): "ミラーモディファイアを適用してあるように展開する",
 
         ("Operator", "Mark Seam by Angle"): "角度でシームを設定",

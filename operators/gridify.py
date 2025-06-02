@@ -1,9 +1,10 @@
 import bpy
 import math
 from bpy.props import BoolProperty, EnumProperty
-from mathutils import Vector
+from mathutils import Vector, Matrix
 from ..classes import UVIslandManager, Mio3UVOperator
 import mathutils
+
 
 class MIO3UV_OT_grid(Mio3UVOperator):
     bl_idname = "uv.mio3_gridify"
@@ -122,30 +123,25 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         return best_face
 
     def align_rect(self, uv_layer, active_face):
+
         uv_coords = [loop[uv_layer].uv for loop in active_face.loops]
         min_uv = Vector((min(uv.x for uv in uv_coords), min(uv.y for uv in uv_coords)))
         max_uv = Vector((max(uv.x for uv in uv_coords), max(uv.y for uv in uv_coords)))
         center_uv = (min_uv + max_uv) / 2
 
-        # 角度
+        # 特定のエッジを基準に水平 or 垂直にする
         edge_uv = uv_coords[1] - uv_coords[0]
         current_angle = math.atan2(edge_uv.y, edge_uv.x)
-        rotation_angle = (round(math.degrees(current_angle) / 90) * 90 - math.degrees(current_angle) + 45) % 90 - 45
-        rotation_rad = math.radians(rotation_angle)
-        sin_rot, cos_rot = math.sin(rotation_rad), math.cos(rotation_rad)
+        target_angle = round(current_angle / (math.pi / 2)) * (math.pi / 2)  # 90度単位
+        angle_diff = target_angle - current_angle
+        sin_a = math.sin(angle_diff)
+        cos_a = math.cos(angle_diff)
 
+        rot_matrix = Matrix(((cos_a, -sin_a), (sin_a, cos_a)))
         rotated_uvs = []
         for uv in uv_coords:
-            uv_local = uv - center_uv
-            uv_rotated = (
-                Vector(
-                    (
-                        uv_local.x * cos_rot - uv_local.y * sin_rot,
-                        uv_local.x * sin_rot + uv_local.y * cos_rot,
-                    )
-                )
-                + center_uv
-            )
+            local = uv - center_uv
+            uv_rotated = rot_matrix @ local + center_uv
             rotated_uvs.append(uv_rotated)
 
         min_x = min(uv.x for uv in rotated_uvs)
