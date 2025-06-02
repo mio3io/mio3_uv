@@ -63,6 +63,10 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
             context.tool_settings.uv_select_mode = mode
         return select_mode
 
+    @staticmethod
+    def restore_uv_select_mode(context: Context, select_mode):
+        context.tool_settings.uv_select_mode = select_mode
+
     def check_selected_face_objects(self, objects: list[Object]) -> bool:
         if bpy.context.tool_settings.use_uv_select_sync:
             for obj in objects:
@@ -81,17 +85,15 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
                 break
         return is_selected_face_objects
 
-    def check_selected_uv(self, bm:BMesh, uv_layer: BMLayerItem):
+    def check_selected_uv(self, bm: BMesh, uv_layer: BMLayerItem):
         for face in bm.faces:
             if face.select:
-                if all({l[uv_layer].select_edge for l in face.loops}): # select_edge -> エッジ選択時の〼を許容しない
+                if all({l[uv_layer].select_edge for l in face.loops}):  # select_edge -> エッジ選択時の〼を許容しない
                     return True
         return False
-    
+
 
 class Mio3UVGlobalOperator(Operator, Mio3UVDebug):
     @staticmethod
     def get_selected_objects(context):
         return [obj for obj in context.selected_objects if obj.type == "MESH"]
-
-
