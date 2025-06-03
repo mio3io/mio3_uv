@@ -127,7 +127,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         threshold_sq = self.threshold_sq
         axis_3d = self.axis_3d
 
-        target_faces, target_verts, source_loops = self.find_targets(bm, uv_layer)
+        target_faces, source_loops = self.find_targets(bm, uv_layer)
 
         kd = kdtree.KDTree(len(bm.faces))
         face_centers = {}
@@ -141,7 +141,14 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         sym_center_uv = self.get_symmetry_center(context, uv_layer, source_loops)
         direction_3d = self.check_uv_3d_direction(uv_layer, sym_center_uv, face_centers, target_faces)
 
-        sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in target_verts}
+        target_verts = set()
+        sym_positions = {}
+        for face in target_faces:
+            for v in face.verts:
+                if v not in target_verts:
+                    target_verts.add(v)
+                    sym_positions[v] = self.get_symmetric_3d_point(v.co)
+
         face_sym_verts = {face: [sym_positions[v] for v in face.verts if v in sym_positions] for face in target_faces}
 
         get_symmetric_uv_point = self.get_symmetric_uv_point
@@ -252,18 +259,15 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
         threshold = self.threshold
         target_faces = set()
-        target_verts = set()
         for v in source_verts:
             symm_co = self.get_symmetric_3d_point(v.co)
             co_find = kd.find(symm_co)
             if co_find[2] < threshold:
                 symm_vert = bm.verts[co_find[1]]
-                target_verts.add(symm_vert)
                 target_faces.update(symm_vert.link_faces)
 
         target_faces.update(source_faces)
-        target_verts.update(source_verts)
-        return target_faces, target_verts, source_loops
+        return target_faces, source_loops
 
     def draw(self, context):
         layout = self.layout
