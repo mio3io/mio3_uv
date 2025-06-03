@@ -30,6 +30,9 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         use_uv_select_sync = tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             self.sync_uv_from_mesh(context, self.objects)
+
+        bpy.ops.uv.remove_doubles(threshold=1e-7)
+
         island_manager = UVIslandManager(self.objects, extend=False, sync=use_uv_select_sync)
         if not island_manager.islands:
             self.report({"WARNING"}, "No UV islands found")
