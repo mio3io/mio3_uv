@@ -25,6 +25,8 @@ UV Image Editor > Sidebar > Mio3
 -   **Gridify**: Unwrap so that the selected face becomes a rectangle. Can be used for quadrilateral meshes
 -   **Rectify**: Unwrap so that the boundary becomes a rectangle
 -   **Projection Unwrap**: Unwrap by projecting from an angle parallel to the normal of the face selected in the 3D view
+-   **Virtual Mirror**: Unwrap as if the mirror modifier is applied (v1.6)
+
 
 ### Align Operations
 
@@ -32,33 +34,27 @@ UV Image Editor > Sidebar > Mio3
 -   **Rotate Selected UVs**
 -   **Flip Selected UVs**
 -   **Align Vertical/Horizontal Edges Only**: Align edge loops only in vertical or horizontal directions
--   **Orient Edge**: Adjust the angle and position of the island so that the selected edge becomes vertical or horizontal
--   **Align Axis**: Adjust to be vertical to the X or Y axis
+-   **Align Axis**: Adjust the angle of the island so that the selected edge or island becomes vertical or horizontal
 -   **Orient World**: Align the angle of the island to the Z axis
 -   **Align Seams**: Align UV coordinates with the same 3D vertex that are separated by seams
 -   **Stretch**: Align the width of islands or UV groups (v1.3)
--   **Distribute**: Distribute islands evenly (v1.3)
+-   **Sort**: Sort islands based on coordinates in 3D space
+-   **Distribute**: Distribute islands and UVs evenly (v1.3)
 
 ### Vertex Operations
 
 -   **Relax**: Smooth selected vertices
--   **Distribute UVs**: Distribute UVs based on geometry/equalize edge length
+-   **Merge**: Merge nearby UVs in the selection
 -   **Circle**: Adjust to form a clean circle
 -   **Offset Boundary**: Expand or shrink the boundary UVs of the island
 
 ### Island Operations
 
--   **Sort**: Sort islands based on coordinates in 3D space
--   **Stack**: Stack similar islands
 -   **Copy & Paste UV Shape**: Copy and paste the shape while maintaining the original position
+-   **Stack**: Stack similar islands
 -   **Shuffle**: Randomly rearrange island positions. If two islands are selected, exchange their positions
--   **Unify Shapes**: Align UV shapes while maintaining the original position
--   **Average Island Scales**: Adjust size based on the mesh size in 3D space
-
-### Island Arrangement
-
--   **Grid Sort**: Arrange islands by grouping and sorting
 -   **Unfoldify**: Automatically layout selected islands based on their spatial relationships in 3D space
+-   **Average Island Scales**: Adjust size based on the mesh size in 3D space
 -   **Align Body Parts**: Identify body parts based on coordinates and align orientation and order for intuitive layout
 
 ### Symmetry Operations
