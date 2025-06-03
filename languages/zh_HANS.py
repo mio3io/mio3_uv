@@ -141,6 +141,8 @@ translation_dict = {
         ("*", "Symmetrize based on 3D space"): "基于3D空间对称化UV",
         ("Operator", "Snap"): "对齐",
         ("*", "Symmetrize based on UV space"): "基于UV空间对称化",
+        ("*", "Stack Mirror"): "折叠镜像",
+        ("*", "Mirror along the axis and stack the UVs"): "沿轴镜像并堆叠UV",
 
         # Select
         ("Operator", "Select Half"): "选择一半",

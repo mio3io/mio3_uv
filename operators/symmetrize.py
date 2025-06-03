@@ -3,7 +3,7 @@ import bmesh
 from mathutils import Vector, kdtree
 from bpy.types import Context
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from bmesh.types import BMesh, BMVert, BMLoop, BMEdge, BMFace, BMLayerItem
+from bmesh.types import BMesh
 from ..classes import Mio3UVOperator
 from ..utils import get_tile_co
 from ..icons import preview_collections
@@ -52,6 +52,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         step=0.01,
     )
     merge: BoolProperty(name="Merge by Distance", description="Merge by Distance", default=True)
+    stack: BoolProperty(name="Stack Mirror", description="Mirror along the axis and stack the UVs", default=False)
     threshold_uv = 0.00001
 
     def invoke(self, context, event):
@@ -145,6 +146,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
         get_symmetric_uv_point = self.get_symmetric_uv_point
         get_symmetric_face = self.get_symmetric_face
+        stack = self.stack
 
         for face in target_faces:
             center = face_centers[face]
@@ -155,36 +157,47 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 if not sym_face:
                     continue
                 for loop in face.loops:
-                    loop_uv = loop[uv_layer].uv
-                    sym_vert = min(
-                        sym_face.verts,
-                        key=lambda v: (v.co - sym_positions[loop.vert]).length_squared,
-                    )
+                    loop_uv = loop[uv_layer]
+                    sym_vert = min(sym_face.verts, key=lambda v: (v.co - sym_positions[loop.vert]).length_squared)
                     for sym_loop in sym_face.loops:
                         if sym_loop.vert == sym_vert:
-                            if sym_loop[uv_layer].select or loop[uv_layer].select:
-                                new_uv = get_symmetric_uv_point(loop_uv, sym_center_uv)
-                                sym_loop[uv_layer].uv = new_uv
+                            if sym_loop[uv_layer].select or loop_uv.select:
+                                if stack:
+                                    sym_loop[uv_layer].uv = loop[uv_layer].uv
+                                else:
+                                    sym_loop[uv_layer].uv = get_symmetric_uv_point(loop_uv.uv, sym_center_uv)
 
     # self.direction側にあるUV面がどの方向にあるか調べる
     def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, target_faces):
         uv_axis_index = self.uv_axis_index
         axis_3d_index = self.axis_3d_index
-
         for face in target_faces:
             center = face_centers[face]
             face_uv_center = Vector((0, 0))
             for loop in face.loops:
                 face_uv_center += loop[uv_layer].uv
             face_uv_center /= len(face.loops)
+
+            if self.is_flipped(face, uv_layer):
+                continue
+
             if self.direction == "POSITIVE":
                 if face_uv_center[uv_axis_index] > sym_center_uv[uv_axis_index]:
                     return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
             else:
                 if face_uv_center[uv_axis_index] < sym_center_uv[uv_axis_index]:
                     return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
-
         return self.direction
+
+    @staticmethod
+    def is_flipped(face, uv_layer):
+        prev_uv = face.loops[-1][uv_layer].uv
+        area = 0.0
+        for loop in face.loops:
+            uv = loop[uv_layer].uv
+            area += prev_uv.x * uv.y - uv.x * prev_uv.y
+            prev_uv = uv
+        return area < -1e-7
 
     # 対称化化するか判定
     @staticmethod
@@ -265,6 +278,9 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         split.alignment = "RIGHT"
         split.label(text="Threshold")
         split.prop(self, "threshold", text="")
+        split = layout.split(factor=0.35)
+        split.label(text="")
+        split.prop(self, "stack")
 
 
 def register():
