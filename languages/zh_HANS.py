@@ -143,6 +143,8 @@ translation_dict = {
         ("*", "Symmetrize based on UV space"): "基于UV空间对称化",
         ("*", "Stack Mirror"): "折叠镜像",
         ("*", "Mirror along the axis and stack the UVs"): "沿轴镜像并堆叠UV",
+        ("*", "Fast Mode"): "快速模式",
+        ("*", "Simply search for mirror UVs(If multiple faces are positioned too closely in 3D space, it can cause issues)"): "简单搜索镜像UV（如果多个面在3D空间中位置过于接近，可能会导致问题）",
 
         # Select
         ("Operator", "Select Half"): "选择一半",

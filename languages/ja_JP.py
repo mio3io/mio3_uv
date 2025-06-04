@@ -143,6 +143,8 @@ translation_dict = {
         ("*", "Symmetrize based on UV space"): "UV空間での対称位置にスナップします",
         ("*", "Stack Mirror"): "折り返して重ねる",
         ("*", "Mirror along the axis and stack the UVs"): "軸に沿ってミラーリングしUVを重ねます",
+        ("*", "Fast Mode"): "高速モード",
+        ("*", "Simply search for mirror UVs(If multiple faces are positioned too closely in 3D space, it can cause issues)"): "ミラーUVを簡単に検索します（3D空間で複数の面が近すぎると問題が発生する可能性があります）",
 
         # Select
         ("Operator", "Select Half"): "半分を選択",

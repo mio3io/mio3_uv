@@ -186,10 +186,15 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         default=0.001,
         min=0.0001,
         max=0.1,
-        precision=4,
-        step=0.01,
+        precision=3,
+        step=0.1,
     )
     expand: BoolProperty(name="Expand", default=True)
+    fast: BoolProperty(
+        name="Fast Mode",
+        description="Simply search for mirror UVs(If multiple faces are positioned too closely in 3D space, it can cause issues)",
+        default=True,
+    )
 
     def execute(self, context):
         self.start_time()
@@ -200,7 +205,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
         if context.tool_settings.use_uv_select_sync:
             try:
-                bpy.ops.mesh.select_mirror(extend=True)
+                bpy.ops.mesh.select_mirror(extend=self.expand)
             except:
                 return {"CANCELLED"}
             return {"FINISHED"}
@@ -218,51 +223,65 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         return {"FINISHED"}
 
     def select_mirror(self, bm, uv_layer):
-        source_faces, source_verts, target_faces = self.find_targets(bm, uv_layer)
-        faces = source_faces | target_faces
+        source_faces, source_verts, symmetric_faces = self.find_targets(bm, uv_layer)
+        target_faces = source_faces | symmetric_faces
 
         kd = kdtree.KDTree(len(bm.faces))
         face_centers = {}
-        uv_selection = {}
         for i, face in enumerate(bm.faces):
-            if face in faces:
+            if face in target_faces:
                 face_center = face.calc_center_median()
                 face_centers[face] = face_center
-                uv_selection[face] = any(l[uv_layer].select for l in face.loops)
                 kd.insert(face_center, i)
         kd.balance()
 
         sym_positions = {v: self.get_symmetric_3d_point(v.co) for v in source_verts}
-        face_sym_verts = {face: [sym_positions[v] for v in face.verts if v in sym_positions] for face in source_faces}
+        if self.fast:
+            sym_verts = {}
+        else:
+            sym_verts = {f: [sym_positions[v] for v in f.verts if v in sym_positions] for f in source_faces}
 
+        processed = set()
         for face in source_faces:
-            if uv_selection[face]:
-                sym_center = self.get_symmetric_3d_point(face_centers[face])
-                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
-                sym_face = self.get_symmetric_face(potential_sym_faces, face_sym_verts[face], self.threshold_sq)
-                if not sym_face:
+            sym_center = self.get_symmetric_3d_point(face_centers[face])
+            if self.fast:
+                sym_face = self.find_sym_face_single(bm, kd, sym_center, self.threshold)
+            else:
+                sym_face = self.find_sym_face_strict(bm, kd, sym_center, sym_verts[face], self.threshold_sq)
+            if not sym_face:
+                continue
+            for loop in face.loops:
+                if loop in processed:
                     continue
-                for loop in face.loops:
-                    if loop[uv_layer].select:
-                        sym_vert = min(
-                            sym_face.verts,
-                            key=lambda v: (v.co - sym_positions[loop.vert]).length_squared,
-                        )
-                        for sym_loop in sym_face.loops:
-                            if sym_loop.vert == sym_vert:
-                                sym_loop[uv_layer].select = True
-                                sym_loop[uv_layer].select_edge = True
-                                break
-                    if not self.expand:
-                        loop[uv_layer].select = False
-                        loop[uv_layer].select_edge = False
+                if loop[uv_layer].select:
+                    sym_vert = min(sym_face.verts, key=lambda v: (v.co - sym_positions[loop.vert]).length_squared)
+                    for sym_loop in sym_face.loops:
+                        if sym_loop in processed:
+                            continue
+                        if sym_loop.vert == sym_vert:
+                            sym_loop[uv_layer].select = True
+                            processed.add(sym_loop)
+                            break
+                if not self.expand:
+                    loop[uv_layer].select = False
+                processed.add(loop)
 
     @staticmethod
     def get_symmetric_3d_point(co):
         return Vector((-co.x, co.y, co.z))
 
+    # 対称面を見つける
     @staticmethod
-    def get_symmetric_face(potential_faces, sym_verts, threshold_sq):
+    def find_sym_face_single(bm, kd, sym_center, threshold):
+        _, i, dist = kd.find(sym_center)
+        if dist > threshold:
+            return None
+        return bm.faces[i]
+
+    # 対称面を見つける（頂点位置の一致も考慮する＠ミラーで三角の割が違い、近くに別の面があるケースを考慮）
+    @staticmethod
+    def find_sym_face_strict(bm, kd, sym_center, sym_verts, threshold_sq):
+        potential_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
         for pot_face in potential_faces:
             if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
                 return pot_face
@@ -286,15 +305,15 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                             source_verts.add(vert)
 
         threshold = self.threshold
-        target_faces = set()
+        symmetric_faces = set()
         for v in source_verts:
             symm_co = self.get_symmetric_3d_point(v.co)
             co_find = kd.find(symm_co)
             if co_find[2] < threshold:
                 symm_vert = bm.verts[co_find[1]]
-                target_faces.update(symm_vert.link_faces)
+                symmetric_faces.update(symm_vert.link_faces)
 
-        return source_faces, source_verts, target_faces
+        return source_faces, source_verts, symmetric_faces
 
 
 class MIO3UV_OT_select_boundary(Mio3UVOperator):
