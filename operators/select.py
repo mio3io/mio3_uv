@@ -300,12 +300,14 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
         source_faces = set()
         source_verts = set()
+        source_face_verts = set()
         for face in bm.faces:
             if face.select:
                 for loop in face.loops:
                     if loop[uv_layer].select:
                         source_faces.add(face)
                         source_verts.add(loop.vert)
+                        source_face_verts.update(face.verts) # extend
 
         threshold = self.threshold
         symmetric_faces = set()
@@ -316,7 +318,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                 symm_vert = bm.verts[co_find[1]]
                 symmetric_faces.update(symm_vert.link_faces)
 
-        return source_faces, source_verts, symmetric_faces
+        return source_faces, source_face_verts, symmetric_faces
 
 
 class MIO3UV_OT_select_boundary(Mio3UVOperator):
