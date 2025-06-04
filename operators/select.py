@@ -200,8 +200,6 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
-        if context.tool_settings.uv_select_mode == "EDGE":
-            context.tool_settings.uv_select_mode = "VERTEX"
 
         if context.tool_settings.use_uv_select_sync:
             try:
@@ -266,6 +264,12 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                     loop[uv_layer].select = False
                 processed.add(loop)
 
+        for face in target_faces:
+            for loop in face.loops:
+                if loop[uv_layer].select and loop.link_loop_next[uv_layer].select:
+                    loop[uv_layer].select_edge = True
+                else:
+                    loop[uv_layer].select_edge = False
     @staticmethod
     def get_symmetric_3d_point(co):
         return Vector((-co.x, co.y, co.z))
