@@ -301,8 +301,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
                 for loop in face.loops:
                     if loop[uv_layer].select:
                         source_faces.add(face)
-                        for vert in face.verts:
-                            source_verts.add(vert)
+                        source_verts.add(loop.vert)
 
         threshold = self.threshold
         symmetric_faces = set()

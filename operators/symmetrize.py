@@ -43,13 +43,17 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         items=symmetry_direction_items,
         default=1,
     )
+    lock_direction: BoolProperty(
+        name="Lock Direction",
+        description="Does not reference the orientation of the face in 3D space",
+    )
     threshold: FloatProperty(
         name="Threshold",
         default=0.001,
         min=0.0001,
         max=0.1,
-        precision=4,
-        step=0.01,
+        precision=3,
+        step=0.1,
     )
     merge: BoolProperty(name="Merge by Distance", description="Merge by Distance", default=True)
     stack: BoolProperty(name="Stack Mirror", description="Mirror along the axis and stack the UVs", default=False)
@@ -124,10 +128,9 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         return {"FINISHED"}
 
     def symmetrize(self, context, bm, uv_layer):
-        threshold_sq = self.threshold_sq
         axis_3d = self.axis_3d
 
-        target_faces, source_loops = self.find_targets(bm, uv_layer)
+        target_faces, source_faces, source_loops = self.find_targets(bm, uv_layer)
 
         kd = kdtree.KDTree(len(bm.faces))
         face_centers = {}
@@ -139,7 +142,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         kd.balance()
 
         sym_center_uv = self.get_symmetry_center(context, uv_layer, source_loops)
-        direction_3d = self.check_uv_3d_direction(uv_layer, sym_center_uv, face_centers, target_faces)
+        direction_3d = self.check_uv_3d_direction(uv_layer, sym_center_uv, face_centers, source_faces)
 
         target_verts = set()
         sym_positions = {}
@@ -149,18 +152,16 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     target_verts.add(v)
                     sym_positions[v] = self.get_symmetric_3d_point(v.co)
 
-        face_sym_verts = {face: [sym_positions[v] for v in face.verts if v in sym_positions] for face in target_faces}
+        sym_verts = {f: [sym_positions[v] for v in f.verts if v in sym_positions] for f in target_faces}
 
         get_symmetric_uv_point = self.get_symmetric_uv_point
-        get_symmetric_face = self.get_symmetric_face
         stack = self.stack
 
         for face in target_faces:
             center = face_centers[face]
             sym_center = self.get_symmetric_3d_point(center)
             if self.should_symmetrize(center, direction_3d, axis_3d):
-                potential_sym_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
-                sym_face = get_symmetric_face(potential_sym_faces, face_sym_verts[face], threshold_sq)
+                sym_face = self.find_sym_face_strict(bm, kd, sym_center, sym_verts[face], self.threshold_sq)
                 if not sym_face:
                     continue
                 for loop in face.loops:
@@ -175,18 +176,21 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                                     sym_loop[uv_layer].uv = get_symmetric_uv_point(loop_uv.uv, sym_center_uv)
 
     # self.direction側にあるUV面がどの方向にあるか調べる
-    def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, target_faces):
+    def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, source_faces):
+        if self.lock_direction:
+            return self.direction
+
         uv_axis_index = self.uv_axis_index
         axis_3d_index = self.axis_3d_index
-        for face in target_faces:
+
+        for face in source_faces:
+            if self.is_flipped(face, uv_layer):
+                continue
             center = face_centers[face]
             face_uv_center = Vector((0, 0))
             for loop in face.loops:
                 face_uv_center += loop[uv_layer].uv
             face_uv_center /= len(face.loops)
-
-            if self.is_flipped(face, uv_layer):
-                continue
 
             if self.direction == "POSITIVE":
                 if face_uv_center[uv_axis_index] > sym_center_uv[uv_axis_index]:
@@ -214,9 +218,10 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             direction_3d == "NEGATIVE" and point[axis_index] < 0
         )
 
-    # 対称的な面を見つける
+    # 対称面を見つける（頂点位置の一致も考慮する＠ミラーで三角の割が違い、近くに別の面があるケースを考慮）
     @staticmethod
-    def get_symmetric_face(potential_faces, sym_verts, threshold_sq):
+    def find_sym_face_strict(bm, kd, sym_center, sym_verts, threshold_sq):
+        potential_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
         for pot_face in potential_faces:
             if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
                 return pot_face
@@ -253,21 +258,19 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     if loop[uv_layer].select:
                         source_faces.add(face)
                         source_loops.add(loop)
-                        for link_face in loop.vert.link_faces:
-                            for fv in link_face.verts:
-                                source_verts.add(fv)
+                        source_verts.add(loop.vert)
 
         threshold = self.threshold
-        target_faces = set()
+        symmetric_faces = set()
         for v in source_verts:
             symm_co = self.get_symmetric_3d_point(v.co)
             co_find = kd.find(symm_co)
             if co_find[2] < threshold:
                 symm_vert = bm.verts[co_find[1]]
-                target_faces.update(symm_vert.link_faces)
+                symmetric_faces.update(symm_vert.link_faces)
 
-        target_faces.update(source_faces)
-        return target_faces, source_loops
+        target_face = symmetric_faces | source_faces
+        return target_face, source_faces, source_loops
 
     def draw(self, context):
         layout = self.layout
@@ -275,17 +278,20 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         row.prop(self, "center", expand=True)
         split = layout.split(factor=0.35)
         split.alignment = "RIGHT"
+        split.label(text="Threshold")
+        split.prop(self, "threshold", text="")
+
+        split = layout.split(factor=0.35)
+        split.alignment = "RIGHT"
         split.label(text="Direction")
         row = split.row()
         row.prop(self, "direction", expand=True)
         split = layout.split(factor=0.35)
-        split.alignment = "RIGHT"
-        split.label(text="Threshold")
-        split.prop(self, "threshold", text="")
+        split.label(text="")
+        split.prop(self, "lock_direction")
         split = layout.split(factor=0.35)
         split.label(text="")
         split.prop(self, "stack")
-
 
 def register():
     bpy.utils.register_class(MIO3UV_OT_symmetrize)
