@@ -109,15 +109,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             bm.verts.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
-            original_selected_verts = {v.index for v in bm.verts if v.select}
-
             self.symmetrize(context, bm, uv_layer)
-
-            for v in bm.verts:
-                v.select = False
-            for i in original_selected_verts:
-                bm.verts[i].select = True
-            bm.select_flush_mode()
             bmesh.update_edit_mesh(obj.data)
 
         if self.merge:

@@ -144,7 +144,7 @@ translation_dict = {
         ("*", "Stack Mirror"): "折り返して重ねる",
         ("*", "Mirror along the axis and stack the UVs"): "軸に沿ってミラーリングしUVを重ねます",
         ("*", "Fast Mode"): "高速モード",
-        ("*", "Simply search for mirror UVs(If multiple faces are positioned too closely in 3D space, it can cause issues)"): "ミラーUVを簡単に検索します（3D空間で複数の面が近すぎると問題が発生する可能性があります）",
+        ("*", "Performs a simplified search for mirrored UVs\n(may not work correctly if multiple faces are too close together in 3D space"): "ミラーUVを簡易的に検索します\n3D空間で複数の面が近すぎると正しく検索できないことがあります",
         ("*", "Does not reference the orientation of the face in 3D space"): "3D空間の面の方向を参照しません",
 
         # Select

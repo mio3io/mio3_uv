@@ -144,7 +144,7 @@ translation_dict = {
         ("*", "Stack Mirror"): "折叠镜像",
         ("*", "Mirror along the axis and stack the UVs"): "沿轴镜像并堆叠UV",
         ("*", "Fast Mode"): "快速模式",
-        ("*", "Simply search for mirror UVs(If multiple faces are positioned too closely in 3D space, it can cause issues)"): "简单搜索镜像UV（如果多个面在3D空间中位置过于接近，可能会导致问题）",
+        ("*", "Performs a simplified search for mirrored UVs\n(may not work correctly if multiple faces are too close together in 3D space"): "执行简化的镜像UV搜索\n(如果多个面在3D空间中太近，可能无法正确工作",
         ("*", "Does not reference the orientation of the face in 3D space"): "不参考3D空间中面的方向",
 
         # Select

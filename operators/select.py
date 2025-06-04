@@ -192,7 +192,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
     expand: BoolProperty(name="Expand", default=True)
     fast: BoolProperty(
         name="Fast Mode",
-        description="Simply search for mirror UVs(If multiple faces are positioned too closely in 3D space, it can cause issues)",
+        description="Performs a simplified search for mirrored UVs\n(may not work correctly if multiple faces are too close together in 3D space",
         default=True,
     )
 
