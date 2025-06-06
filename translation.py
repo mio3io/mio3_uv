@@ -1,16 +1,20 @@
 import bpy
 import os
 import importlib
+from .languages import LANGUAGES_LIST
 
-translation_dict = {}
 
+def register():
 
-addon_dir = os.path.dirname(__file__)
-languages_dir = os.path.join(addon_dir, "languages")
+    translation_dict = {}
 
-for lang_file in os.listdir(languages_dir):
-    if lang_file.endswith(".py") and not lang_file.startswith("__"):
-        lang_code = lang_file[:-3]
+    addon_dir = os.path.dirname(__file__)
+    languages_dir = os.path.join(addon_dir, "languages")
+
+    for lang_code in LANGUAGES_LIST:
+        lang_file = os.path.join(languages_dir, "{}.py".format(lang_code))
+        if not os.path.isfile(lang_file):
+            continue
         try:
             module_path = "{}.languages.{}".format(__package__, lang_code)
             module = importlib.import_module(module_path)
@@ -18,8 +22,6 @@ for lang_file in os.listdir(languages_dir):
         except Exception as e:
             print("❌ Failed to load translation file: {} - {}".format(lang_code, e))
 
-
-def register():
     bpy.app.translations.unregister(__name__)
     bpy.app.translations.register(__name__, translation_dict)
 
