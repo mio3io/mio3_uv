@@ -3,13 +3,16 @@ import bmesh
 import math
 from mathutils import Vector, Matrix
 
+
 def sync_uv_from_mesh(context, selected_objects):
+    "メッシュからUVの選択状態を同期する"
     objects = selected_objects if selected_objects else context.objects_in_mode
     for obj in objects:
         sync_uv_from_mesh_obj(obj)
 
 
 def sync_uv_from_mesh_obj(obj):
+    "メッシュからUVの選択状態を同期する"
     bm = bmesh.from_edit_mesh(obj.data)
     uv_layer = bm.loops.layers.uv.verify()
     for face in bm.faces:
@@ -28,25 +31,23 @@ def sync_uv_from_mesh_obj(obj):
 
 
 def sync_mesh_from_uv(context, selected_objects):
-    objects = selected_objects if selected_objects else context.selected_objects
+    "UVからメッシュの選択状態を同期する"
+    objects = selected_objects if selected_objects else context.objects_in_mode
     for obj in objects:
         sync_mesh_from_uv_obj(obj)
         obj.data.update()
 
 
 def sync_mesh_from_uv_obj(obj):
+    "UVからメッシュの選択状態を同期する"
     bm = bmesh.from_edit_mesh(obj.data)
     uv_layer = bm.loops.layers.uv.verify()
-
     for vert in bm.verts:
         vert.select = False
     bm.select_flush(False)
 
     for vert in bm.verts:
-        vert.select = all(loop[uv_layer].select for loop in vert.link_loops)
-    # for edge in bm.edges:
-    #     if all(loop[uv_layer].select_edge for loop in edge.link_loops):
-    #         edge.select = True
+        vert.select = any(loop[uv_layer].select for loop in vert.link_loops)
     for face in bm.faces:
         if all(loop[uv_layer].select for loop in face.loops):
             face.select = True
@@ -66,6 +67,7 @@ def get_uv_from_mirror_offset(obj, is_vertical):
             offset_v = 0.5 + mod.mirror_offset_v * 0.5
             return Vector((0, offset_v))
     return None
+
 
 def rotate_uv_faces(faces, angle, uv_layer, center):
     sin_a = math.sin(angle)
