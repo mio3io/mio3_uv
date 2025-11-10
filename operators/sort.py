@@ -129,8 +129,6 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         self.by_group = self.aling_mode == "FIXED"
 
@@ -171,7 +169,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         else:
             self.align_groups(groups)
 
-        island_manager.update_uvmeshes()
+        island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}

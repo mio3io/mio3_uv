@@ -45,10 +45,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
 
         self.objects = self.get_selected_objects(context)
         udim = context.scene.mio3uv.udim
-
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
         if not island_manager.islands:
@@ -91,10 +88,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
                     for l in face.loops:
                         l[uv_layer].uv.y += move_delta
 
-        if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-
-        island_manager.update_uvmeshes()
+        island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}
@@ -112,13 +106,13 @@ class MIO3UV_OT_orient(Mio3UVOperator):
                 for edge in face.edges:
                     if edge.select:
                         for loop in edge.link_loops:
-                            if loop[uv_layer].select and loop.link_loop_next[uv_layer].select:
+                            if loop.uv_select_vert and loop.link_loop_next.uv_select_vert:
                                 return (loop[uv_layer], loop.link_loop_next[uv_layer])
         else:
             for face in island.faces:
                 if face.select:
                     for loop in face.loops:
-                        if loop[uv_layer].select and loop.link_loop_next[uv_layer].select:
+                        if loop.uv_select_vert and loop.link_loop_next.uv_select_vert:
                             return (loop[uv_layer], loop.link_loop_next[uv_layer])
         return (None, None)
 

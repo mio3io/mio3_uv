@@ -53,8 +53,6 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
         if self.island:
             self.objects = self.get_selected_objects(context)
             use_uv_select_sync = context.tool_settings.use_uv_select_sync
-            if use_uv_select_sync:
-                self.sync_uv_from_mesh(context, self.objects)
 
             island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
             if not island_manager.islands:
@@ -83,7 +81,7 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
 
                 island.update_bounds()
 
-            island_manager.update_uvmeshes()
+            island_manager.update_uvmeshes(True)
         else:
             pivot_point = context.space_data.pivot_point
             context.space_data.pivot_point = self.pivot_point

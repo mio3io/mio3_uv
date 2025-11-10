@@ -28,19 +28,17 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         tool_settings = context.tool_settings
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         bpy.ops.uv.remove_doubles(threshold=1e-7)
 
-        island_manager = UVIslandManager(self.objects, extend=False, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, extend=False)
         if not island_manager.islands:
             self.report({"WARNING"}, "No UV islands found")
             return {"CANCELLED"}
 
         for island in island_manager.islands:
             island.store_selection()
-            island.deselect_all_uv()
+            # island.deselect_all_uv()
 
         # オブジェクトで並行処理
         max_length = max(len(colle.islands) for colle in island_manager.collections)
@@ -62,7 +60,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
                 self.align_rect(uv_layer, bm.faces.active)
 
                 for face in island.faces:
-                    if all(loop[uv_layer].select for loop in face.loops):
+                    if all(loop.uv_select_vert for loop in face.loops):
                         for loop in face.loops:
                             loop[uv_layer].pin_uv = True
                     else:
@@ -76,30 +74,11 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             for island in islands:
                 island.deselect_all_uv()
 
-        # Sync アイランドのメッシュだけ全選択
-        if use_uv_select_sync:
-            context.scene.mio3uv.auto_uv_sync_skip = True
-            context.tool_settings.use_uv_select_sync = False
-
-            for colle in island_manager.collections:
-                bm = colle.bm
-                for face in bm.faces:
-                    face.select = False
-                for island in colle.islands:
-                    for face in island.faces:
-                        face.select = True
-                bm.select_flush(True)
-
         for island in island_manager.islands:
             island.restore_selection()
 
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
         bpy.ops.uv.pin(clear=True)
-
-        # Sync 選択を戻す
-        if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-            context.tool_settings.use_uv_select_sync = True
 
         island_manager.update_uvmeshes()
 
@@ -117,7 +96,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         avg_area = total_area / len(selected_faces)
 
         for face in selected_faces:
-            if len(face.loops) == 4 and all(loop[uv_layer].select for loop in face.loops):
+            if len(face.loops) == 4 and all(loop.uv_select_vert for loop in face.loops):
                 max_angle_diff = 0
                 for i in range(4):
                     v1 = face.loops[i][uv_layer].uv - face.loops[(i - 1) % 4][uv_layer].uv

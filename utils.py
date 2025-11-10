@@ -4,55 +4,31 @@ import math
 from mathutils import Vector, Matrix
 
 
-def sync_uv_from_mesh(context, selected_objects):
-    "メッシュからUVの選択状態を同期する"
-    objects = selected_objects if selected_objects else context.objects_in_mode
-    for obj in objects:
-        sync_uv_from_mesh_obj(obj)
+# bm.uv_select_foreach_set(select, /, *, loop_verts=(), loop_edges=(), faces=())
 
 
-def sync_uv_from_mesh_obj(obj):
-    "メッシュからUVの選択状態を同期する"
-    bm = bmesh.from_edit_mesh(obj.data)
-    uv_layer = bm.loops.layers.uv.verify()
-    for face in bm.faces:
+def uv_select_set_face(face, select):
+    face.uv_select = select
+    for loop in face.loops:
+        loop.uv_select_vert = select
+        loop.uv_select_edge = select
+
+
+def uv_select_set_all(faces, select):
+    for face in faces:
+        face.uv_select = select
         for loop in face.loops:
-            loop[uv_layer].select = False
-            loop[uv_layer].select_edge = False
-    for vert in bm.verts:
-        if vert.select:
-            for loop in vert.link_loops:
-                loop[uv_layer].select = True
-    for edge in bm.edges:
-        if edge.select:
-            for loop in edge.link_loops:
-                loop[uv_layer].select_edge = True
-    bmesh.update_edit_mesh(obj.data)
+            loop.uv_select_vert = select
+            loop.uv_select_edge = select
 
 
-def sync_mesh_from_uv(context, selected_objects):
-    "UVからメッシュの選択状態を同期する"
-    objects = selected_objects if selected_objects else context.objects_in_mode
-    for obj in objects:
-        sync_mesh_from_uv_obj(obj)
-        obj.data.update()
-
-
-def sync_mesh_from_uv_obj(obj):
-    "UVからメッシュの選択状態を同期する"
-    bm = bmesh.from_edit_mesh(obj.data)
-    uv_layer = bm.loops.layers.uv.verify()
-    for vert in bm.verts:
-        vert.select = False
-    bm.select_flush(False)
-
-    for vert in bm.verts:
-        vert.select = any(loop[uv_layer].select for loop in vert.link_loops)
-    for face in bm.faces:
-        if all(loop[uv_layer].select for loop in face.loops):
-            face.select = True
-    bm.select_flush(True)
-    bmesh.update_edit_mesh(obj.data)
+def get_uv_selected_edges(faces):
+    selected_edges = set()
+    for face in faces:
+        for loop in face.loops:
+            if loop.uv_select_edge:
+                selected_edges.add(loop.edge)
+    return selected_edges
 
 
 def get_uv_from_mirror_offset(obj, is_vertical):

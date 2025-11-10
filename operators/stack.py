@@ -20,7 +20,6 @@ class MIO3UV_OT_paste(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             mesh_select_mode = self.store_mesh_select_mode(context, (False, False, True))
-            self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects)
         if self.mode == "AUTO":
@@ -56,13 +55,10 @@ class MIO3UV_OT_stack(Mio3UVOperator):
     def execute(self, context):
         self.start_time()
         self.objects = self.get_selected_objects(context)
-
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            mesh_select_mode = self.store_mesh_select_mode(context, (False, False, True))
-            self.sync_uv_from_mesh(context, self.objects)
+        # context.tool_settings.mesh_select_mode = (False, False, True)
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True)
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True, select_mode="FACE")
 
         source_islands = [i for i in island_manager.islands if i.is_any_uv_selected]
         among_islands = source_islands if self.selected else island_manager.islands
@@ -85,10 +81,6 @@ class MIO3UV_OT_stack(Mio3UVOperator):
                     processed.add(island)
 
         bpy.ops.uv.paste()
-
-        if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-            self.restore_mesh_select_mode(context, mesh_select_mode)
 
         island_manager.update_uvmeshes()
         self.print_time()

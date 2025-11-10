@@ -7,9 +7,14 @@ To preview all the features currently implemented, please refer to the documenta
 
 Document [English](https://addon.mio3io.com/#/en/mio3uv/) / [Japanese](https://addon.mio3io.com/#/ja/mio3uv/)
 
-## Install
+## Install (from Blender Extensions)
 
-[Blender Extensions](https://extensions.blender.org/add-ons/mio3-uv/)
+[for Blender 5](https://extensions.blender.org/add-ons/mio3-uv/)
+
+Mio3 UV Ver 2 supports Blender 5 and later.
+Please use Ver 1.5 with Blender 4.
+
+[for Blender 4](https://extensions.blender.org/add-ons/mio3-uv/versions/#v151)
 
 ## Location
 

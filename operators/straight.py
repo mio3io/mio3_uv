@@ -26,8 +26,6 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 
@@ -46,14 +44,13 @@ class MIO3UV_OT_straight(Mio3UVOperator):
         bpy.ops.uv.pin(clear=False)
         bpy.ops.uv.select_linked()
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
-        bpy.ops.uv.select_all(action="DESELECT")
+        
+        node_manager.uv_select_set_all(False)
 
         for group in node_manager.groups:
             group.restore_selection()
 
-        bpy.ops.uv.pin(clear=True)
-
-        node_manager.update_uvmeshes()
+        node_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}

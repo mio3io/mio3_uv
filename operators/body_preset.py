@@ -35,11 +35,8 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-        # original_pivot = context.space_data.pivot_point
 
-        island_manager = UVIslandManager(self.objects)
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 
@@ -90,7 +87,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
 
             self.align_islands(island_manager)
 
-            island_manager.update_uvmeshes()
+            island_manager.update_uvmeshes(True)
 
         self.print_time()
         self.report({"INFO"}, "Match as {}".format(parts_type))
@@ -100,12 +97,12 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         dimensions = max_co - min_co
         rel_x = (avg_center.x - min_co.x) / dimensions.x
         rel_z = (avg_center.z - min_co.z) / dimensions.z
-        center_x = (min_co.x + max_co.x) / 2
+        # center_x = (min_co.x + max_co.x) / 2
         x = avg_center.x
         #  Legs Bottom 45%
-        if rel_z < 0.45 and x < center_x:
+        if rel_z < 0.45 and rel_x < 0.6:
             return "FOOT_R"
-        if rel_z < 0.45 and x > center_x:
+        if rel_z < 0.45 and rel_x >= 0.6:
             return "FOOT_L"
         # Arms
         if rel_x < 0.35:  # L 35%

@@ -47,6 +47,7 @@ class UVNodeGroup:
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
+    uv_sync_valid: bool = False
 
     min_uv: Vector = field(default_factory=lambda: Vector((float("inf"), float("inf"))))
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
@@ -71,25 +72,30 @@ class UVNodeGroup:
         "すべてのUVを非選択にする"
         for node in self.nodes:
             for loop in node.loops:
-                loop[self.uv_layer].select = False
-                loop[self.uv_layer].select_edge = False
+                loop.uv_select_vert = False
+                loop.uv_select_edge = False
+
+        if self.bm.uv_select_sync_valid:
+            self.bm.uv_select_flush(False)
 
     def store_selection(self):
         "現在のUV選択状態を保存"
         self.selection_states.clear()
         for node in self.nodes:
             for loop in node.loops:
-                uv = loop[self.uv_layer]
-                self.selection_states[loop.index] = (uv.select, uv.select_edge)
+                self.selection_states[loop.index] = (loop.uv_select_vert, loop.uv_select_edge)
 
     def restore_selection(self):
         "保存したUV選択状態を復元"
         for node in self.nodes:
             for loop in node.loops:
                 if loop.index in self.selection_states:
-                    select, select_edge = self.selection_states[loop.index]
-                    loop[self.uv_layer].select = select
-                    loop[self.uv_layer].select_edge = select_edge
+                    uv_select_vert, uv_select_edge = self.selection_states[loop.index]
+                    loop.uv_select_vert = uv_select_vert
+                    loop.uv_select_edge = uv_select_edge
+
+        if self.bm.uv_select_sync_valid:
+            self.bm.uv_select_flush_mode()
 
     def update_bounds(self):
         "バウンディングボックス・中心・min/maxを計算"
@@ -132,6 +138,7 @@ class UVNodeGroupCollection:
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
+    uv_sync_valid: bool = False
     groups: list[UVNodeGroup] = field(default_factory=list)
 
 
@@ -153,21 +160,26 @@ class UVNodeManager:
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-            if uv_groups := self.find_uv_nodes(bm, uv_layer):
-                colle = UVNodeGroupCollection(obj, bm, uv_layer)
+            uv_sync_valid = bm.uv_select_sync_valid
+
+            if self.sync and not uv_sync_valid:
+                bm.uv_select_sync_from_mesh()
+
+            if uv_groups := self.find_uv_nodes(bm, uv_layer, uv_sync_valid):
+                colle = UVNodeGroupCollection(obj, bm, uv_layer, uv_sync_valid)
                 self.collections.append(colle)
                 for group in uv_groups:
                     colle.groups.append(UVNodeGroup(group, obj, bm, uv_layer))
 
-    def find_uv_nodes(self, bm, uv_layer, sub_faces=None):
+    def find_uv_nodes(self, bm, uv_layer, uv_sync_valid, sub_faces=None):
         uv_nodes = {}
 
         def add_uv_node(loop):
             key = self.get_key(loop[uv_layer].uv)
             if key not in uv_nodes:
-                uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert, select=loop[uv_layer].select)
+                uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert, select=loop.uv_select_vert)
             else:
-                if loop[uv_layer].select and not uv_nodes[key].select:
+                if loop.uv_select_vert and not uv_nodes[key].select:
                     uv_nodes[key].select = True
             uv_nodes[key].loops.add(loop)
 
@@ -186,13 +198,13 @@ class UVNodeManager:
                 for vert in target_verts:
                     if vert.select:
                         for loop in vert.link_loops:
-                            if loop[uv_layer].select and loop.face in sub_faces:
+                            if loop.uv_select_vert and loop.face in sub_faces:
                                 add_uv_node(loop)
             else:
                 for vert in target_verts:
                     if vert.select:
                         for loop in vert.link_loops:
-                            if loop[uv_layer].select:
+                            if loop.uv_select_vert:
                                 add_uv_node(loop)
 
         else:
@@ -200,7 +212,7 @@ class UVNodeManager:
             for face in target_faces:
                 if face.select:
                     for loop in face.loops:
-                        if loop[uv_layer].select:
+                        if loop.uv_select_vert:
                             add_uv_node(loop)
 
         # UVノードの隣接リストを作成
@@ -208,7 +220,7 @@ class UVNodeManager:
             for loop in node.loops:
                 edge = loop.edge
                 # 選択されていないエッジループがある場合は接続を無視
-                if not any(loop[uv_layer].select_edge for loop in edge.link_loops):
+                if not any(loop.uv_select_edge for loop in edge.link_loops):
                     continue
                 for loop in edge.link_loops:
                     prev_key = self.get_key(loop[uv_layer].uv)
@@ -219,6 +231,15 @@ class UVNodeManager:
 
         # 接続ごとにグループ分けして返す
         return self.group_uv_nodes(list(uv_nodes.values()))
+
+    def uv_select_set_all(self, select):
+        for colle in self.collections:
+            bm = colle.bm
+            for face in bm.faces:
+                face.uv_select = select
+                for loop in face.loops:
+                    loop.uv_select_vert = select
+                    loop.uv_select_edge = select
 
     @staticmethod
     def get_key(uv):
@@ -246,15 +267,18 @@ class UVNodeManager:
         if group_to_remove in self.groups:
             self.groups.remove(group_to_remove)
 
-    def update_uvmeshes(self):
+    def update_uvmeshes(self, mesh_sync=False):
         for colle in self.collections:
+            if self.sync and mesh_sync and colle.bm.uv_select_sync_valid:
+                colle.bm.uv_select_sync_to_mesh()
             bmesh.update_edit_mesh(colle.obj.data)
 
     @classmethod
     def from_island(cls, island, sync=False, sub_faces=None):
         manager = cls(objects=[], sync=sync)
-        if uv_groups := manager.find_uv_nodes(island.bm, island.uv_layer, sub_faces=sub_faces):
-            colle = UVNodeGroupCollection(island.obj, island.bm, island.uv_layer)
+        uv_sync_valid = island.uv_sync_valid
+        if uv_groups := manager.find_uv_nodes(island.bm, island.uv_layer, uv_sync_valid, sub_faces=sub_faces):
+            colle = UVNodeGroupCollection(island.obj, island.bm, island.uv_layer, uv_sync_valid)
             manager.collections.append(colle)
             for group in uv_groups:
                 colle.groups.append(UVNodeGroup(group, island.obj, island.bm, island.uv_layer))

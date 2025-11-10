@@ -33,8 +33,6 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         if self.island:
             im = UVIslandManager(self.objects, sync=use_uv_select_sync)
@@ -91,7 +89,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
                                 local_y = uv.y - center_y
                                 uv.y = center_y + (local_y * scale_y)
 
-            im.update_uvmeshes()
+            im.update_uvmeshes(True)
         else:
             nm = UVNodeManager(self.objects, sync=use_uv_select_sync)
             if not nm.groups:

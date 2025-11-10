@@ -63,12 +63,17 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         context.scene.mio3uv.auto_uv_sync_skip = True
         self.objects = self.get_selected_objects(context)
 
-        uv_select_mode, use_uv_select_sync = self.store_mode(context)
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
-            context.tool_settings.use_uv_select_sync = False
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
+        mesh_select_mode = context.tool_settings.mesh_select_mode[:]
+        uv_select_mode = context.tool_settings.uv_select_mode
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+
+        if use_uv_select_sync:
+            context.tool_settings.mesh_select_mode = (True, False, False)
+        else:
+            context.tool_settings.uv_select_mode = "VERTEX"
+
         if not island_manager.islands:
             return {"CANCELLED"}
 
@@ -81,7 +86,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
             selected_uvs = {}
             for face in island.faces:
                 for loop in face.loops:
-                    if loop[uv_layer].select:
+                    if loop.uv_select_vert:
                         uv = loop[uv_layer].uv
                         uvkey = (round(uv.x, 6), round(uv.y, 6))
                         selected_uvs.setdefault(uvkey, []).append(loop)
@@ -135,7 +140,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                     straight_uv_nodes(group, self.distribute)
                     for node in group.nodes:
                         for loop in node.loops:
-                            loop[uv_layer].select = False
+                            loop.uv_select_vert = False
                             loop[uv_layer].pin_uv = True
                             boundary_loops.add(loop)
                     group.update_uvs()
@@ -169,36 +174,20 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         for island, _ in valid_islands:
             island.restore_selection()
 
+        island_manager.update_uvmeshes(True)
+
         if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-            context.tool_settings.use_uv_select_sync = True
-
-        self.restore_mode(context, uv_select_mode, use_uv_select_sync)
-
-        island_manager.update_uvmeshes()
+            context.tool_settings.mesh_select_mode = mesh_select_mode
+        else:
+            context.tool_settings.uv_select_mode = uv_select_mode
 
         self.print_time()
         return {"FINISHED"}
 
     @staticmethod
-    def store_mode(context):
-        uv_select_mode = context.tool_settings.uv_select_mode
-        context.tool_settings.uv_select_mode = "VERTEX"
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        # if use_uv_select_sync:
-        #     context.tool_settings.use_uv_select_sync = False
-        return uv_select_mode, use_uv_select_sync
-
-    @staticmethod
-    def restore_mode(context, uv_select_mode, use_uv_select_sync):
-        context.tool_settings.uv_select_mode = uv_select_mode
-        # if use_uv_select_sync:
-        #     context.tool_settings.use_uv_select_sync = True
-
-    @staticmethod
     def select_uv(loops, uv_layer, select):
         for loop in loops:
-            loop[uv_layer].select = select
+            loop.uv_select_vert = select
 
     @staticmethod
     def get_bbox_uvs(uvs):

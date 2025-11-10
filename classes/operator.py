@@ -3,7 +3,6 @@ import bmesh
 import time
 from bpy.types import Context, Object, Operator, Panel
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
-from ..utils import sync_uv_from_mesh, sync_mesh_from_uv
 
 
 class Mio3UVPanel(Panel):
@@ -38,14 +37,6 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
         return [obj for obj in context.objects_in_mode if obj.type == "MESH"]
 
     @staticmethod
-    def sync_uv_from_mesh(context, selected_objects):
-        sync_uv_from_mesh(context, selected_objects)
-
-    @staticmethod
-    def sync_mesh_from_uv(context, selected_objects):
-        sync_mesh_from_uv(context, selected_objects)
-
-    @staticmethod
     def store_mesh_select_mode(context: Context, mode=None):
         select_mode = context.tool_settings.mesh_select_mode[:]
         if mode is not None:
@@ -77,18 +68,17 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
         is_selected_face_objects = False
         for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
-            uv_layer = bm.loops.layers.uv.verify()
-            selected_face = self.check_selected_uv(bm, uv_layer)
+            selected_face = self.check_selected_uv(bm)
             bm.free()
             if selected_face:
                 is_selected_face_objects = True
                 break
         return is_selected_face_objects
 
-    def check_selected_uv(self, bm: BMesh, uv_layer: BMLayerItem):
+    def check_selected_uv(self, bm: BMesh):
         for face in bm.faces:
             if face.select:
-                if all({l[uv_layer].select_edge for l in face.loops}):  # select_edge -> エッジ選択時の〼を許容しない
+                if face.uv_select:
                     return True
         return False
 

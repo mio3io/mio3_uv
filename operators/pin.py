@@ -23,36 +23,34 @@ class MIO3UV_OT_pin(Mio3UVOperator):
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        if context.tool_settings.use_uv_select_sync:
-            self.sync_uv_from_mesh(context, objects)
-
         return self.execute(context)
 
     def execute(self, context):
         self.start_time()
         objects = self.get_selected_objects(context)
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         for obj in objects:
             me = obj.data
             bm = bmesh.from_edit_mesh(me)
             uv_layer = bm.loops.layers.uv.verify()
 
-            for face in bm.faces:
-                if not face.select:
-                    continue
+            pin_uv = not self.clear
 
-                for loop in face.loops:
-                    loop_uv = loop[uv_layer]
-                    if loop_uv.select:
-                        if self.clear:
-                            loop_uv.pin_uv = False
-                        else:
-                            loop_uv.pin_uv = True
+            for face in bm.faces:
+                if face.select:
+                    if use_uv_select_sync and not bm.uv_select_sync_valid:
+                        for loop in face.loops:
+                            loop[uv_layer].pin_uv = pin_uv
+                    else:
+                        for loop in face.loops:
+                            if loop.uv_select_vert:
+                                loop[uv_layer].pin_uv = pin_uv
+
 
             bmesh.update_edit_mesh(me)
 
         self.print_time()
-
         return {"FINISHED"}
 
 

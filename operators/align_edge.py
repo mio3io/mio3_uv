@@ -32,8 +32,6 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
         if not island_manager.islands:
@@ -59,7 +57,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
 
             island.restore_selection()
 
-        island_manager.update_uvmeshes()
+        island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}
@@ -70,14 +68,14 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
             if not face.select:
                 continue
             for loop in face.loops:
-                if loop[uv_layer].select_edge:
+                if loop.uv_select_edge:
                     edge = loop.edge
                     selected_uv_edges.add((edge, loop))
 
         for edge, loop in selected_uv_edges:
             if not self.is_direction(edge, loop, axis, uv_layer):
                 for l in edge.link_loops:
-                    l[uv_layer].select_edge = False
+                    l.uv_select_edge = False
 
     def is_direction(self, edge, loop, axis, uv_layer):
         uv1 = loop[uv_layer].uv

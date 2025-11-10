@@ -23,6 +23,11 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
         show_only_shape_key = obj.show_only_shape_key
         obj.show_only_shape_key = True
 
+        is_has_mirror_mod = any(mod.type == "MIRROR" for mod in obj.modifiers)
+        if not is_has_mirror_mod:
+            self.report({"WARNING"}, "Object does not have a mirror modifier")
+            return {"CANCELLED"}
+
         bpy.ops.object.mode_set(mode="OBJECT")
 
         for o in context.selected_objects:
@@ -79,7 +84,7 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
             for loop in face.loops:
                 loop_uv = loop[uv_layer]
                 v_co = loop.vert.co
-                if loop_uv.select:
+                if loop.uv_select_vert:
                     closest_vert = min(face_src.verts, key=lambda v: (v.co - v_co).length_squared)
                     for loop_src in face_src.loops:
                         if loop_src.vert == closest_vert:

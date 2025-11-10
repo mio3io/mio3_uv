@@ -64,8 +64,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 return {"FINISHED"}
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
@@ -87,7 +85,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 uv_layer = island.uv_layer
                 for face in island.faces:
                     for loop in face.loops:
-                        if loop[uv_layer].select:
+                        if loop.uv_select_vert:
                             original_uvs_island[loop] = loop[uv_layer].uv.copy()
 
             if island.ajast:
@@ -116,13 +114,10 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 offset = island.original_center - island.center
                 self.transform_island(island, offset)
                 if hasattr(island, "tmp_uv_list"):
-                    for uv in island.tmp_uv_list:
-                        uv.select = True
+                    for loop in island.tmp_uv_list:
+                        loop.uv_select_vert = True
 
-        if use_uv_select_sync:
-            island_manager.restore_vertex_selection()
-
-        island_manager.update_uvmeshes()
+        island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}
@@ -142,17 +137,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 uv.uv = (uv.uv - original_center) * scale + original_center
                 uv.uv += offset
 
-    def count_uvs(self, island):
-        uv_layer = island.uv_layer
-        unselected_count = 0
-        for face in island.faces:
-            for loop in face.loops:
-                if not loop[uv_layer].select:
-                    unselected_count += 1
-                    if unselected_count >= 2:
-                        return False
-        return True
-
     def init_select_uvs(self, island):
         island.tmp_uv_list = []
 
@@ -169,9 +153,9 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         for face in island.faces:
             for loop in face.loops:
                 loop_uv = loop[uv_layer]
-                if loop_uv.select:
+                if loop.uv_select_vert:
                     key = (loop_uv.uv.x, loop_uv.uv.y, loop.vert.index)
-                    selected_nodes.setdefault(key, []).append(loop_uv)
+                    selected_nodes.setdefault(key, []).append((loop, loop_uv))
 
         sorted_keys = sorted(selected_nodes.keys())
         nodes_to_process = []
@@ -181,11 +165,11 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 nodes_to_process.append(selected_nodes[sorted_keys[-1]])
 
         additional_deselect_needed = 2 - deselect_count
-        for uvs in nodes_to_process:
-            for loop_uv in uvs:
+        for loop_uvs in nodes_to_process:
+            for loop, loop_uv in loop_uvs:
                 if self.keep == "ALL":
-                    loop_uv.select = False
-                island.tmp_uv_list.append(loop_uv)
+                    loop.uv_select_vert = False
+                island.tmp_uv_list.append(loop)
             additional_deselect_needed -= 1
             if additional_deselect_needed == 0:
                 break

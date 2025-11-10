@@ -13,8 +13,6 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
@@ -36,7 +34,7 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
         else:
             return {"CANCELLED"}
 
-        island_manager.update_uvmeshes()
+        island_manager.update_uvmeshes(True)
 
         return {"FINISHED"}
 

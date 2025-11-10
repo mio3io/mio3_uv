@@ -75,14 +75,11 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
+        use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         if not self.objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
-
-        use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         if self.axis_3d == "AUTO":
             self.axis_3d = {"X": "X", "Y": "Z"}.get(self.axis_uv, self.axis_uv)
@@ -102,27 +99,33 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         self.uv_axis_index = 0 if self.axis_uv == "X" else 1
         self.axis_3d_index = {"X": 0, "Y": 1, "Z": 2}[self.axis_3d]
 
-        mesh_select_mode = self.store_mesh_select_mode(context, mode=(True, False, False))
-
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
             bm.verts.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
-            self.symmetrize(context, bm, uv_layer)
+            if use_uv_select_sync and not bm.uv_select_sync_valid:
+                bm.uv_select_sync_from_mesh()
+
+            self.symmetrize(context, bm, uv_layer, use_uv_select_sync)
             bmesh.update_edit_mesh(obj.data)
 
         if self.merge:
             bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
 
-        self.restore_mesh_select_mode(context, mesh_select_mode)
         self.print_time()
         return {"FINISHED"}
 
-    def symmetrize(self, context, bm, uv_layer):
+    def symmetrize(self, context, bm, uv_layer, use_uv_select_sync):
         axis_3d = self.axis_3d
+        stack = self.stack
+        threshold_sq = self.threshold_sq
+        get_symmetric_3d_point = self.get_symmetric_3d_point
+        get_symmetric_uv_point = self.get_symmetric_uv_point
+        should_symmetrize = self.should_symmetrize
+        find_sym_face_strict = self.find_sym_face_strict
 
-        target_faces, source_faces, source_loops = self.find_targets(bm, uv_layer)
+        target_faces, source_faces, source_loops = self.find_targets(bm, use_uv_select_sync)
 
         kd = kdtree.KDTree(len(bm.faces))
         face_centers = {}
@@ -142,18 +145,15 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             for v in face.verts:
                 if v not in target_verts:
                     target_verts.add(v)
-                    sym_positions[v] = self.get_symmetric_3d_point(v.co)
+                    sym_positions[v] = get_symmetric_3d_point(v.co)
 
         sym_verts = {f: [sym_positions[v] for v in f.verts if v in sym_positions] for f in target_faces}
 
-        get_symmetric_uv_point = self.get_symmetric_uv_point
-        stack = self.stack
-
         for face in target_faces:
             center = face_centers[face]
-            sym_center = self.get_symmetric_3d_point(center)
-            if self.should_symmetrize(center, direction_3d, axis_3d):
-                sym_face = self.find_sym_face_strict(bm, kd, sym_center, sym_verts[face], self.threshold_sq)
+            sym_center = get_symmetric_3d_point(center)
+            if should_symmetrize(center, direction_3d, axis_3d):
+                sym_face = find_sym_face_strict(bm, kd, sym_center, sym_verts[face], threshold_sq)
                 if not sym_face:
                     continue
                 for loop in face.loops:
@@ -161,9 +161,9 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     sym_vert = min(sym_face.verts, key=lambda v: (v.co - sym_positions[loop.vert]).length_squared)
                     for sym_loop in sym_face.loops:
                         if sym_loop.vert == sym_vert:
-                            if sym_loop[uv_layer].select or loop_uv.select:
+                            if sym_loop.uv_select_vert or loop.uv_select_vert:
                                 if stack:
-                                    sym_loop[uv_layer].uv = loop[uv_layer].uv
+                                    sym_loop[uv_layer].uv = loop_uv.uv
                                 else:
                                     sym_loop[uv_layer].uv = get_symmetric_uv_point(loop_uv.uv, sym_center_uv)
 
@@ -235,7 +235,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 return Vector((0.5, 0.5))
 
     # 対象の頂点を収集
-    def find_targets(self, bm: BMesh, uv_layer):
+    def find_targets(self, bm: BMesh, use_uv_select_sync):
         kd = kdtree.KDTree(len(bm.verts))
         for i, v in enumerate(bm.verts):
             kd.insert(v.co, i)
@@ -245,12 +245,14 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         source_verts = set()
         source_loops = set()
         for face in bm.faces:
-            if face.select:
-                for loop in face.loops:
-                    if loop[uv_layer].select:
-                        source_faces.add(face)
-                        source_loops.add(loop)
-                        source_verts.add(loop.vert)
+            if not face.select and not use_uv_select_sync:
+                continue
+
+            for loop in face.loops:
+                if loop.uv_select_vert:
+                    source_faces.add(face)
+                    source_loops.add(loop)
+                    source_verts.add(loop.vert)
 
         threshold = self.threshold
         symmetric_faces = set()

@@ -70,15 +70,14 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         if self.island:
             island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
             if not island_manager.islands:
                 return {"CANCELLED"}
             self.align_islands(island_manager)
-            island_manager.update_uvmeshes()
+
+            island_manager.update_uvmeshes(True)
         else:
             node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 

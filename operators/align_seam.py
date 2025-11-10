@@ -36,24 +36,21 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
             return {"CANCELLED"}
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
 
         if len(node_manager.groups) == 1:
             obj = node_manager.groups[0].obj
             bm = node_manager.groups[0].bm
-            uv_layer = node_manager.groups[0].uv_layer
             selected_uv_verts = set()
             for face in bm.faces:
                 for loop in face.loops:
-                    if loop[uv_layer].select:
+                    if loop.uv_select_vert:
                         selected_uv_verts.add(loop.vert)
             for face in bm.faces:
                 for loop in face.loops:
                     if loop.vert in selected_uv_verts:
-                        loop[uv_layer].select = True
+                        loop.uv_select_vert = True
 
             node_manager.update_uvmeshes()
             node_manager = UVNodeManager([obj], sync=use_uv_select_sync)

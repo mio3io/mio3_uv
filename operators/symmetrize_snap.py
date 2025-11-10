@@ -84,8 +84,6 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
 
     def execute(self, context):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if context.tool_settings.use_uv_select_sync:
-            self.sync_uv_from_mesh(context, self.objects)
 
         for obj in self.objects:
             context.view_layer.objects.active = obj
@@ -108,7 +106,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         for face in bm.faces:
             if face.select:
                 for loop in face.loops:
-                    if loop[uv_layer].select:
+                    if loop.uv_select_vert:
                         selected_loops.add(loop)
 
         center = self.get_symmetry_center(context, uv_layer, selected_loops)
@@ -117,7 +115,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         negative_uvs = []
         positive_uvs = []
         for loop in selected_loops:
-            if loop[uv_layer].select:
+            if loop.uv_select_vert:
                 uv = loop[uv_layer].uv
                 if self.axis_uv == "X":
                     axis_value = uv.x
