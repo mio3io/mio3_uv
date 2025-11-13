@@ -271,15 +271,12 @@ class UVIslandManager:
             else:
                 target_faces = {face for face in bm.faces if face.select}
         else:
-            if self.sync:
-                target_faces = {face for face in bm.faces if face.select}
-            else:
-                for face in bm.faces:
-                    if face.select:
-                        for loop in face.loops:
-                            if loop.uv_select_vert and face not in target_faces:
-                                target_faces.add(face)
-                                break
+            for face in bm.faces:
+                if face.select:
+                    for loop in face.loops:
+                        if loop.uv_select_vert and face not in target_faces:
+                            target_faces.add(face)
+                            break
 
         islands = []
         processed_faces = set()
