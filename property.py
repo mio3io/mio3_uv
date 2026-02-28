@@ -77,7 +77,7 @@ class MIO3UV_PG_scene(PropertyGroup):
         name="Checker Map Size",
         description="Choose an image size",
         items=ITEMS_TEXTURE_SIZE,
-        default="1024",
+        default=2,
     )
     use_exposure: BoolProperty(
         name="Exposure",
@@ -89,6 +89,11 @@ class MIO3UV_PG_scene(PropertyGroup):
 
 class MIO3UV_PG_object(PropertyGroup):
     def callback_update_padding(self, context):
+        if self.padding_px == "AUTO":
+            self.calc_padding_px = int(int(self.image_size) / 256 * 2)
+        else:
+            self.calc_padding_px = int(self.padding_px)
+
         view_padding.UV_OT_mio3_guide_padding.redraw(context)
 
     def callback_update_uvmesh_factor(self, context):
@@ -129,14 +134,14 @@ class MIO3UV_PG_object(PropertyGroup):
         name="Size X",
         description="Choose an image size",
         items=ITEMS_TEXTURE_SIZE,
-        default="1024",
+        default="2048",
         update=callback_update_texture_size_x,
     )
     texture_size_y: EnumProperty(
         name="Size Y",
         description="Choose an image size",
         items=ITEMS_TEXTURE_SIZE,
-        default="1024",
+        default="2048",
         update=callback_update_texture_size_y,
     )
     texture_size_link: BoolProperty(name="Size Link", default=True)
@@ -145,16 +150,17 @@ class MIO3UV_PG_object(PropertyGroup):
         name="Size",
         description="Choose an image size",
         items=ITEMS_TEXTURE_SIZE,
-        default=1,
+        default=2,
         update=callback_update_padding,
     )
 
     padding_px: EnumProperty(
         name="Padding (px)",
-        items=[("4", "4", ""), ("8", "8", ""), ("16", "16", ""), ("32", "32", ""), ("64", "64", "")],
-        default="16",
+        items=[("AUTO", "Auto", ""), ("4", "4", ""), ("8", "8", ""), ("16", "16", ""), ("32", "32", ""), ("64", "64", "")],
+        default="AUTO",
         update=callback_update_padding,
     )
+    calc_padding_px: IntProperty(name="Calculated Padding (px)", default=16)
 
     uvmesh_factor: FloatProperty(name="Factor", default=1, min=0, max=1, update=callback_update_uvmesh_factor)
     uvmesh_size: FloatProperty(

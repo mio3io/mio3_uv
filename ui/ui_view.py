@@ -113,10 +113,10 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row.scale_x = 5
         row.prop(props_object, "padding_px", text="")
         row.scale_x = 1
-        row.label(text="px")
-
-        # row = layout.row()
-        # row.prop(props_object, "realtime")
+        if props_object.padding_px == "AUTO":
+            row.label(text=str(props_object.calc_padding_px) + "px", translate=False)
+        else:
+            row.label(text="px", translate=False)
 
 
 classes = [MIO3UV_PT_Utility, MIO3UV_PT_UVMesh, MIO3UV_PT_SubGuidePadding]

@@ -23,6 +23,7 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     _handle = None
+    _shader = None
 
     _color = (0.1, 0.5, 1.0, 1)
     _vertices = []
@@ -47,6 +48,8 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         if is_running:
             return {"FINISHED"}
 
+        self._shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+
         cls._handle = SpaceImageEditor.draw_handler_add(self.draw_2d, ((self, context)), "WINDOW", "POST_PIXEL")
 
         def callback():
@@ -54,6 +57,7 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
 
         bpy.msgbus.subscribe_rna(key=(bpy.types.Object, "mode"), owner=msgbus_owner, args=(), notify=callback)
 
+        self.update_state(context)
         self.update_mesh(context)
         reload_view(context)
         context.window_manager.modal_handler_add(self)
@@ -63,7 +67,9 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         cls = self.__class__
         if not cls.is_running():
             return {"FINISHED"}
-        if event.type == "LEFTMOUSE" and event.value == "RELEASE":
+        if event.type in ("LEFTMOUSE", "RET") and event.value == "RELEASE":
+            self.update_mesh(context)
+        if event.type == "Z" and event.ctrl and event.value == "RELEASE":
             self.update_mesh(context)
         return {"PASS_THROUGH"}
 
@@ -76,20 +82,7 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
     @classmethod
     def update_state(cls, context):
         obj = context.active_object
-        mio3uv = obj.mio3uv
-        padding_pixels = int(mio3uv.padding_px)
-        if mio3uv.image_size == "AUTO":
-            image_size = None
-            for area in context.screen.areas:
-                if area.type == "IMAGE_EDITOR":
-                    space = area.spaces.active
-                    if space.image:
-                        image_size = space.image.size[0]
-            if not image_size:
-                image_size = 2048
-        else:
-            image_size = int(mio3uv.image_size)
-        cls._padding = padding_pixels / image_size
+        cls._padding = int(obj.mio3uv.calc_padding_px) / int(obj.mio3uv.image_size)
 
     @classmethod
     def update_mesh(cls, context):
@@ -134,7 +127,7 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
     @staticmethod
     def draw_2d(self, context):
         viewport_vertices = [context.region.view2d.view_to_region(v[0], v[1], clip=False) for v in self._vertices]
-        shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+        shader = self._shader
         batch = batch_for_shader(shader, "LINES", {"pos": viewport_vertices})
         shader.bind()
         shader.uniform_float("color", self._color)
