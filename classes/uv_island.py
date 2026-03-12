@@ -6,7 +6,8 @@ from typing import Literal
 from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
 from functools import cached_property
-import time
+
+VER_5_0_1 = bpy.app.version >= (5, 0, 1)
 
 
 @dataclass
@@ -229,9 +230,12 @@ class UVIslandManager:
                     bm = bmesh_dict[obj]
                     bm.uv_select_foreach_set(True, faces=bm.faces)
             elif self.extend:
-                bpy.ops.uv.select_more()
-                bpy.ops.uv.select_more()
-                bpy.ops.uv.select_linked()
+                if VER_5_0_1:
+                    bpy.ops.uv.select_linked()
+                else:
+                    bpy.ops.uv.select_more()
+                    bpy.ops.uv.select_more()
+                    bpy.ops.uv.select_linked()
         else:
             if self.find_all:
                 bpy.ops.uv.select_all(action="SELECT")  # シームを切る
