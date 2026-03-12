@@ -34,7 +34,7 @@ class MIO3UV_OT_circle(Mio3UVOperator):
             base_group = node_manager.groups[0]
             all_nodes = {node for group in node_manager.groups for node in group.nodes}
             composite_group = UVNodeGroup(
-                nodes=all_nodes, obj=base_group.obj, bm=base_group.bm, uv_layer=base_group.uv_layer, mode="EDGE"
+                nodes=all_nodes, obj=base_group.obj, bm=base_group.bm, uv_layer=base_group.uv_layer
             )
             self.make_circular(composite_group)
             composite_group.update_uvs()
