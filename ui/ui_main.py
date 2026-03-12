@@ -18,8 +18,9 @@ class MIO3UV_PT_main(Mio3UVPanel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
+        col = layout.column()
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.prop(context.space_data, "pivot_point", icon_only=True, expand=True)
 
         row2 = row.row(align=False)
@@ -34,7 +35,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
         row3.separator(factor=0.5)
         row3.popover("MIO3UV_PT_options_popover", text="", icon="PREFERENCES")
 
-        col_unwrap = layout.column(align=True)
+        col_unwrap = col.column(align=True)
         col_unwrap.scale_y = 1.1
 
         row = col_unwrap.row(align=True)
@@ -46,7 +47,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
         row.separator(factor=0.2)
         row.operator("uv.mio3_unwrap_mirrored", text="", icon="MOD_MIRROR")
 
-        col_unwrap = layout.column(align=True)
+        col_unwrap = col.column(align=True)
 
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_normalize", icon_value=icons["NORMALIZE"].icon_id)
@@ -68,11 +69,11 @@ class MIO3UV_PT_align(Mio3UVPanel):
         icons = preview_collections["icons"]
         # props_scene = context.scene.mio3uv
         layout = self.layout
+        col = layout.column()
 
-
-        split = layout.split(factor=0.5)
+        split = col.split(factor=0.5)
         col_left = split.column()
-        col_left.scale_y = 1.1
+        col_left.scale_y = 1.05
         grid = col_left.grid_flow(row_major=True, columns=3, even_columns=True, even_rows=True, align=True)
         grid.label(text="")
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
@@ -87,7 +88,7 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
         # Right
         col_right = split.column(align=True)
-        col_right.scale_y = 1.14
+        col_right.scale_y = 1.12
 
         row = col_right.row(align=True)
         row.scale_x = 3
@@ -102,9 +103,8 @@ class MIO3UV_PT_align(Mio3UVPanel):
         row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_Y"].icon_id).axis="Y"
         row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
 
-
-        col_rotate = layout.column(align=True)
-        col_rotate.scale_y = 1.1
+        col_rotate = col.column(align=True)
+        col_rotate.scale_y = 1.05
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_rotate", text="90", icon_value=icons["P90"].icon_id).angle = -1.5708
@@ -125,7 +125,7 @@ class MIO3UV_PT_align(Mio3UVPanel):
         row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
         row.operator("uv.mio3_distribute", icon_value=icons["DIST_X"].icon_id)
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.label(text="Fixed Mode")
         row.scale_x = 0.7
         row.prop(context.scene.mio3uv, "edge_mode", text="Edge", toggle=True)
@@ -143,12 +143,10 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
+        col = layout.column()
 
-        # Vertex
-        # layout.label(text="Vertex", icon_value=icons["VERT"].icon_id)
-
-        col_vert = layout.column(align=True)
-        col_vert.scale_y = 1.2
+        col_vert = col.column(align=True)
+        col_vert.scale_y = 1.05
         row = col_vert.row(align=True)
         row.operator("uv.mio3_relax", icon_value=icons["RELAX"].icon_id)
         row.operator("uv.mio3_merge", icon_value=icons["VERT"].icon_id)
@@ -157,12 +155,8 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         row.operator("uv.mio3_circle", icon_value=icons["CIRCLE"].icon_id)
         row.operator("uv.mio3_offset", icon_value=icons["OFFSET"].icon_id)
 
-        # Island
-        row = layout.row()
-        row.label(text="Island", icon_value=icons["ISLAND"].icon_id)
-
-        col_iisland = layout.column(align=True)
-        col_iisland.scale_y = 1.2
+        col_iisland = col.column(align=True)
+        col_iisland.scale_y = 1.05
 
         row = col_iisland.row(align=True)
         row.operator("uv.copy", text="Copy", icon_value=icons["COPY"].icon_id)
@@ -177,7 +171,6 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         
         row = col_iisland.row(align=True)
         row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons["CUBE"].icon_id)
-        col = layout.column(align=True)
         row = col.row(align=True)
         row.operator("uv.mio3_body_preset", icon_value=icons["BODY"].icon_id).type = "AUTO"
         row.popover("MIO3UV_PT_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
@@ -193,12 +186,12 @@ class MIO3UV_PT_symmetry(Mio3UVPanel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
-        row = layout.row(align=True)
-        row.scale_y = 1.2
+        col = layout.column()
+        row = col.row(align=True)
+        row.scale_y = 1.15
         row.operator("uv.mio3_symmetrize", icon_value=icons["SYMMETRIZE"].icon_id)
         row.operator("uv.mio3_symmetry_snap", icon_value=icons["SNAP"].icon_id)
-        row_option = layout.row()
-        row_option.scale_y = 1.1
+        row_option = col.row()
         row = row_option.row(align=True)
         row.scale_x = 2
         row.prop(context.scene.mio3uv, "symmetry_uv_axis", expand=True)
@@ -219,25 +212,22 @@ class MIO3UV_PT_select(Mio3UVPanel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
+        col = layout.column()
 
-        col = layout.column(align=True)
-        col.scale_y = 1.1
-
-        row = col.row(align=True)
+        col2 = col.column(align=True)
+        row = col2.row(align=True)
         row.operator("uv.mio3_select_half", text="-X", icon_value=icons["X_N"].icon_id).direction = "NEGATIVE_X"
         row.operator("uv.mio3_select_half", text="+X", icon_value=icons["X_P"].icon_id).direction = "POSITIVE_X"
         row.scale_x = 1.3
         row.operator("uv.mio3_select_mirror3d", icon_value=icons["MIRROR_UV"].icon_id)
-
-        row = col.row(align=True)
+        row = col2.row(align=True)
         row.operator("uv.mio3_select_similar", icon_value=icons["SIMILAR"].icon_id)
         row.operator("uv.mio3_select_boundary", icon_value=icons["BOUND"].icon_id)
-        row = col.row(align=True)
-
+        row = col2.row(align=True)
         row.operator("uv.mio3_select_edge_direction", text="Horizontal", icon_value=icons["EDGE_X"].icon_id).axis = "X"
         row.operator("uv.mio3_select_edge_direction", text="Vertical", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.label(text="Odd UVs")
         row.operator("uv.mio3_select_zero")
         row.operator("uv.mio3_select_flipped_faces")

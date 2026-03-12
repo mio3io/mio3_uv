@@ -18,19 +18,19 @@ class MIO3UV_PT_Utility(Panel):
 
     def draw(self, context):
         layout = self.layout
+        col = layout.column()
         icons = preview_collections["icons"]
         props_scene = context.scene.mio3uv
 
-        split = layout.split(factor=0.5)
+        split = col.split(factor=0.5)
         split.label(text="Size")
         split.prop(props_scene, "checker_map_size", text="")
-        
-        col = layout.column(align=True)
+
         row = col.row(align=True)
         row.operator("mio3uv.checker_map", icon_value=icons["COLOR_GRID"].icon_id)
         row.operator("mio3uv.checker_map_clear", text="", icon="CANCEL")
 
-        layout.operator("mio3uv.checker_map_cleanup", text="Ceanup All Chaker Maps", icon="TRASH")
+        col.operator("mio3uv.checker_map_cleanup", text="Ceanup All Chaker Maps", icon="TRASH")
 
 
 class MIO3UV_PT_UVMesh(Panel):
@@ -96,18 +96,19 @@ class MIO3UV_PT_SubGuidePadding(Panel):
     def draw(self, context):
         icons = preview_collections["icons"]
         layout = self.layout
+        col = layout.column()
         props_object = context.active_object.mio3uv
 
-        row = layout.row()
+        row = col.row()
         row.prop(props_object, "image_size", text="Size")
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.operator(
             "uv.mio3_guide_padding",
             icon_value=icons["OFFSET"].icon_id,
             depress=True if UV_OT_mio3_guide_padding.is_running() else False,
         )
-        row = layout.row()
+        row = col.row()
         row.label(text="Padding")
         row.alignment = "RIGHT"
         row.scale_x = 5

@@ -1,8 +1,11 @@
 import bpy
 import bmesh
 import time
+import sys
 from bpy.types import Context, Object, Operator, Panel
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
+
+DEBUG = bool("--python" in sys.argv)
 
 
 class Mio3UVPanel(Panel):
@@ -18,8 +21,8 @@ class Mio3UVDebug:
         self._start_time = time.time()
 
     def print_time(self):
-        # print("Time: {:.5f}".format(time.time() - self._start_time))
-        pass
+        if DEBUG:
+            print("Time: {:.5f}".format(time.time() - self._start_time))
 
 
 class Mio3UVOperator(Operator, Mio3UVDebug):
