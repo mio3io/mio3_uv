@@ -71,35 +71,39 @@ class MIO3UV_PT_align(Mio3UVPanel):
         layout = self.layout
         col = layout.column()
 
-        split = col.split(factor=0.5)
+        split = col.row(align=True)
         col_left = split.column()
-        col_left.scale_y = 1.05
+        # col_left.scale_y = 1.1
         grid = col_left.grid_flow(row_major=True, columns=3, even_columns=True, even_rows=True, align=True)
-        grid.label(text="")
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T_L"].icon_id).type = "MAX_Y_MIN_X"
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
-        grid.label(text="")
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T_R"].icon_id).type = "MAX_Y_MAX_X"
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
         dummy = grid.row(align=True)
         dummy.scale_x = 3
         dummy.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_CENTER"].icon_id).type = "CENTER"
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_R"].icon_id).type = "MAX_X"
-        grid.label(text="")
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B_L"].icon_id).type = "MIN_Y_MIN_X"
         grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B"].icon_id).type = "MIN_Y"
+        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B_R"].icon_id).type = "MIN_Y_MAX_X"
+
+        split.separator(factor=0.4)
+        split.scale_x = 0.8
 
         # Right
         col_right = split.column(align=True)
-        col_right.scale_y = 1.12
+        col_right.scale_y = 1.1
 
         row = col_right.row(align=True)
-        row.scale_x = 3
+        row.scale_x = 2.5
         row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_Y_CENTER"].icon_id).type = "ALIGN_Y"
         row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
         row = col_right.row(align=True)
-        row.scale_x = 3
+        row.scale_x = 2.5
         row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_X"].icon_id).axis = "X"
         row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
         row = col_right.row(align=True)
-        row.scale_x = 3
+        row.scale_x = 2.5
         row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_Y"].icon_id).axis="Y"
         row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
 

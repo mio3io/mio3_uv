@@ -31,6 +31,8 @@ translation_dict = {
         ("*", "Keep Boundary"): "境界を維持",
         ("*", "Original Position"): "元の位置",
         ("*", "Mirror U/V"): "ミラー U/V",
+        ("*", "UV Area"): "UV 領域",
+        ("*", "UV Bounds"): "UVの範囲",
         ("*", "Refers to the Mirror setting of the Mirror Modifier"): "ミラーモディファイアのミラーオフセット設定を参照します",
 
         # Unwrap
@@ -67,6 +69,10 @@ translation_dict = {
         ("*", "Edge Mode"): "辺モード",
         ("*", "Process each edge loops"): "エッジループ毎に処理する",
         ("*", "Process multiple edge loops as a single group"): "複数のエッジループをひとつのグループとして処理する",
+
+        ("*", "Align UVs to the target position"): "UVをターゲット位置に整列",
+        ("*", "Move UVs to the target position while keeping their relative spacing"): "UVをターゲット位置に移動（相対的な間隔を保持）",
+
 
         ("Operator", "Sort"): "ソート",
         ("Operator", "Align UVs"): "UVを整列",
