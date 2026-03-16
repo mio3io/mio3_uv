@@ -191,6 +191,16 @@ class UVIslandManager:
     def __post_init__(self):
         self.find_all_islands()
 
+    def get_average_center(self):
+        if not self.islands:
+            return Vector((0, 0))
+        total_center = sum((island.center for island in self.islands), Vector((0, 0)))
+        return total_center / len(self.islands)
+        # centers = [island.center for island in self.islands]
+        # avg_x = sum(center.x for center in centers) / len(centers)
+        # avg_y = sum(center.y for center in centers) / len(centers)
+        # return Vector((avg_x, avg_y))
+
     def find_all_islands(self):
         original_edge_seam = {}
         original_uv_select = {}

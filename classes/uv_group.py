@@ -55,6 +55,10 @@ class UVNodeGroup:
 
     selection_states: dict[int, bool] = field(default_factory=dict)
 
+    def __post_init__(self):
+        if self.nodes:
+            self.update_bounds()
+
     def __hash__(self):
         return hash((tuple(self.uv), self.vert))
 
@@ -262,6 +266,12 @@ class UVNodeManager:
                         stack.extend(node.neighbors - visited)
                 islands.append(island)
         return islands
+    
+    def get_average_center(self):
+        if not self.groups:
+            return Vector((0, 0))
+        total_center = sum((group.center for group in self.groups), Vector((0, 0)))
+        return total_center / len(self.groups)
 
     def remove_group(self, group_to_remove):
         if group_to_remove in self.groups:
