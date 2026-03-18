@@ -4,7 +4,7 @@ translation_dict = {
         ("*", "UV Sync Auto Select"): "選択同期で自動選択",
         ("*", "Legacy UI Layout"): "従来のUIレイアウト",
 
-        # Common
+        # 🍑 Common
         ("Operator", "Horizontal"): "水平",
         ("Operator", "Vertical"): "垂直",
         ("*", "UV Space"): "UV空間",
@@ -35,7 +35,7 @@ translation_dict = {
         ("*", "UV Bounds"): "UVの範囲",
         ("*", "Refers to the Mirror setting of the Mirror Modifier"): "ミラーモディファイアのミラーオフセット設定を参照します",
 
-        # Unwrap
+        # 🍑 Unwrap
         ("Operator", "UV Unwrap"): "UV展開",
         ("*", "Position and Scale"): "位置とサイズ",
         ("*", "Keep Position, Scale, Angle"): "位置・サイズ・角度の維持",
@@ -63,7 +63,7 @@ translation_dict = {
         ("*", "Clear Original Seam"): "元のシームをクリア",
         ("*", "Rear"): "背面",
 
-        # Align
+        # 🍑 Align
         ("*", "Fixed Mode"): "モード固定",
         ("*", "Island Mode"): "アイランドモード",
         ("*", "Edge Mode"): "辺モード",
@@ -86,15 +86,19 @@ translation_dict = {
         ("Operator", "Align Seam"): "シーム整列",
         ("*", "Align UVs of the same 3D vertex split by a seam"): "シームで別れた同じ3D頂点を持つUV座標を整列します",
         ("*", "Align the width of islands or UV groups"): "アイランドやUVグループの幅を揃える",
+
+        # Distribute
         ("Operator", "Distribute"): "分布",
-        ("*", "Distribute islands evenly"): "アイランドを等間隔に分布する",
         ("*", "Distribute"): "分布",
-        ("Operator", "Stretch Island"): "ストレッチ",
+        ("*", "Distribute islands evenly"): "アイランドを等間隔に分布する",
+        ("*", "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"): "アイランド:等間隔に分布\nUVグループ:等間隔またはジオメトリに基づくように分布",
+        ("*", "Factor for smoothing the distribution"): "分布を滑らかにするための係数",
+        ("*", "Number of iterations for distributing UVs"): "UVを分布するための反復回数",
+
         ("Operator", "Stretch"): "ストレッチ",
 
-        # Vertex
-        ("Operator", "Distribute UVs"): "UVを分布",
-        ("*", "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"): "アイランド:等間隔に分布\nUVグループ:等間隔またはジオメトリに基づくように分布",
+        # 🍑 Vertex
+
         ("Operator", "Circular"): "円形",
         ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("Operator", "Offset"): "オフセット",

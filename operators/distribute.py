@@ -25,7 +25,6 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
         name="Reference",
         items=[("BBOX", "Boundary", ""), ("CENTER", "Center", "")],
     )
-
     spacing: FloatProperty(
         name="Margin",
         default=0.01,
@@ -40,20 +39,21 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             ("EVEN", "Even", ""),
         ],
     )
-    iteration: IntProperty(
-        name="Iterations",
-        default=20,
-        min=1,
-        max=100,
-    )
     smooth_factor: FloatProperty(
         name="Smooth",
-        description="",
+        description="Factor for smoothing the distribution",
         default=0.01,
         min=0.0,
         max=1.0,
     )
-    straight: BoolProperty(name="Straight", default=True)
+    iteration: IntProperty(
+        name="Iterations",
+        description="Number of iterations for distributing UVs",
+        default=15,
+        min=1,
+        max=100,
+    )
+    straight: BoolProperty(name="Straighten", default=False)
 
     def invoke(self, context, event):
         self.objects = self.get_selected_objects(context)
@@ -73,9 +73,8 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
 
         if self.island:
             island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
-            if not island_manager.islands:
-                return {"CANCELLED"}
-            self.align_islands(island_manager)
+            if island_manager.islands:
+                self.align_islands(island_manager)
 
             island_manager.update_uvmeshes(True)
         else:
@@ -90,7 +89,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
                 if self.straight:
                     straight_uv_nodes(group, mode=self.align_uvs, keep_length=False, center=False)
                 else:
-                    self.adjust_edges(group)
+                    self.align_uv_nodes(group)
                 group.update_uvs()
             node_manager.update_uvmeshes()
 
@@ -103,9 +102,11 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             return
 
         axis = self.axis if self.axis != "AUTO" else island_manager.get_axis_uv()
+        axis_index = 0 if axis == "X" else 1
+        direction = 1 if axis == "X" else -1
 
         if axis == "X":
-            island_manager.islands.sort(key=lambda island: island.center[0], reverse=False)
+            island_manager.islands.sort(key=lambda island: island.center[0])
         else:
             island_manager.islands.sort(key=lambda island: island.center[1], reverse=True)
 
@@ -141,14 +142,14 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
                         island.move(offset)
                         current_pos -= island.height + space
             else:
-                start_center = first_island.center[0 if axis == "X" else 1]
-                end_center = last_island.center[0 if axis == "X" else 1]
+                start_center = first_island.center[axis_index]
+                end_center = last_island.center[axis_index]
                 total_space = abs(end_center - start_center)
                 equal_space = total_space / (total_islands - 1)
 
                 for i, island in enumerate(islands[1:-1], 1):
-                    target_center = start_center + (equal_space * i * (1 if axis == "X" else -1))
-                    current_center = island.center[0 if axis == "X" else 1]
+                    target_center = start_center + (equal_space * i * direction)
+                    current_center = island.center[axis_index]
                     offset_value = target_center - current_center
                     offset = Vector((offset_value, 0)) if axis == "X" else Vector((0, offset_value))
                     island.move(offset)
@@ -167,7 +168,7 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
                         current_pos -= island.height + self.spacing
                         island.move(offset)
             else:
-                get_center = lambda island: island.center[0 if axis == "X" else 1]
+                get_center = lambda island: island.center[axis_index]
                 current_pos = (
                     min(get_center(island) for island in islands)
                     if axis == "X"
@@ -178,22 +179,25 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
                     offset_value = current_pos - current_center
                     offset = Vector((offset_value, 0)) if axis == "X" else Vector((0, offset_value))
                     island.move(offset)
-                    current_pos += self.spacing * (1 if axis == "X" else -1)
+                    current_pos += self.spacing * direction
 
-    def adjust_edges(self, group: UVNodeGroup):
+    def align_uv_nodes(self, group: UVNodeGroup):
         align_uvs = self.align_uvs
         nodes = list(group.nodes)
+        node_set = set(nodes)
         node_indices = {node: i for i, node in enumerate(group.nodes)}
-        edges = []
+        edges = set()
 
         for node in nodes:
             for neighbor in node.neighbors:
-                if neighbor in nodes:
-                    edge = tuple(sorted([node_indices[node], node_indices[neighbor]]))
-                    if edge not in edges:
-                        edges.append(edge)
+                if neighbor in node_set:
+                    edge = tuple(sorted((node_indices[node], node_indices[neighbor])))
+                    edges.add(edge)
 
-        endpoints = [node for node in nodes if sum(1 for neighbor in node.neighbors if neighbor in nodes) == 1]
+        if not edges:
+            return
+
+        endpoints = {node for node in nodes if sum(1 for neighbor in node.neighbors if neighbor in node_set) == 1}
 
         if align_uvs == "GEOMETRY":
             total_3d_length = sum((nodes[edge[0]].vert.co - nodes[edge[1]].vert.co).length for edge in edges)
@@ -239,29 +243,18 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
             if max_movement < 0.00005:
                 break
 
-        for node in nodes:
-            for neighbor in node.neighbors:
-                if neighbor not in nodes:
-                    relative_pos = neighbor.uv - node.uv
-                    neighbor.uv = node.uv + relative_pos
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
 
         if self.island:
-            row = layout.row()
-            row.prop(self, "method", expand=True)
-            row = layout.row()
-            row.prop(self, "spacing", text="Spacing")
-            row.enabled = self.method == "FREE"
-            row = layout.row()
-            row.prop(self, "axis", expand=True)
-            row = layout.row()
-            row.prop(self, "reference", expand=True)
+            layout.row().prop(self, "method", expand=True)
+            layout.row().prop(self, "spacing", text="Spacing")
+            layout.row().prop(self, "axis", expand=True)
+            layout.row().prop(self, "reference", expand=True)
         else:
-            layout.prop(self, "align_uvs")
+            layout.row().prop(self, "align_uvs", expand=True)
             layout.prop(self, "smooth_factor")
             layout.prop(self, "iteration")
             layout.prop(self, "straight")
