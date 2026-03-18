@@ -5,12 +5,30 @@ from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes import UVIslandManager, Mio3UVOperator
 
+ver_5_1 = bpy.app.version >= (5, 1, 0)
+
 
 class MIO3UV_OT_rotate(Mio3UVOperator):
     bl_idname = "uv.mio3_rotate"
     bl_label = "Rotate"
     bl_description = "[Shift] {}".format(tt_iface("Individual Origins"))
     bl_options = {"REGISTER", "UNDO"}
+
+    def pivot_point_items(self, context):
+        if ver_5_1:
+            return [
+                ("BOUNDING_BOX_CENTER", "Center", "Bounding Box Center", "PIVOT_BOUNDBOX", 0),
+                ("MEDIAN_POINT", "Median Point", "Median Point", "PIVOT_MEDIAN", 1),
+                ("CURSOR", "2D Cursor", "2D Cursor", "PIVOT_CURSOR", 2),
+                ("INDIVIDUAL_ORIGINS", "Individual Origins", "Individual Origins", "PIVOT_INDIVIDUAL", 3),
+            ]
+        else:
+            return [
+                ("CENTER", "Center", "Bounding Box Center", "PIVOT_BOUNDBOX", 0),
+                ("MEDIAN", "Median Point", "Median Point", "PIVOT_MEDIAN", 1),
+                ("CURSOR", "2D Cursor", "2D Cursor", "PIVOT_CURSOR", 2),
+                ("INDIVIDUAL_ORIGINS", "Individual Origins", "Individual Origins", "PIVOT_INDIVIDUAL", 3),
+            ]
 
     angle: FloatProperty(
         name="Angle",
@@ -22,15 +40,9 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
     )
     pivot_point: EnumProperty(
         name="Pivot Point",
-        items=[
-            ("CENTER", "Center", "Bounding Box Center", "PIVOT_BOUNDBOX", 0),
-            ("MEDIAN", "Median Point", "Median Point", "PIVOT_MEDIAN", 1),
-            ("CURSOR", "2D Cursor", "2D Cursor", "PIVOT_CURSOR", 2),
-            ("INDIVIDUAL_ORIGINS", "Individual Origins", "Individual Origins", "PIVOT_INDIVIDUAL", 3),
-        ],
+        items=pivot_point_items,
     )
     island: BoolProperty(name="Island Mode", default=False)
-    
 
     def invoke(self, context, event):
         self.objects = self.get_selected_objects(context)
@@ -57,9 +69,9 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
             if not island_manager.islands:
                 return {"CANCELLED"}
 
-            if self.pivot_point == "MEDIAN":
+            if self.pivot_point in ("MEDIAN", "MEDIAN_POINT"):
                 center = self.get_median_point(island_manager.islands)
-            elif self.pivot_point == "CENTER":
+            elif self.pivot_point in ("CENTER", "BOUNDING_BOX_CENTER"):
                 center = self.get_islands_bounds(island_manager.islands)
             else:
                 center = context.space_data.cursor_location.copy()
