@@ -51,7 +51,8 @@ class UVNodeGroup:
 
     min_uv: Vector = field(default_factory=lambda: Vector((float("inf"), float("inf"))))
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
-    center: Vector = field(default_factory=lambda: Vector((0.0, 0.0)))
+    center: Vector = field(default_factory=lambda: Vector((0, 0)))
+    median_center: Vector = field(default_factory=lambda: Vector((0, 0)))
 
     selection_states: dict[int, bool] = field(default_factory=dict)
 
@@ -108,7 +109,8 @@ class UVNodeGroup:
         y_coords = [uv.y for uv in uv_points]
         self.min_uv = Vector((min(x_coords), min(y_coords)))
         self.max_uv = Vector((max(x_coords), max(y_coords)))
-        self.center = Vector((sum(x_coords) / len(x_coords), sum(y_coords) / len(y_coords)))
+        self.center = Vector(((self.min_uv.x + self.max_uv.x) / 2, (self.min_uv.y + self.max_uv.y) / 2))
+        self.median_center = Vector((sum(x_coords) / len(uv_points), sum(y_coords) / len(uv_points)))
 
     def get_ordered_nodes(self):
         "順序付けしたノードリストを取得"
@@ -266,12 +268,25 @@ class UVNodeManager:
                         stack.extend(node.neighbors - visited)
                 islands.append(island)
         return islands
-    
-    def get_average_center(self):
+
+    def get_median_center(self):
         if not self.groups:
             return Vector((0, 0))
-        total_center = sum((group.center for group in self.groups), Vector((0, 0)))
-        return total_center / len(self.groups)
+        total_count = sum(len(group.nodes) for group in self.groups)
+        if total_count == 0:
+            return Vector((0, 0))
+        sum_x = sum(group.median_center.x * len(group.nodes) for group in self.groups)
+        sum_y = sum(group.median_center.y * len(group.nodes) for group in self.groups)
+        return Vector((sum_x / total_count, sum_y / total_count))
+
+    def get_bbox_center(self):
+        if not self.groups:
+            return Vector((0, 0))
+        min_x = min(group.min_uv.x for group in self.groups)
+        min_y = min(group.min_uv.y for group in self.groups)
+        max_x = max(group.max_uv.x for group in self.groups)
+        max_y = max(group.max_uv.y for group in self.groups)
+        return Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
 
     def remove_group(self, group_to_remove):
         if group_to_remove in self.groups:

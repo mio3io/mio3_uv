@@ -3,7 +3,7 @@ import math
 from mathutils import Vector, Matrix
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 ver_5_1 = bpy.app.version >= (5, 1, 0)
 
@@ -18,14 +18,14 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         if ver_5_1:
             return [
                 ("BOUNDING_BOX_CENTER", "Center", "Bounding Box Center", "PIVOT_BOUNDBOX", 0),
-                ("MEDIAN_POINT", "Median Point", "Median Point", "PIVOT_MEDIAN", 1),
+                ("MEDIAN_POINT", "Median Point", "Median Point of UVs", "PIVOT_MEDIAN", 1),
                 ("CURSOR", "2D Cursor", "2D Cursor", "PIVOT_CURSOR", 2),
                 ("INDIVIDUAL_ORIGINS", "Individual Origins", "Individual Origins", "PIVOT_INDIVIDUAL", 3),
             ]
         else:
             return [
                 ("CENTER", "Center", "Bounding Box Center", "PIVOT_BOUNDBOX", 0),
-                ("MEDIAN", "Median Point", "Median Point", "PIVOT_MEDIAN", 1),
+                ("MEDIAN", "Median Point", "Median Point of UVs", "PIVOT_MEDIAN", 1),
                 ("CURSOR", "2D Cursor", "2D Cursor", "PIVOT_CURSOR", 2),
                 ("INDIVIDUAL_ORIGINS", "Individual Origins", "Individual Origins", "PIVOT_INDIVIDUAL", 3),
             ]
@@ -64,17 +64,17 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
+        center = context.space_data.cursor_location.copy()
+
         if self.island:
             island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
             if not island_manager.islands:
                 return {"CANCELLED"}
 
             if self.pivot_point in ("MEDIAN", "MEDIAN_POINT"):
-                center = self.get_median_point(island_manager.islands)
+                center = island_manager.get_median_center()
             elif self.pivot_point in ("CENTER", "BOUNDING_BOX_CENTER"):
-                center = self.get_islands_bounds(island_manager.islands)
-            else:
-                center = context.space_data.cursor_location.copy()
+                center = island_manager.get_bbox_center()
 
             angle = -self.angle
             cos_a = math.cos(angle)
@@ -85,7 +85,7 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
                 uv_layer = island.uv_layer
 
                 if self.pivot_point == "INDIVIDUAL_ORIGINS":
-                    center = island.center
+                    center = island.median_center
 
                 for face in island.faces:
                     for loop in face.loops:
@@ -97,32 +97,35 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
 
             island_manager.update_uvmeshes(True)
         else:
-            pivot_point = context.space_data.pivot_point
-            context.space_data.pivot_point = self.pivot_point
-            bpy.ops.transform.rotate(
-                value=self.angle,
-                orient_type="VIEW",
-                orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-                orient_matrix_type="VIEW",
-            )
-            context.space_data.pivot_point = pivot_point
+            node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
+            if not node_manager.groups:
+                return {"CANCELLED"}
+
+            if self.pivot_point in ("MEDIAN", "MEDIAN_POINT"):
+                center = node_manager.get_median_center()
+            elif self.pivot_point in ("CENTER", "BOUNDING_BOX_CENTER"):
+                center = node_manager.get_bbox_center()
+                
+            angle = -self.angle
+            cos_a = math.cos(angle)
+            sin_a = math.sin(angle)
+            rot_matrix = Matrix(((cos_a, -sin_a), (sin_a, cos_a)))
+
+            for group in node_manager.groups:
+                if self.pivot_point == "INDIVIDUAL_ORIGINS":
+                    center = group.median_center
+
+                for node in group.nodes:
+                    relative_pos = node.uv - center
+                    node.uv = rot_matrix @ relative_pos + center
+
+                group.update_bounds()
+                group.update_uvs()
+
+            node_manager.update_uvmeshes()
 
         self.print_time()
         return {"FINISHED"}
-
-    def get_median_point(self, islands):
-        sum_x = sum(island.center.x for island in islands)
-        sum_y = sum(island.center.y for island in islands)
-        count = len(islands)
-        return Vector((sum_x / count, sum_y / count))
-
-    def get_islands_bounds(self, islands):
-        min_x = min(island.min_uv.x for island in islands)
-        min_y = min(island.min_uv.y for island in islands)
-        max_x = max(island.max_uv.x for island in islands)
-        max_y = max(island.max_uv.y for island in islands)
-        return Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
-
 
 def register():
     bpy.utils.register_class(MIO3UV_OT_rotate)

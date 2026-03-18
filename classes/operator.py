@@ -50,17 +50,6 @@ class Mio3UVOperator(Operator, Mio3UVDebug):
     def restore_mesh_select_mode(context: Context, select_mode):
         context.tool_settings.mesh_select_mode = select_mode
 
-    @staticmethod
-    def store_uv_select_mode(context: Context, mode=None):
-        select_mode = context.tool_settings.uv_select_mode
-        if mode is not None:
-            context.tool_settings.uv_select_mode = mode
-        return select_mode
-
-    @staticmethod
-    def restore_uv_select_mode(context: Context, select_mode):
-        context.tool_settings.uv_select_mode = select_mode
-
     def check_selected_face_objects(self, objects: list[Object]) -> bool:
         if bpy.context.tool_settings.use_uv_select_sync:
             for obj in objects:

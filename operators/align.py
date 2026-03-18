@@ -94,8 +94,8 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
         if self.island and not self.edge_mode:
             island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
-            avg_center = island_manager.get_average_center()
-            self.avg_center = avg_center
+            uv_center = island_manager.get_bbox_center()
+            self.avg_center = uv_center
             if not island_manager.islands:
                 return {"CANCELLED"}
             for align_type in align_types:
@@ -109,8 +109,8 @@ class MIO3UV_OT_align(Mio3UVOperator):
             island_manager.update_uvmeshes(True)
         else:
             node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
-            avg_center = node_manager.get_average_center()
-            self.avg_center = avg_center
+            uv_center = node_manager.get_bbox_center()
+            self.avg_center = uv_center
             if not node_manager.groups:
                 return {"CANCELLED"}
             for align_type in align_types:

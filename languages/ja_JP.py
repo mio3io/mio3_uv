@@ -33,6 +33,7 @@ translation_dict = {
         ("*", "Mirror U/V"): "ミラー U/V",
         ("*", "UV Area"): "UV 領域",
         ("*", "UV Bounds"): "UVの範囲",
+        ("*", "Median Point of UVs"): "UVの中央値（重心）",
         ("*", "Refers to the Mirror setting of the Mirror Modifier"): "ミラーモディファイアのミラーオフセット設定を参照します",
 
         # 🍑 Unwrap

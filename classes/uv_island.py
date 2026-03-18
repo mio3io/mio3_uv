@@ -37,7 +37,8 @@ class UVIsland:
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
     width: float = field(init=False)
     height: float = field(init=False)
-    center: Vector = field(init=False, default_factory=lambda: Vector((0.0, 0.0)))
+    center: Vector = field(init=False, default_factory=lambda: Vector((0, 0)))
+    median_center: Vector = field(init=False, default_factory=lambda: Vector((0, 0)))
 
     selection_loops: dict[int, bool] = field(default_factory=dict)
     selection_uv_faces: dict[int, bool] = field(default_factory=dict)
@@ -82,11 +83,15 @@ class UVIsland:
             y_coords = [uv.y for uv in uv_points]
             self.min_uv = Vector((min(x_coords), min(y_coords)))
             self.max_uv = Vector((max(x_coords), max(y_coords)))
-            self.center = Vector((sum(x_coords) / len(x_coords), sum(y_coords) / len(y_coords)))
+            self.center = Vector(((self.min_uv.x + self.max_uv.x) / 2, (self.min_uv.y + self.max_uv.y) / 2))
+            self.median_center = Vector((sum(x_coords) / len(uv_points), sum(y_coords) / len(uv_points)))
             self.width = self.max_uv.x - self.min_uv.x
             self.height = self.max_uv.y - self.min_uv.y
         else:
+            self.min_uv = Vector((float("inf"), float("inf")))
+            self.max_uv = Vector((float("-inf"), float("-inf")))
             self.center = Vector((0, 0))
+            self.median_center = Vector((0, 0))
             self.width = self.height = 0
 
     def move(self, offset):
@@ -190,16 +195,6 @@ class UVIslandManager:
 
     def __post_init__(self):
         self.find_all_islands()
-
-    def get_average_center(self):
-        if not self.islands:
-            return Vector((0, 0))
-        total_center = sum((island.center for island in self.islands), Vector((0, 0)))
-        return total_center / len(self.islands)
-        # centers = [island.center for island in self.islands]
-        # avg_x = sum(center.x for center in centers) / len(centers)
-        # avg_y = sum(center.y for center in centers) / len(centers)
-        # return Vector((avg_x, avg_y))
 
     def find_all_islands(self):
         original_edge_seam = {}
@@ -325,6 +320,25 @@ class UVIslandManager:
                     islands.append(new_island)
 
         return islands
+
+    def get_median_center(self):
+        if not self.islands:
+            return Vector((0, 0))
+        total_count = sum(island.uv_count for island in self.islands)
+        if total_count == 0:
+            return Vector((0, 0))
+        sum_x = sum(island.median_center.x * island.uv_count for island in self.islands)
+        sum_y = sum(island.median_center.y * island.uv_count for island in self.islands)
+        return Vector((sum_x / total_count, sum_y / total_count))
+
+    def get_bbox_center(self):
+        if not self.islands:
+            return Vector((0, 0))
+        min_x = min(island.min_uv.x for island in self.islands)
+        min_y = min(island.min_uv.y for island in self.islands)
+        max_x = max(island.max_uv.x for island in self.islands)
+        max_y = max(island.max_uv.y for island in self.islands)
+        return Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
 
     def get_axis_3d(self):
         centers = [island.center_3d for island in self.islands]
