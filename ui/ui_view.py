@@ -107,7 +107,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row = col.row(align=True)
         row.operator(
             "uv.mio3_guide_padding",
-            icon_value=icons["OFFSET"].icon_id,
+            icon_value=icons["PADDING"].icon_id,
             depress=True if UV_OT_mio3_guide_padding.is_running() else False,
         )
         row = col.row()

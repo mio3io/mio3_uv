@@ -18,7 +18,6 @@ def register():
     icons.load("STRAIGHT", os.path.join(ICON_DIR, "straight.png"), "IMAGE")
     icons.load("HIGHLIGHT", os.path.join(ICON_DIR, "highlight.png"), "IMAGE")
 
-    icons.load("ISLAND", os.path.join(ICON_DIR, "island.png"), "IMAGE")
     icons.load("VERT", os.path.join(ICON_DIR, "vert.png"), "IMAGE")
 
     icons.load("ALIGN_EDGE", os.path.join(ICON_DIR, "align_edge.png"), "IMAGE")
@@ -73,6 +72,7 @@ def register():
     icons.load("FOOT_L", os.path.join(ICON_DIR, "foot_l.png"), "IMAGE")
     icons.load("FOOT_R", os.path.join(ICON_DIR, "foot_r.png"), "IMAGE")
     icons.load("BODY", os.path.join(ICON_DIR, "body.png"), "IMAGE")
+    icons.load("BUTTON", os.path.join(ICON_DIR, "button.png"), "IMAGE")
 
     icons.load("MIRROR_UV", os.path.join(ICON_DIR, "mirror_uv.png"), "IMAGE")
 
@@ -94,7 +94,6 @@ def register():
 
     icons.load("BOUND", os.path.join(ICON_DIR, "boundary.png"), "IMAGE")
     icons.load("SHUFFLE", os.path.join(ICON_DIR, "shuffle.png"), "IMAGE")
-    icons.load("SHAPE", os.path.join(ICON_DIR, "shape.png"), "IMAGE")
     icons.load("CIRCLE", os.path.join(ICON_DIR, "circle.png"), "IMAGE")
     icons.load("DIST_UVS", os.path.join(ICON_DIR, "dist_uvs.png"), "IMAGE")
     icons.load("OFFSET", os.path.join(ICON_DIR, "offset.png"), "IMAGE")
@@ -103,6 +102,8 @@ def register():
 
     icons.load("CUBE", os.path.join(ICON_DIR, "cube.png"), "IMAGE")
     icons.load("AUTO", os.path.join(ICON_DIR, "auto.png"), "IMAGE")
+
+    icons.load("PADDING", os.path.join(ICON_DIR, "padding.png"), "IMAGE")
 
     preview_collections["icons"] = icons
 

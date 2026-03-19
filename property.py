@@ -44,7 +44,7 @@ class MIO3UV_PG_scene(PropertyGroup):
             ("Y", "Y", "", icons["AXIS_Y"].icon_id, 1),
         ]
 
-    udim: BoolProperty(name="UDIM", default=False)
+    udim: BoolProperty(name="Use UV Tiles", description="Use UDIM UV Tiles", default=False)
 
     symmetry_center: EnumProperty(
         name="Center",

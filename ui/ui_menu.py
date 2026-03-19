@@ -23,7 +23,7 @@ class MIO3UV_PT_auto_body_parts_popover(Panel):
         row.operator("uv.mio3_body_preset", text="Foot R", icon_value=icons["FOOT_R"].icon_id).type = "FOOT_R"
         row.operator("uv.mio3_body_preset", text="Foot L", icon_value=icons["FOOT_L"].icon_id).type = "FOOT_L"
         row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text="Button").type = "BUTTON"
+        row.operator("uv.mio3_body_preset", text="Button", icon_value=icons["BUTTON"].icon_id).type = "BUTTON"
 
 
 class MIO3UV_PT_options_popover(Panel):

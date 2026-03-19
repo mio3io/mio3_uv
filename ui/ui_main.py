@@ -240,8 +240,8 @@ class MIO3UV_PT_select(Mio3UVPanel):
 classes = [
     MIO3UV_PT_main,
     MIO3UV_PT_align,
-    MIO3UV_PT_arrange,
     MIO3UV_PT_symmetry,
+    MIO3UV_PT_arrange,
     MIO3UV_PT_select,
 ]
 

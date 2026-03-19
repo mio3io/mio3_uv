@@ -3,6 +3,8 @@ translation_dict = {
         # Options
         ("*", "UV Sync Auto Select"): "選択同期で自動選択",
         ("*", "Legacy UI Layout"): "従来のUIレイアウト",
+        ("*", "Use UV Tiles"): "UVタイルを使用する",
+        ("*", "Use UDIM UV Tiles"): "UDIM形式のUVタイルを使用する",
 
         # 🍑 Common
         ("Operator", "Horizontal"): "水平",
