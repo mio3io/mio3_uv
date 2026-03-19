@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, EnumProperty
 
 
 class MIO3UV_preferences(AddonPreferences):
@@ -10,15 +10,25 @@ class MIO3UV_preferences(AddonPreferences):
     #     name="Legacy UI Layout",
     #     default=True,
     # )
-    auto_uv_sync: BoolProperty(
-        name="UV Sync Auto Select",
-        default=False,
+    auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False, options=set())
+    default_symmetry_priority: EnumProperty(
+        name="Symmetry Priority",
+        description="Specifies which side to use as the reference during automatic symmetry.",
+        items=[
+            ("NEGATIVE", "Negative", ""),
+            ("POSITIVE", "Positive", ""),
+        ],
+        default="POSITIVE",
+        options=set(),
     )
 
     def draw(self, context):
         layout = self.layout
-        # layout.prop(self, "ui_legacy")
-        layout.prop(self, "auto_uv_sync")
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        col = layout.column()
+        col.prop(self, "default_symmetry_priority")
+        col.prop(self, "auto_uv_sync")
 
 
 def register():

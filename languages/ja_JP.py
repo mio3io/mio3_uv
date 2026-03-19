@@ -5,6 +5,9 @@ translation_dict = {
         ("*", "Legacy UI Layout"): "従来のUIレイアウト",
         ("*", "Use UV Tiles"): "UVタイルを使用する",
         ("*", "Use UDIM UV Tiles"): "UDIM形式のUVタイルを使用する",
+        ("*", "Symmetry Priority "): "対称操作の優先",
+        ("*", "Specifies which side to use as the reference during automatic symmetry."): "自動対称化の際にどちら側を基準にするかを指定します",
+
 
         # 🍑 Common
         ("Operator", "Horizontal"): "水平",

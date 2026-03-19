@@ -6,6 +6,7 @@ from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from bmesh.types import BMesh
 from ..classes import Mio3UVOperator
 from ..utils import get_tile_co
+from ..globals import get_preferences
 from ..icons import preview_collections
 
 
@@ -200,6 +201,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         return self.direction
 
     def detect_selected_direction(self, uv_layer, sym_center_uv, face_centers, source_faces):
+        prefs = get_preferences()
         axis_3d_index = self.axis_3d_index
         positive_count = 0
         negative_count = 0
@@ -233,7 +235,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     negative_count += 1
 
         if positive_count == negative_count:
-            return "POSITIVE"
+            return prefs.default_symmetry_priority
 
         return "POSITIVE" if positive_count > negative_count else "NEGATIVE"
 
