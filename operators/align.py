@@ -129,6 +129,14 @@ class MIO3UV_OT_align(Mio3UVOperator):
         }
         return corner_map.get(align_type, [align_type])
 
+    def _group_current_value(self, group, alignment_type, axis):
+        coords = [node.uv.x if axis == 0 else node.uv.y for node in group.nodes]
+        if alignment_type in ["MAX_X", "MAX_Y"]:
+            return max(coords)
+        if alignment_type in ["MIN_X", "MIN_Y"]:
+            return min(coords)
+        return (min(coords) + max(coords)) / 2
+
     def align_uv_nodes(self, context, node_manager, alignment_type, align_to):
         if self.edge_mode and self.island:
             self.align_groups(context, node_manager.groups, alignment_type, align_to)
@@ -150,30 +158,17 @@ class MIO3UV_OT_align(Mio3UVOperator):
         if not groups:
             return
 
-        if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X"]:
+        if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X", "MAX_Y", "MIN_Y", "ALIGN_Y"]:
+            axis = 0 if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
             target = self.get_target_value(context, groups, alignment_type, align_to)
             for group in groups:
-                if alignment_type == "MAX_X":
-                    current = max(node.uv.x for node in group.nodes)
-                elif alignment_type == "MIN_X":
-                    current = min(node.uv.x for node in group.nodes)
-                else:
-                    current = (min(node.uv.x for node in group.nodes) + max(node.uv.x for node in group.nodes)) / 2
+                current = self._group_current_value(group, alignment_type, axis)
                 offset = target - current
                 for node in group.nodes:
-                    node.uv.x += offset
-        elif alignment_type in ["MAX_Y", "MIN_Y", "ALIGN_Y"]:
-            target = self.get_target_value(context, groups, alignment_type, align_to)
-            for group in groups:
-                if alignment_type == "MAX_Y":
-                    current = max(node.uv.y for node in group.nodes)
-                elif alignment_type == "MIN_Y":
-                    current = min(node.uv.y for node in group.nodes)
-                else:
-                    current = (min(node.uv.y for node in group.nodes) + max(node.uv.y for node in group.nodes)) / 2
-                offset = target - current
-                for node in group.nodes:
-                    node.uv.y += offset
+                    if axis == 0:
+                        node.uv.x += offset
+                    else:
+                        node.uv.y += offset
         elif alignment_type == "CENTER":
             self.align_groups(context, groups, "ALIGN_X", align_to)
             self.align_groups(context, groups, "ALIGN_Y", align_to)
@@ -181,30 +176,14 @@ class MIO3UV_OT_align(Mio3UVOperator):
     def align_nodes(self, context, nodes, alignment_type, align_to):
         uv_coords = [node.uv for node in nodes]
 
-        if alignment_type == "MAX_X":
+        if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X", "MAX_Y", "MIN_Y", "ALIGN_Y"]:
+            axis = 0 if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
             pos = self.get_target_value(context, uv_coords, alignment_type, align_to)
             for node in nodes:
-                node.uv.x = pos
-        elif alignment_type == "MIN_X":
-            pos = self.get_target_value(context, uv_coords, alignment_type, align_to)
-            for node in nodes:
-                node.uv.x = pos
-        elif alignment_type == "MAX_Y":
-            pos = self.get_target_value(context, uv_coords, alignment_type, align_to)
-            for node in nodes:
-                node.uv.y = pos
-        elif alignment_type == "MIN_Y":
-            pos = self.get_target_value(context, uv_coords, alignment_type, align_to)
-            for node in nodes:
-                node.uv.y = pos
-        elif alignment_type == "ALIGN_X":
-            avg_x = self.get_target_value(context, uv_coords, alignment_type, align_to)
-            for node in nodes:
-                node.uv.x = avg_x
-        elif alignment_type == "ALIGN_Y":
-            avg_y = self.get_target_value(context, uv_coords, alignment_type, align_to)
-            for node in nodes:
-                node.uv.y = avg_y
+                if axis == 0:
+                    node.uv.x = pos
+                else:
+                    node.uv.y = pos
         elif alignment_type == "CENTER":
             center_x = self.get_target_value(context, uv_coords, "ALIGN_X", align_to)
             center_y = self.get_target_value(context, uv_coords, "ALIGN_Y", align_to)
@@ -214,22 +193,14 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
     def align_islands(self, context, islands, align_type, align_to):
         if align_type in ["MAX_Y", "MIN_Y", "MIN_X", "MAX_X"]:
-            if align_type == "MAX_Y":
-                target = self.get_target_value(context, islands, align_type, align_to)
-                for island in islands:
-                    island.move(Vector((0, target - island.max_uv.y)))
-            elif align_type == "MIN_Y":
-                target = self.get_target_value(context, islands, align_type, align_to)
-                for island in islands:
-                    island.move(Vector((0, target - island.min_uv.y)))
-            elif align_type == "MIN_X":
-                target = self.get_target_value(context, islands, align_type, align_to)
-                for island in islands:
-                    island.move(Vector((target - island.min_uv.x, 0)))
-            elif align_type == "MAX_X":
-                target = self.get_target_value(context, islands, align_type, align_to)
-                for island in islands:
-                    island.move(Vector((target - island.max_uv.x, 0)))
+            target = self.get_target_value(context, islands, align_type, align_to)
+            axis = 0 if align_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
+
+            for island in islands:
+                uv = island.max_uv if align_type in ["MAX_X", "MAX_Y"] else island.min_uv
+                current = uv.x if axis == 0 else uv.y
+                offset = target - current
+                island.move(Vector((offset, 0)) if axis == 0 else Vector((0, offset)))
 
         elif align_type == "ALIGN_S":
             avg_center = sum((island.center for island in islands), Vector()) / len(islands)
@@ -295,6 +266,14 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
     def get_target_value(self, context, elements, alignment_type, align_to):
         axis = 0 if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
+        if align_to == "BBOX" and alignment_type in ["ALIGN_X", "ALIGN_Y"]:
+            min_type = "MIN_X" if axis == 0 else "MIN_Y"
+            max_type = "MAX_X" if axis == 0 else "MAX_Y"
+            min_values = self.collect_values(elements, axis, min_type)
+            max_values = self.collect_values(elements, axis, max_type)
+            if not min_values or not max_values:
+                return 0.0
+            return (min(min_values) + max(max_values)) / 2
 
         if align_to == "UV_AREA":
             if alignment_type in ["MAX_X", "MAX_Y"]:
