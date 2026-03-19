@@ -30,7 +30,9 @@ class MIO3UV_PT_Utility(Panel):
         row.operator("mio3uv.checker_map", icon_value=icons["COLOR_GRID"].icon_id)
         row.operator("mio3uv.checker_map_clear", text="", icon="CANCEL")
 
-        col.operator("mio3uv.checker_map_cleanup", text="Ceanup All Chaker Maps", icon="TRASH")
+        col.operator(
+            "mio3uv.checker_map_cleanup", text="Cleanup All Checker Maps", icon="TRASH"
+        )
 
 
 class MIO3UV_PT_UVMesh(Panel):
