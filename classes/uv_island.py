@@ -94,11 +94,12 @@ class UVIsland:
             self.median_center = Vector((0, 0))
             self.width = self.height = 0
 
-    def move(self, offset):
+    def move(self, offset, calc=False):
         for face in self.faces:
             for loop in face.loops:
                 loop[self.uv_layer].uv += offset
-        self.update_bounds()
+        if calc:
+            self.update_bounds()
 
     def store_selection(self):
         self.all_uv_count = 0
