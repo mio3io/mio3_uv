@@ -20,13 +20,15 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         symmetry_uv_axis = context.scene.mio3uv.symmetry_uv_axis
         if symmetry_uv_axis == "X":
             return [
-                ("NEGATIVE", "-X → +X", "", icons["SYMM_N_X"].icon_id, 0),
-                ("POSITIVE", "-X ← +X", "", icons["SYMM_P_X"].icon_id, 1),
+                ("NEGATIVE", "-X", "", icons["SYMM_N_X"].icon_id, 0),
+                ("AUTO", "Auto", "The direction is automatically determined based on the UV selection", icons["AUTO"].icon_id, 1),
+                ("POSITIVE", "+X", "", icons["SYMM_P_X"].icon_id, 2),
             ]
         else:
             return [
-                ("NEGATIVE", "-Y → +Y", "", icons["SYMM_N_Y"].icon_id, 0),
-                ("POSITIVE", "-Y ← +Y", "", icons["SYMM_P_Y"].icon_id, 1),
+                ("NEGATIVE", "-Y", "", icons["SYMM_N_Y"].icon_id, 0),
+                ("AUTO", "Auto", "The direction is automatically determined based on the UV selection", icons["AUTO"].icon_id, 1),
+                ("POSITIVE", "+Y", "", icons["SYMM_P_Y"].icon_id, 2),
             ]
 
     center: EnumProperty(
@@ -126,14 +128,14 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         find_sym_face_strict = self.find_sym_face_strict
 
         target_faces, source_faces, source_loops = self.find_targets(bm, use_uv_select_sync)
+        target_faces = list(target_faces)
 
-        kd = kdtree.KDTree(len(bm.faces))
+        kd = kdtree.KDTree(len(target_faces))
         face_centers = {}
-        for i, face in enumerate(bm.faces):
-            if face in target_faces:
-                face_center = face.calc_center_median()
-                face_centers[face] = face_center
-                kd.insert(face_center, i)
+        for i, face in enumerate(target_faces):
+            face_center = face.calc_center_median()
+            face_centers[face] = face_center
+            kd.insert(face_center, i)
         kd.balance()
 
         sym_center_uv = self.get_symmetry_center(context, uv_layer, source_loops)
@@ -141,7 +143,9 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
         target_verts = set()
         sym_positions = {}
+        sym_loop_maps = {}
         for face in target_faces:
+            sym_loop_maps[face] = {loop.vert: loop for loop in face.loops}
             for v in face.verts:
                 if v not in target_verts:
                     target_verts.add(v)
@@ -153,22 +157,25 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             center = face_centers[face]
             sym_center = get_symmetric_3d_point(center)
             if should_symmetrize(center, direction_3d, axis_3d):
-                sym_face = find_sym_face_strict(bm, kd, sym_center, sym_verts[face], threshold_sq)
+                sym_face = find_sym_face_strict(target_faces, kd, sym_center, sym_verts[face], threshold_sq)
                 if not sym_face:
                     continue
+                sym_face_loops = sym_loop_maps[sym_face]
                 for loop in face.loops:
                     loop_uv = loop[uv_layer]
                     sym_vert = min(sym_face.verts, key=lambda v: (v.co - sym_positions[loop.vert]).length_squared)
-                    for sym_loop in sym_face.loops:
-                        if sym_loop.vert == sym_vert:
-                            if sym_loop.uv_select_vert or loop.uv_select_vert:
-                                if stack:
-                                    sym_loop[uv_layer].uv = loop_uv.uv
-                                else:
-                                    sym_loop[uv_layer].uv = get_symmetric_uv_point(loop_uv.uv, sym_center_uv)
+                    sym_loop = sym_face_loops.get(sym_vert)
+                    if sym_loop and (sym_loop.uv_select_vert or loop.uv_select_vert):
+                        if stack:
+                            sym_loop[uv_layer].uv = loop_uv.uv
+                        else:
+                            sym_loop[uv_layer].uv = get_symmetric_uv_point(loop_uv.uv, sym_center_uv)
 
     # self.direction側にあるUV面がどの方向にあるか調べる
     def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, source_faces):
+        if self.direction == "AUTO":
+            return self.detect_selected_direction(uv_layer, sym_center_uv, face_centers, source_faces)
+
         if self.lock_direction:
             return self.direction
 
@@ -192,6 +199,44 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
         return self.direction
 
+    def detect_selected_direction(self, uv_layer, sym_center_uv, face_centers, source_faces):
+        axis_3d_index = self.axis_3d_index
+        positive_count = 0
+        negative_count = 0
+
+        if self.lock_direction:
+            uv_axis_index = self.uv_axis_index
+            for face in source_faces:
+                if self.is_flipped(face, uv_layer):
+                    continue
+
+                face_uv_center = Vector((0, 0))
+                for loop in face.loops:
+                    face_uv_center += loop[uv_layer].uv
+                face_uv_center /= len(face.loops)
+
+                direction = "POSITIVE" if face_uv_center[uv_axis_index] > sym_center_uv[uv_axis_index] else "NEGATIVE"
+                if direction == "POSITIVE":
+                    positive_count += 1
+                else:
+                    negative_count += 1
+        else:
+            for face in source_faces:
+                center = face_centers.get(face)
+                if center is None:
+                    continue
+
+                direction = "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
+                if direction == "POSITIVE":
+                    positive_count += 1
+                else:
+                    negative_count += 1
+
+        if positive_count == negative_count:
+            return "POSITIVE"
+
+        return "POSITIVE" if positive_count > negative_count else "NEGATIVE"
+
     @staticmethod
     def is_flipped(face, uv_layer):
         prev_uv = face.loops[-1][uv_layer].uv
@@ -212,9 +257,9 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
     # 対称面を見つける（頂点位置の一致も考慮する＠ミラーで三角の割が違い、近くに別の面があるケースを考慮）
     @staticmethod
-    def find_sym_face_strict(bm, kd, sym_center, sym_verts, threshold_sq):
-        potential_faces = [bm.faces[i] for (_, i, _) in kd.find_n(sym_center, 5)]
-        for pot_face in potential_faces:
+    def find_sym_face_strict(target_faces, kd, sym_center, sym_verts, threshold_sq):
+        for _, i, _ in kd.find_n(sym_center, 5):
+            pot_face = target_faces[i]
             if all(any((v.co - sv).length_squared < threshold_sq for sv in sym_verts) for v in pot_face.verts):
                 return pot_face
         return None
@@ -245,10 +290,17 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         source_verts = set()
         source_loops = set()
         for face in bm.faces:
-            if not face.select and not use_uv_select_sync:
-                continue
+            if use_uv_select_sync:
+                if face.hide:
+                    continue
+            else:
+                if not face.select:
+                    continue
 
             for loop in face.loops:
+                if loop.vert.hide:
+                    continue
+
                 if loop.uv_select_vert:
                     source_faces.add(face)
                     source_loops.add(loop)
@@ -261,7 +313,10 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             co_find = kd.find(symm_co)
             if co_find[2] < threshold:
                 symm_vert = bm.verts[co_find[1]]
-                symmetric_faces.update(symm_vert.link_faces)
+                if use_uv_select_sync:
+                    symmetric_faces.update(face for face in symm_vert.link_faces if not face.hide)
+                else:
+                    symmetric_faces.update(face for face in symm_vert.link_faces if face.select)
 
         target_face = symmetric_faces | source_faces
         return target_face, source_faces, source_loops
@@ -270,20 +325,20 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         layout = self.layout
         row = layout.row()
         row.prop(self, "center", expand=True)
-        split = layout.split(factor=0.35)
+        split = layout.split(factor=0.32)
         split.alignment = "RIGHT"
         split.label(text="Threshold")
         split.prop(self, "threshold", text="")
 
-        split = layout.split(factor=0.35)
+        split = layout.split(factor=0.32)
         split.alignment = "RIGHT"
         split.label(text="Direction")
         row = split.row()
         row.prop(self, "direction", expand=True)
-        split = layout.split(factor=0.35)
+        split = layout.split(factor=0.32)
         split.label(text="")
         split.prop(self, "lock_direction")
-        split = layout.split(factor=0.35)
+        split = layout.split(factor=0.32)
         split.label(text="")
         split.prop(self, "stack")
 

@@ -102,6 +102,7 @@ def register():
     icons.load("STRATCH", os.path.join(ICON_DIR, "stretch.png"), "IMAGE")
 
     icons.load("CUBE", os.path.join(ICON_DIR, "cube.png"), "IMAGE")
+    icons.load("AUTO", os.path.join(ICON_DIR, "auto.png"), "IMAGE")
 
     preview_collections["icons"] = icons
 

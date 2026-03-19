@@ -157,6 +157,7 @@ translation_dict = {
         ("*", "Fast Mode"): "高速モード",
         ("*", "Performs a simplified search for mirrored UVs\n(may not work correctly if multiple faces are too close together in 3D space"): "ミラーUVを簡易的に検索します\n3D空間で複数の面が近すぎると正しく検索できないことがあります",
         ("*", "Does not reference the orientation of the face in 3D space"): "3D空間の面の方向を参照しません",
+        ("*", "The direction is automatically determined based on the UV selection"): "UV選択に基づいて方向が自動的に決定されます",
 
         # Select
         ("Operator", "Select Half"): "半分を選択",
