@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import  EnumProperty
+from bpy.props import EnumProperty, BoolProperty
 from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..classes import UVIslandManager, Mio3UVOperator
@@ -36,19 +36,13 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         name="Direction",
         items=[
             ("BOTH", "Both", ""),
-            ("X", "Horizontal", ""),
-            ("Y", "Vertical", ""),
+            ("X", "X", ""),
+            ("Y", "Y", ""),
         ],
     )
-    keep: EnumProperty(
-        name="Keep",
-        description="Keep Position, Scale, Angle",
-        items=[
-            ("ALL", "All", ""),
-            ("INPLACE", "Position and Scale", ""),
-            ("NONE", "None", ""),
-        ],
-    )
+    keep_position: BoolProperty(name="Position", description="Keep UV position", default=True)
+    keep_scale: BoolProperty(name="Scale", description="Keep UV scale", default=True)
+    keep_rotate: BoolProperty(name="Angle", description="Keep UV angle", default=True)
 
     @classmethod
     def poll(cls, context):
@@ -68,122 +62,216 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
         axis = self.axis
+        keep_position = self.keep_position
+        keep_scale = self.keep_scale
+        keep_rotate = self.keep_rotate
+        use_keep = keep_position or keep_scale or keep_rotate
 
-        original_uvs = {}
+        original_axis_uvs = {}
+        original_keep_samples = {}
         for island in island_manager.islands:
             island.store_selection()
-            if self.keep == "NONE":
-                island.ajast = False
-            elif self.method == "MINIMUM_STRETCH":
-                island.ajast = True
-            else:
-                island.ajast = self.init_select_uvs(island)
+            island.inplace_flag = use_keep and self.should_restore(island)
 
-            original_uvs[island] = {}
             if axis != "BOTH":
-                original_uvs_island = original_uvs[island]
+                original_uvs_island = []
                 uv_layer = island.uv_layer
                 for face in island.faces:
                     for loop in face.loops:
                         if loop.uv_select_vert:
-                            original_uvs_island[loop] = loop[uv_layer].uv.copy()
+                            original_uvs_island.append((loop, loop[uv_layer].uv.copy()))
+                original_axis_uvs[island] = original_uvs_island
 
-            if island.ajast:
-                island.update_bounds()
-                island.original_center = island.center.copy()
-                island.original_width = island.width
-                island.original_height = island.height
+            if island.inplace_flag:
+                original_keep_samples[island] = self.capture_uv_samples(island)
 
         bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         for island in island_manager.islands:
             if axis != "BOTH":
-                original_uvs_island = original_uvs[island]
                 uv_layer = island.uv_layer
-                for face in island.faces:
-                    for loop in face.loops:
-                        if loop in original_uvs_island:
-                            curr_uv = loop[uv_layer].uv
-                            orig_uv = original_uvs_island[loop]
-                            if axis == "X":
-                                loop[uv_layer].uv = Vector((curr_uv.x, orig_uv.y))
-                            elif axis == "Y":
-                                loop[uv_layer].uv = Vector((orig_uv.x, curr_uv.y))
-            if island.ajast:
-                island.update_bounds()
-                offset = island.original_center - island.center
-                self.transform_island(island, offset)
-                if hasattr(island, "tmp_uv_list"):
-                    for loop in island.tmp_uv_list:
-                        loop.uv_select_vert = True
+                for loop, orig_uv in original_axis_uvs.get(island, ()):
+                    curr_uv = loop[uv_layer].uv
+                    if axis == "X":
+                        curr_uv.y = orig_uv.y
+                    elif axis == "Y":
+                        curr_uv.x = orig_uv.x
+            if island.inplace_flag:
+                base_transform = self.compute_transform(
+                    original_keep_samples[island],
+                    island.uv_layer,
+                )
+                transform = self.compose_transform(
+                    base_transform,
+                    keep_position,
+                    keep_scale,
+                    keep_rotate,
+                )
+                self.apply_transform(island, transform)
 
         island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}
 
-    def transform_island(self, island, offset):
-        original_size = Vector((island.original_width, island.original_height))
-        current_size = Vector((island.width, island.height))
-        original_center = island.center
+    def should_restore(self, island):
+        uv_layer = island.uv_layer
 
-        scale_x = original_size.x / current_size.x if current_size.x != 0 else 1
-        scale_y = original_size.y / current_size.y if current_size.y != 0 else 1
-        scale = (scale_x + scale_y) / 2
-
+        pinned_nodes = set()
         for face in island.faces:
             for loop in face.loops:
-                uv = loop[island.uv_layer]
-                uv.uv = (uv.uv - original_center) * scale + original_center
-                uv.uv += offset
+                loop_uv = loop[uv_layer]
+                if loop_uv.pin_uv:
+                    pinned_nodes.add((loop.vert.index, loop_uv.uv.x, loop_uv.uv.y))
 
-    def init_select_uvs(self, island):
-        island.tmp_uv_list = []
-
-        pinned_count = sum(1 for face in island.faces for loop in face.loops if loop[island.uv_layer].pin_uv)
-        if pinned_count >= 2:
+        if len(pinned_nodes) >= 2:
             return False
 
         deselect_count = island.all_uv_count - island.selection_uv_count
         if deselect_count >= 2:
             return False
 
+        return True
+
+    def capture_uv_samples(self, island):
+        uv_samples = []
         uv_layer = island.uv_layer
-        selected_nodes = {}
         for face in island.faces:
             for loop in face.loops:
-                loop_uv = loop[uv_layer]
-                if loop.uv_select_vert:
-                    key = (loop_uv.uv.x, loop_uv.uv.y, loop.vert.index)
-                    selected_nodes.setdefault(key, []).append((loop, loop_uv))
+                uv_samples.append((loop, loop[uv_layer].uv.copy()))
+        return uv_samples
 
-        sorted_keys = sorted(selected_nodes.keys())
-        nodes_to_process = []
-        if sorted_keys:
-            nodes_to_process.append(selected_nodes[sorted_keys[0]])
-            if len(sorted_keys) > 1:
-                nodes_to_process.append(selected_nodes[sorted_keys[-1]])
+    def compute_transform(self, uv_samples, uv_layer):
+        pair_count = len(uv_samples)
+        if pair_count < 2:
+            return {
+                "cos_term": 1.0,
+                "sin_term": 0.0,
+                "tx": 0.0,
+                "ty": 0.0,
+                "scale": 1.0,
+                "original_center": Vector((0.0, 0.0)),
+                "current_center": Vector((0.0, 0.0)),
+            }
 
-        additional_deselect_needed = 2 - deselect_count
-        for loop_uvs in nodes_to_process:
-            for loop, loop_uv in loop_uvs:
-                if self.keep == "ALL":
-                    loop.uv_select_vert = False
-                island.tmp_uv_list.append(loop)
-            additional_deselect_needed -= 1
-            if additional_deselect_needed == 0:
-                break
-        return additional_deselect_needed == 0
+        original_center = Vector((0.0, 0.0))
+        current_center = Vector((0.0, 0.0))
+        for loop, orig_uv in uv_samples:
+            curr_uv = loop[uv_layer].uv
+            original_center += orig_uv
+            current_center += curr_uv
+        count = float(pair_count)
+        original_center /= count
+        current_center /= count
+
+        denominator = 0.0
+        for loop, _ in uv_samples:
+            curr_uv = loop[uv_layer].uv
+            curr = curr_uv - current_center
+            denominator += curr.x * curr.x + curr.y * curr.y
+
+        if denominator < 1e-20:
+            return {
+                "cos_term": 1.0,
+                "sin_term": 0.0,
+                "tx": original_center.x - current_center.x,
+                "ty": original_center.y - current_center.y,
+                "scale": 1.0,
+                "original_center": original_center,
+                "current_center": current_center,
+            }
+
+        dot_sum = 0.0
+        cross_sum = 0.0
+        for loop, orig_uv in uv_samples:
+            curr_uv = loop[uv_layer].uv
+            orig = orig_uv - original_center
+            curr = curr_uv - current_center
+            dot_sum += curr.x * orig.x + curr.y * orig.y
+            cross_sum += curr.x * orig.y - curr.y * orig.x
+
+        cos_term = dot_sum / denominator
+        sin_term = cross_sum / denominator
+        scale = max((cos_term * cos_term + sin_term * sin_term) ** 0.5, 1e-8)
+
+        tx = original_center.x - (cos_term * current_center.x - sin_term * current_center.y)
+        ty = original_center.y - (sin_term * current_center.x + cos_term * current_center.y)
+
+        return {
+            "cos_term": cos_term,
+            "sin_term": sin_term,
+            "tx": tx,
+            "ty": ty,
+            "scale": scale,
+            "original_center": original_center,
+            "current_center": current_center,
+        }
+
+    def compose_transform(self, base_transform, keep_position, keep_scale, keep_rotate):
+        original_center = base_transform["original_center"]
+        current_center = base_transform["current_center"]
+
+        if keep_rotate:
+            scale_for_rotation = max(base_transform["scale"], 1e-8)
+            rot_cos = base_transform["cos_term"] / scale_for_rotation
+            rot_sin = base_transform["sin_term"] / scale_for_rotation
+        else:
+            rot_cos = 1.0
+            rot_sin = 0.0
+
+        scale = base_transform["scale"] if keep_scale else 1.0
+
+        cos_term = rot_cos * scale
+        sin_term = rot_sin * scale
+
+        if keep_position:
+            target_center = original_center
+        else:
+            target_center = current_center
+
+        tx = target_center.x - (cos_term * current_center.x - sin_term * current_center.y)
+        ty = target_center.y - (sin_term * current_center.x + cos_term * current_center.y)
+
+        return {
+            "cos_term": cos_term,
+            "sin_term": sin_term,
+            "tx": tx,
+            "ty": ty,
+        }
+
+    def apply_transform(self, island, transform):
+        cos_term = transform["cos_term"]
+        sin_term = transform["sin_term"]
+        tx = transform["tx"]
+        ty = transform["ty"]
+
+        if abs(cos_term - 1.0) < 1e-12 and abs(sin_term) < 1e-12 and abs(tx) < 1e-12 and abs(ty) < 1e-12:
+            return
+
+        uv_layer = island.uv_layer
+        for face in island.faces:
+            for loop in face.loops:
+                uv = loop[uv_layer].uv
+                x = uv.x
+                y = uv.y
+                uv.x = cos_term * x - sin_term * y + tx
+                uv.y = sin_term * x + cos_term * y + ty
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_decorate = False
         layout.use_property_split = True
+        layout.use_property_decorate = False
         layout.prop(self, "method")
-        layout.prop(self, "keep", text="Keep")
         layout.use_property_split = False
-        row = layout.row()
-        row.prop(self, "axis", expand=True)
+        split = layout.split(factor=0.3, align=True)
+        split.label(text="Keep")
+        row = split.row(align=True)
+        row.prop(self, "keep_position", toggle=True)
+        row.prop(self, "keep_scale", toggle=True)
+        row.prop(self, "keep_rotate", toggle=True)
+        split = layout.split(factor=0.3, align=True)
+        split.label(text="Direction")
+        split.row().prop(self, "axis", expand=True)
 
 
 def register():
