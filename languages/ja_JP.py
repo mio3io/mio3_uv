@@ -105,6 +105,10 @@ translation_dict = {
 
         # 🍑 Vertex
 
+        # Relax
+        ("*", "Strength of the relaxation effect"): "リラックスの効果の強さ",
+        ("*", "Number of relaxation iterations to perform"): "リラックスの反復回数",
+
         ("Operator", "Circular"): "円形",
         ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("Operator", "Offset"): "オフセット",
