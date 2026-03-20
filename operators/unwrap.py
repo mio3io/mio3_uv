@@ -62,10 +62,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
 
         axis = self.axis
-        keep_position = self.keep_position
-        keep_scale = self.keep_scale
-        keep_rotate = self.keep_rotate
-        use_keep = keep_position or keep_scale or keep_rotate
+        use_keep = self.keep_position or self.keep_scale or self.keep_rotate
 
         original_axis_uvs = {}
         original_keep_samples = {}
@@ -97,17 +94,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                     elif axis == "Y":
                         curr_uv.x = orig_uv.x
             if island.inplace_flag:
-                base_transform = self.compute_transform(
-                    original_keep_samples[island],
-                    island.uv_layer,
-                )
-                transform = self.compose_transform(
-                    base_transform,
-                    keep_position,
-                    keep_scale,
-                    keep_rotate,
-                )
-                self.apply_transform(island, transform)
+                self.apply_transform(island, original_keep_samples[island])
 
         island_manager.update_uvmeshes(True)
 
@@ -141,19 +128,12 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 uv_samples.append((loop, loop[uv_layer].uv.copy()))
         return uv_samples
 
-    def compute_transform(self, uv_samples, uv_layer):
+    def apply_transform(self, island, uv_samples):
         pair_count = len(uv_samples)
         if pair_count < 2:
-            return {
-                "cos_term": 1.0,
-                "sin_term": 0.0,
-                "tx": 0.0,
-                "ty": 0.0,
-                "scale": 1.0,
-                "original_center": Vector((0.0, 0.0)),
-                "current_center": Vector((0.0, 0.0)),
-            }
+            return
 
+        uv_layer = island.uv_layer
         original_center = Vector((0.0, 0.0))
         current_center = Vector((0.0, 0.0))
         for loop, orig_uv in uv_samples:
@@ -171,60 +151,36 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             denominator += curr.x * curr.x + curr.y * curr.y
 
         if denominator < 1e-20:
-            return {
-                "cos_term": 1.0,
-                "sin_term": 0.0,
-                "tx": original_center.x - current_center.x,
-                "ty": original_center.y - current_center.y,
-                "scale": 1.0,
-                "original_center": original_center,
-                "current_center": current_center,
-            }
+            base_cos_term = 1.0
+            base_sin_term = 0.0
+            scale = 1.0
+        else:
+            dot_sum = 0.0
+            cross_sum = 0.0
+            for loop, orig_uv in uv_samples:
+                curr_uv = loop[uv_layer].uv
+                orig = orig_uv - original_center
+                curr = curr_uv - current_center
+                dot_sum += curr.x * orig.x + curr.y * orig.y
+                cross_sum += curr.x * orig.y - curr.y * orig.x
 
-        dot_sum = 0.0
-        cross_sum = 0.0
-        for loop, orig_uv in uv_samples:
-            curr_uv = loop[uv_layer].uv
-            orig = orig_uv - original_center
-            curr = curr_uv - current_center
-            dot_sum += curr.x * orig.x + curr.y * orig.y
-            cross_sum += curr.x * orig.y - curr.y * orig.x
+            base_cos_term = dot_sum / denominator
+            base_sin_term = cross_sum / denominator
+            scale = max((base_cos_term * base_cos_term + base_sin_term * base_sin_term) ** 0.5, 1e-8)
 
-        cos_term = dot_sum / denominator
-        sin_term = cross_sum / denominator
-        scale = max((cos_term * cos_term + sin_term * sin_term) ** 0.5, 1e-8)
-
-        tx = original_center.x - (cos_term * current_center.x - sin_term * current_center.y)
-        ty = original_center.y - (sin_term * current_center.x + cos_term * current_center.y)
-
-        return {
-            "cos_term": cos_term,
-            "sin_term": sin_term,
-            "tx": tx,
-            "ty": ty,
-            "scale": scale,
-            "original_center": original_center,
-            "current_center": current_center,
-        }
-
-    def compose_transform(self, base_transform, keep_position, keep_scale, keep_rotate):
-        original_center = base_transform["original_center"]
-        current_center = base_transform["current_center"]
-
-        if keep_rotate:
-            scale_for_rotation = max(base_transform["scale"], 1e-8)
-            rot_cos = base_transform["cos_term"] / scale_for_rotation
-            rot_sin = base_transform["sin_term"] / scale_for_rotation
+        if self.keep_rotate:
+            scale_for_rotation = max(scale, 1e-8)
+            rot_cos = base_cos_term / scale_for_rotation
+            rot_sin = base_sin_term / scale_for_rotation
         else:
             rot_cos = 1.0
             rot_sin = 0.0
 
-        scale = base_transform["scale"] if keep_scale else 1.0
+        final_scale = scale if self.keep_scale else 1.0
+        cos_term = rot_cos * final_scale
+        sin_term = rot_sin * final_scale
 
-        cos_term = rot_cos * scale
-        sin_term = rot_sin * scale
-
-        if keep_position:
+        if self.keep_position:
             target_center = original_center
         else:
             target_center = current_center
@@ -232,23 +188,9 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         tx = target_center.x - (cos_term * current_center.x - sin_term * current_center.y)
         ty = target_center.y - (sin_term * current_center.x + cos_term * current_center.y)
 
-        return {
-            "cos_term": cos_term,
-            "sin_term": sin_term,
-            "tx": tx,
-            "ty": ty,
-        }
-
-    def apply_transform(self, island, transform):
-        cos_term = transform["cos_term"]
-        sin_term = transform["sin_term"]
-        tx = transform["tx"]
-        ty = transform["ty"]
-
         if abs(cos_term - 1.0) < 1e-12 and abs(sin_term) < 1e-12 and abs(tx) < 1e-12 and abs(ty) < 1e-12:
             return
 
-        uv_layer = island.uv_layer
         for face in island.faces:
             for loop in face.loops:
                 uv = loop[uv_layer].uv
