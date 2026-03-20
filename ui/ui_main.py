@@ -58,7 +58,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
 
 
 class MIO3UV_PT_align(Mio3UVPanel):
-    bl_label = "Align"
+    bl_label = "Layout"
     bl_idname = "MIO3UV_PT_align"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
@@ -122,12 +122,13 @@ class MIO3UV_PT_align(Mio3UVPanel):
         op.axis = "Z"
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_stretch", icon_value=icons["STRATCH"].icon_id)
-        row.operator("uv.mio3_align_seam", icon_value=icons["ALIGN_SEAM_Y"].icon_id)
-
-        row = col_rotate.row(align=True)
         row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
         row.operator("uv.mio3_distribute", icon_value=icons["DIST_X"].icon_id)
+
+        col = col.column()
+        row = col.row(align=True)
+        row.operator("uv.mio3_relax", icon_value=icons["RELAX"].icon_id)
+        row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
 
         row = col.row(align=True)
         row.label(text="Fixed Mode")
@@ -152,7 +153,7 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         col_vert = col.column(align=True)
         col_vert.scale_y = 1.05
         row = col_vert.row(align=True)
-        row.operator("uv.mio3_relax", icon_value=icons["RELAX"].icon_id)
+        row.operator("uv.mio3_align_seam", icon_value=icons["ALIGN_SEAM_Y"].icon_id)
         row.operator("uv.mio3_merge", icon_value=icons["VERT"].icon_id)
 
         row = col_vert.row(align=True)
@@ -166,7 +167,7 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         row.operator("uv.copy", text="Copy", icon_value=icons["COPY"].icon_id)
         row.operator("uv.mio3_paste", icon_value=icons["PASTE"].icon_id).mode = "PASTE"
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
+        row.operator("uv.mio3_stretch", icon_value=icons["STRATCH"].icon_id)
         row.operator("uv.mio3_shuffle_island", icon_value=icons["SHUFFLE"].icon_id)
 
         row = col_iisland.row(align=True)
