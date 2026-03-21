@@ -152,6 +152,7 @@ class UVNodeGroupCollection:
 class UVNodeManager:
     objects: list[Object]
     sync: bool = False
+    node_key_mode: str = "UV" # "UV" or "VERT_AND_UV"
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
@@ -181,9 +182,10 @@ class UVNodeManager:
         uv_nodes = {}
 
         def add_uv_node(loop):
-            key = self.get_key(loop[uv_layer].uv)
+            key = self.get_loop_key(loop, uv_layer)
+            uv_key = self.get_uv_key(loop[uv_layer].uv)
             if key not in uv_nodes:
-                uv_nodes[key] = UVNode(uv=Vector(key), vert=loop.vert, select=loop.uv_select_vert)
+                uv_nodes[key] = UVNode(uv=Vector(uv_key), vert=loop.vert, select=loop.uv_select_vert)
             else:
                 if loop.uv_select_vert and not uv_nodes[key].select:
                     uv_nodes[key].select = True
@@ -216,10 +218,11 @@ class UVNodeManager:
         else:
             target_faces = sub_faces if sub_faces else bm.faces
             for face in target_faces:
-                if face.select:
-                    for loop in face.loops:
-                        if loop.uv_select_vert:
-                            add_uv_node(loop)
+                if not self.sync and not face.select:
+                    continue
+                for loop in face.loops:
+                    if loop.uv_select_vert:
+                        add_uv_node(loop)
 
         # UVノードの隣接リストを作成
         for node in uv_nodes.values():
@@ -229,8 +232,8 @@ class UVNodeManager:
                 if not any(loop.uv_select_edge for loop in edge.link_loops):
                     continue
                 for loop in edge.link_loops:
-                    prev_key = self.get_key(loop[uv_layer].uv)
-                    next_key = self.get_key(loop.link_loop_next[uv_layer].uv)
+                    prev_key = self.get_loop_key(loop, uv_layer)
+                    next_key = self.get_loop_key(loop.link_loop_next, uv_layer)
                     if prev_key in uv_nodes and next_key in uv_nodes:
                         uv_nodes[prev_key].neighbors.add(uv_nodes[next_key])
                         uv_nodes[next_key].neighbors.add(uv_nodes[prev_key])
@@ -248,8 +251,14 @@ class UVNodeManager:
                     loop.uv_select_edge = select
 
     @staticmethod
-    def get_key(uv):
+    def get_uv_key(uv):
         return (round(uv.x, 6), round(uv.y, 6))
+
+    def get_loop_key(self, loop, uv_layer):
+        uv_key = self.get_uv_key(loop[uv_layer].uv)
+        if self.node_key_mode == "VERT_AND_UV":
+            return (loop.vert, uv_key)
+        return uv_key
 
     @staticmethod
     def group_uv_nodes(uv_nodes):
