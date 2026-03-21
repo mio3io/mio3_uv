@@ -63,13 +63,11 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
     threshold_uv = 0.00001
 
     def invoke(self, context, event):
-        self.center = context.scene.mio3uv.symmetry_center
         self.axis_uv = context.scene.mio3uv.symmetry_uv_axis
         self.axis_3d = context.scene.mio3uv.symmetry_3d_axis
         return self.execute(context)
 
     def check(self, context):
-        context.scene.mio3uv.symmetry_center = self.center
         self.axis_uv = context.scene.mio3uv.symmetry_uv_axis
         self.axis_3d = context.scene.mio3uv.symmetry_3d_axis
         return True
@@ -174,11 +172,17 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
     # self.direction側にあるUV面がどの方向にあるか調べる
     def check_uv_3d_direction(self, uv_layer, sym_center_uv, face_centers, source_faces):
-        if self.direction == "AUTO":
-            return self.detect_selected_direction(uv_layer, sym_center_uv, face_centers, source_faces)
+        prefs = get_preferences()
+        priority_direction = self.direction # 現在の優先
 
         if self.lock_direction:
             return self.direction
+
+        if self.direction == "AUTO":
+            direction = self.detect_selected_direction(uv_layer, sym_center_uv, face_centers, source_faces)
+            if direction:
+                return direction
+            priority_direction = prefs.default_symmetry_priority
 
         uv_axis_index = self.uv_axis_index
         axis_3d_index = self.axis_3d_index
@@ -192,16 +196,15 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                 face_uv_center += loop[uv_layer].uv
             face_uv_center /= len(face.loops)
 
-            if self.direction == "POSITIVE":
+            if priority_direction == "POSITIVE":
                 if face_uv_center[uv_axis_index] > sym_center_uv[uv_axis_index]:
                     return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
             else:
                 if face_uv_center[uv_axis_index] < sym_center_uv[uv_axis_index]:
                     return "POSITIVE" if center[axis_3d_index] > 0 else "NEGATIVE"
-        return self.direction
+        return priority_direction
 
     def detect_selected_direction(self, uv_layer, sym_center_uv, face_centers, source_faces):
-        prefs = get_preferences()
         axis_3d_index = self.axis_3d_index
         positive_count = 0
         negative_count = 0
@@ -235,7 +238,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
                     negative_count += 1
 
         if positive_count == negative_count:
-            return prefs.default_symmetry_priority
+            return None
 
         return "POSITIVE" if positive_count > negative_count else "NEGATIVE"
 
