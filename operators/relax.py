@@ -59,53 +59,48 @@ class MIO3UV_OT_relax(Mio3UVOperator):
             use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
             node_manager = UVNodeManager(self._objects, sync=use_uv_select_sync)
-
-            self.prepare_cache_data(node_manager)
-
+            keep_boundary = self.keep_boundary and self._selected_face
+            keep_pin = self.keep_pin
             for group in node_manager.groups:
+                node_index_map = {id(node): index for index, node in enumerate(group.nodes)}
+                fixed_nodes = [False] * len(group.nodes)
+                neighbor_cache = [[] for _ in group.nodes]
+                selection_boundary_cache = {}
+
+                for index, node in enumerate(group.nodes):
+                    if keep_boundary:
+                        is_boundary_node = any(
+                            loop.edge.is_boundary
+                            or loop.edge.seam
+                            or self.is_selection_boundary(loop.edge, selection_boundary_cache)
+                            for loop in node.loops
+                        )
+                    else:
+                        is_boundary_node = False
+
+                    is_pinned = any(loop[group.uv_layer].pin_uv for loop in node.loops) if keep_pin else False
+                    fixed_nodes[index] = len(node.neighbors) <= 1 or is_pinned or is_boundary_node
+
+                    if fixed_nodes[index]:
+                        continue
+
+                    node_co = node.vert.co
+                    weighted_neighbors = []
+                    for neighbor in node.neighbors:
+                        distance = max((neighbor.vert.co - node_co).length, 0.000001)
+                        weighted_neighbors.append((node_index_map[id(neighbor)], 1.0 / distance))
+                    neighbor_cache[index] = weighted_neighbors
+
+                group.relax_nodes = group.nodes
+                group.relax_fixed_nodes = fixed_nodes
+                group.relax_neighbor_cache = neighbor_cache
+
                 self.relax_group(group)
+
             node_manager.update_uvmeshes()
 
         self.print_time()
         return {"FINISHED"}
-
-    def prepare_cache_data(self, node_manager):
-        keep_boundary = self.keep_boundary and self._selected_face
-        keep_pin = self.keep_pin
-        for group in node_manager.groups:
-            nodes = list(group.nodes)
-            node_index_map = {id(node): index for index, node in enumerate(nodes)}
-            fixed_nodes = [False] * len(nodes)
-            neighbor_cache = [[] for _ in nodes]
-            selection_boundary_cache = {}
-
-            for index, node in enumerate(nodes):
-                if keep_boundary:
-                    is_boundary_node = any(
-                        loop.edge.is_boundary
-                        or loop.edge.seam
-                        or self.is_selection_boundary(loop.edge, selection_boundary_cache)
-                        for loop in node.loops
-                    )
-                else:
-                    is_boundary_node = False
-
-                is_pinned = any(loop[group.uv_layer].pin_uv for loop in node.loops) if keep_pin else False
-                fixed_nodes[index] = len(node.neighbors) <= 1 or is_pinned or is_boundary_node
-
-                if fixed_nodes[index]:
-                    continue
-
-                node_co = node.vert.co
-                weighted_neighbors = []
-                for neighbor in node.neighbors:
-                    distance = max((neighbor.vert.co - node_co).length, 0.000001)
-                    weighted_neighbors.append((node_index_map[id(neighbor)], 1.0 / distance))
-                neighbor_cache[index] = weighted_neighbors
-
-            group.relax_nodes = nodes
-            group.relax_fixed_nodes = fixed_nodes
-            group.relax_neighbor_cache = neighbor_cache
 
     @staticmethod
     def is_selection_boundary(edge, cache):
