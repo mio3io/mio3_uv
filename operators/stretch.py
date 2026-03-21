@@ -18,24 +18,24 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
     keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
 
     def invoke(self, context, event):
-        self.objects = self.get_selected_objects(context)
-        if not self.objects:
+        objects = self.get_selected_objects(context)
+        if not objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        selected_face = self.check_selected_face_objects(self.objects)
-        self.island = True if context.scene.mio3uv.island_mode else selected_face
+        face_selected = self.check_selected_face_objects(objects)
+        self.island = True if context.scene.mio3uv.island_mode else face_selected
 
         return self.execute(context)
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         if self.island:
-            im = UVIslandManager(self.objects, sync=use_uv_select_sync)
+            im = UVIslandManager(objects, sync=use_uv_select_sync)
             if not im.islands:
                 return {"CANCELLED"}
 
@@ -91,7 +91,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
             im.update_uvmeshes(True)
         else:
-            nm = UVNodeManager(self.objects, sync=use_uv_select_sync)
+            nm = UVNodeManager(objects, sync=use_uv_select_sync)
             if not nm.groups:
                 return {"CANCELLED"}
 

@@ -61,14 +61,14 @@ class MIO3UV_OT_select_half(Mio3UVOperator):
     def execute(self, context):
         self.start_time()
 
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         use_global = self.orientation == "GLOBAL"
         is_negative = self.direction.startswith("NEGATIVE")
         axis = self.direction[-1].lower()
 
-        for obj in self.objects:
+        for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
             if use_uv_select_sync and not bm.uv_select_sync_valid:
                 bm.uv_select_sync_from_mesh()
@@ -107,10 +107,10 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync, find_all=True)
 
         check_edges = self.check_edges
         source_island = None
@@ -174,11 +174,11 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        for obj in self.objects:
+        for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
             bm.select_mode = {"VERT"}
             bm.verts.ensure_lookup_table()
@@ -322,14 +322,14 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
     def execute(self, context):
         self.start_time()
 
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        check_selected = self.check_selected_face_objects(self.objects)
+        check_selected = self.check_selected_face_objects(objects)
         if not check_selected:
             bpy.ops.uv.select_all(action="SELECT")
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         use_seam = self.use_seam
         use_mesh_boundary = self.use_mesh_boundary
@@ -406,18 +406,18 @@ class MIO3UV_OT_select_edge_direction(Mio3UVOperator):
     def execute(self, context):
         self.start_time()
 
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             context.tool_settings.mesh_select_mode = (False, True, False)
         else:
             context.tool_settings.uv_select_mode = "EDGE"
 
-        check_selected = self.check_selected_face_objects(self.objects)
+        check_selected = self.check_selected_face_objects(objects)
         if not check_selected:
             bpy.ops.uv.select_all(action="SELECT")
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         axis = self.axis
 
@@ -489,10 +489,10 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        for obj in self.objects:
+        for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
 
@@ -535,12 +535,11 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        for obj in self.objects:
+        for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
-            bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
 
             if use_uv_select_sync and not bm.uv_select_sync_valid:

@@ -15,13 +15,13 @@ class MIO3UV_OT_paste(Mio3UVOperator):
     keep_position: BoolProperty(name="Keep Position", default=True)
 
     def execute(self, context):
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         if use_uv_select_sync:
             mesh_select_mode = self.store_mesh_select_mode(context, (False, False, True))
 
-        island_manager = UVIslandManager(self.objects)
+        island_manager = UVIslandManager(objects)
         if self.mode == "AUTO":
             bpy.ops.uv.copy()
 

@@ -45,8 +45,8 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
     island: BoolProperty(name="Island Mode", default=False)
 
     def invoke(self, context, event):
-        self.objects = self.get_selected_objects(context)
-        if not self.objects:
+        objects = self.get_selected_objects(context)
+        if not objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
@@ -55,19 +55,19 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         else:
             self.pivot_point = context.space_data.pivot_point
 
-        selected_face = self.check_selected_face_objects(self.objects)
-        self.island = True if context.scene.mio3uv.island_mode else selected_face
+        face_selected = self.check_selected_face_objects(objects)
+        self.island = True if context.scene.mio3uv.island_mode else face_selected
         return self.execute(context)
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         center = context.space_data.cursor_location.copy()
 
         if self.island:
-            island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+            island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
             if not island_manager.islands:
                 return {"CANCELLED"}
 
@@ -97,7 +97,7 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
 
             island_manager.update_uvmeshes(True)
         else:
-            node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
+            node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
             if not node_manager.groups:
                 return {"CANCELLED"}
 

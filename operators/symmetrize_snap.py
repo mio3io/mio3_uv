@@ -56,18 +56,18 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
     )
 
     def invoke(self, context, event):
-        self.objects = self.get_selected_objects(context)
-        if not self.objects:
+        objects = self.get_selected_objects(context)
+        if not objects:
             self.report({"WARNING"}, "No objects selected")
             return {"CANCELLED"}
         return self.execute(context)
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync, node_key_mode="VERT_AND_UV")
+        node_manager = UVNodeManager(objects, sync=use_uv_select_sync, node_key_mode="VERT_AND_UV")
         for group in node_manager.groups:
             uv_layer = group.uv_layer
             center_loops = [loop for node in group.nodes for loop in node.loops]

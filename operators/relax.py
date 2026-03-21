@@ -38,28 +38,28 @@ class MIO3UV_OT_relax(Mio3UVOperator):
     _lambda = 0.5
     _mu = -0.53
     _eps = 0.00001
-    _selected_face = False
+    _face_selected = False
 
     def invoke(self, context, event):
-        self._objects = self.get_selected_objects(context)
-        self._selected_face = self.check_selected_face_objects(self._objects)
+        objects = self.get_selected_objects(context)
+        self._face_selected = self.check_selected_face_objects(objects)
 
-        if not self._objects:
+        if not objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
         return self.execute(context)
 
     def execute(self, context):
         self.start_time()
-        self._objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         if self.method == "MINIMIZE":
             bpy.ops.uv.minimize_stretch(fill_holes=True, blend=0, iterations=self.iterations)
         else:
             use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-            node_manager = UVNodeManager(self._objects, sync=use_uv_select_sync)
-            keep_boundary = self.keep_boundary and self._selected_face
+            node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
+            keep_boundary = self.keep_boundary and self._face_selected
             keep_pin = self.keep_pin
             for group in node_manager.groups:
                 node_index_map = {id(node): index for index, node in enumerate(group.nodes)}
@@ -107,14 +107,14 @@ class MIO3UV_OT_relax(Mio3UVOperator):
         if edge in cache:
             return cache[edge]
 
-        has_selected_face = False
+        has_is_face_selected = False
         has_unselected_face = False
         for face in edge.link_faces:
             if face.select:
-                has_selected_face = True
+                has_is_face_selected = True
             else:
                 has_unselected_face = True
-            if has_selected_face and has_unselected_face:
+            if has_is_face_selected and has_unselected_face:
                 cache[edge] = True
                 return True
         cache[edge] = False

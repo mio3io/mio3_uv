@@ -50,16 +50,16 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
-        for obj in self.objects:
+        for obj in objects:
             if not obj.data.uv_layers:
                 bpy.ops.uv.unwrap(method=self.method, margin=0.001)
                 return {"FINISHED"}
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         axis = self.axis
         use_keep = self.keep_position or self.keep_scale or self.keep_rotate

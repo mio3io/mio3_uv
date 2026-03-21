@@ -18,12 +18,6 @@ ITEMS_TEXTURE_SIZE = [
 
 
 class MIO3UV_PG_scene(PropertyGroup):
-    def callback_update_exposure(self, context):
-        context.scene.view_settings.exposure = self.exposure
-
-    # auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False)
-    auto_uv_sync_skip: BoolProperty(name="UV Sync Auto Select Skip", default=False)
-
     edge_mode: BoolProperty(name="Edge Mode", description="Edge Mode", default=False)
     island_mode: BoolProperty(name="Island Mode", description="Island Mode", default=False)
 
@@ -37,29 +31,19 @@ class MIO3UV_PG_scene(PropertyGroup):
         default="AUTO",
     )
 
-    def symmetry_center_items(self, context):
+    udim: BoolProperty(name="Use UV Tiles", description="Use UDIM UV Tiles", default=False)
+
+    def symmetry_uv_axis_items(self, context):
         icons = preview_collections["icons"]
         return [
             ("X", "X", "", icons["AXIS_X"].icon_id, 0),
             ("Y", "Y", "", icons["AXIS_Y"].icon_id, 1),
         ]
 
-    udim: BoolProperty(name="Use UV Tiles", description="Use UDIM UV Tiles", default=False)
-
-    symmetry_center: EnumProperty(
-        name="Center",
-        items=[
-            ("GLOBAL", "Center", "Center"),
-            ("CURSOR", "Cursor", "2D Cursor"),
-            ("SELECT", "Selection", "Bounding Box Center"),
-        ],
-        default="GLOBAL",
-    )
-
     symmetry_uv_axis: EnumProperty(
         name="Axis",
         description="Axis of symmetry in UV space",
-        items=symmetry_center_items,
+        items=symmetry_uv_axis_items,
         default=0,
     )
     symmetry_3d_axis: EnumProperty(
@@ -84,6 +68,10 @@ class MIO3UV_PG_scene(PropertyGroup):
         default=False,
         description="Adjusts Exposure if image is set",
     )  # Dummy Property
+
+    def callback_update_exposure(self, context):
+        context.scene.view_settings.exposure = self.exposure
+
     exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
 
@@ -151,7 +139,14 @@ class MIO3UV_PG_object(PropertyGroup):
 
     padding_px: EnumProperty(
         name="Padding (px)",
-        items=[("AUTO", "Auto", ""), ("4", "4", ""), ("8", "8", ""), ("16", "16", ""), ("32", "32", ""), ("64", "64", "")],
+        items=[
+            ("AUTO", "Auto", ""),
+            ("4", "4", ""),
+            ("8", "8", ""),
+            ("16", "16", ""),
+            ("32", "32", ""),
+            ("64", "64", ""),
+        ],
         default="AUTO",
         update=callback_update_padding,
     )
@@ -189,12 +184,8 @@ class MIO3UV_PG_image(PropertyGroup):
 
 def callback_use_uv_select_sync():
     pref = get_preferences()
-    context = bpy.context
-    props_s = context.scene.mio3uv
     if pref.auto_uv_sync:
-        if not props_s.auto_uv_sync_skip:
-            bpy.ops.uv.mio3_auto_uv_sync("EXEC_DEFAULT")
-    props_s.auto_uv_sync_skip = False
+        bpy.ops.uv.mio3_auto_uv_sync("EXEC_DEFAULT")
 
 
 msgbus_owner = object()

@@ -60,13 +60,13 @@ class MIO3UV_OT_align(Mio3UVOperator):
         layout.prop(self, "align_to", expand=True)
 
     def invoke(self, context, event):
-        self.objects = self.get_selected_objects(context)
-        if not self.objects:
+        objects = self.get_selected_objects(context)
+        if not objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        selected_face = self.check_selected_face_objects(self.objects)
-        self.island = True if context.scene.mio3uv.island_mode else selected_face
+        face_selected = self.check_selected_face_objects(objects)
+        self.island = True if context.scene.mio3uv.island_mode else face_selected
 
         if context.scene.mio3uv.edge_mode:
             self.edge_mode = True
@@ -78,7 +78,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         align_to = self.align_to
         align_types = self.expand_align_types(self.type)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -93,7 +93,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             return {"FINISHED"}
 
         if self.island and not self.edge_mode:
-            island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+            island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
             uv_center = island_manager.get_bbox_center()
             self.avg_center = uv_center
             if not island_manager.islands:
@@ -108,7 +108,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
             island_manager.update_uvmeshes(True)
         else:
-            node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
+            node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
             uv_center = node_manager.get_bbox_center()
             self.avg_center = uv_center
             if not node_manager.groups:
@@ -129,7 +129,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
         }
         return corner_map.get(align_type, [align_type])
 
-    def _group_current_value(self, group, alignment_type, axis):
+    def group_current_value(self, group, alignment_type, axis):
         coords = [node.uv.x if axis == 0 else node.uv.y for node in group.nodes]
         if alignment_type in ["MAX_X", "MAX_Y"]:
             return max(coords)
@@ -162,7 +162,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             axis = 0 if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
             target = self.get_target_value(context, groups, alignment_type, align_to)
             for group in groups:
-                current = self._group_current_value(group, alignment_type, axis)
+                current = self.group_current_value(group, alignment_type, axis)
                 offset = target - current
                 for node in group.nodes:
                     if axis == 0:

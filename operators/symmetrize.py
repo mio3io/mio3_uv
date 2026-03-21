@@ -60,7 +60,8 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
     )
     merge: BoolProperty(name="Merge by Distance", description="Merge by Distance", default=True)
     stack: BoolProperty(name="Stack Mirror", description="Mirror along the axis and stack the UVs", default=False)
-    threshold_uv = 0.00001
+
+    _threshold_uv = 0.00001
 
     def invoke(self, context, event):
         self.axis_uv = context.scene.mio3uv.symmetry_uv_axis
@@ -74,11 +75,11 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         self.threshold_sq = self.threshold * self.threshold
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        if not self.objects:
+        if not objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
@@ -100,7 +101,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         self.uv_axis_index = 0 if self.axis_uv == "X" else 1
         self.axis_3d_index = {"X": 0, "Y": 1, "Z": 2}[self.axis_3d]
 
-        for obj in self.objects:
+        for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
             bm.verts.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
@@ -112,7 +113,7 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
             bmesh.update_edit_mesh(obj.data)
 
         if self.merge:
-            bpy.ops.uv.remove_doubles(threshold=self.threshold_uv)
+            bpy.ops.uv.remove_doubles(threshold=self._threshold_uv)
 
         self.print_time()
         return {"FINISHED"}

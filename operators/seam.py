@@ -60,13 +60,13 @@ class MIO3UV_OT_seam(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         view_matrix = context.space_data.region_3d.view_matrix
         view_direction = Vector((0, 0, -1)) @ view_matrix.to_3x3()
         view_position = view_matrix.inverted().translation
 
-        for obj in self.objects:
+        for obj in objects:
             world_matrix = obj.matrix_world
             bm = bmesh.from_edit_mesh(obj.data)
             selected_faces = {face for face in bm.faces if face.select}

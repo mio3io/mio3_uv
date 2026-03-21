@@ -21,7 +21,7 @@ class MIO3UV_OT_offset(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         if context.tool_settings.uv_select_mode in {"FACE", "ISLAND"}:
             context.tool_settings.uv_select_mode = "VERTEX"
@@ -30,7 +30,7 @@ class MIO3UV_OT_offset(Mio3UVOperator):
         if use_uv_select_sync:
             context.tool_settings.mesh_select_mode = (True, False, False)
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         for island in island_manager.islands:
             self.expand_uv_boundary_outward(island, self.offset)

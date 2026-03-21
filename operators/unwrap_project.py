@@ -18,12 +18,12 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
-        if not self.objects:
+        if not objects:
             return {"CANCELLED"}
 
-        for obj in self.objects:
+        for obj in objects:
             context.view_layer.objects.active = obj
             bpy.ops.object.mode_set(mode="EDIT")
 
@@ -51,10 +51,10 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
             # bpy.ops.uv.unwrap(method='ANGLE_BASED')
             bpy.ops.uv.pin(clear=True)
 
-        context.view_layer.objects.active = self.objects[0]
+        context.view_layer.objects.active = objects[0]
 
         if self.units:
-            island_manager = UVIslandManager(self.objects)
+            island_manager = UVIslandManager(objects)
             self.align_islands(island_manager.islands)
             island_manager.update_uvmeshes()
 

@@ -19,10 +19,7 @@ class MIO3UV_OT_merge(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
-
         bpy.ops.uv.remove_doubles(threshold=self.threshold)
-
         self.print_time()
         return {"FINISHED"}
 

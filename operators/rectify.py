@@ -60,14 +60,13 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        context.scene.mio3uv.auto_uv_sync_skip = True
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
         mesh_select_mode = context.tool_settings.mesh_select_mode[:]
         uv_select_mode = context.tool_settings.uv_select_mode
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         if use_uv_select_sync:
             context.tool_settings.mesh_select_mode = (True, False, False)

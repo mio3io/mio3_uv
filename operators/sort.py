@@ -126,7 +126,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
@@ -149,7 +149,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         self.calc_grid_x = grid_x
         self.calc_grid_y = grid_y
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 

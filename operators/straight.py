@@ -23,11 +23,11 @@ class MIO3UV_OT_straight(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
+        node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
 
         uv_select_mode = context.tool_settings.uv_select_mode
         if uv_select_mode == "FACE":

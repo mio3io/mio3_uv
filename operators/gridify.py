@@ -26,12 +26,12 @@ class MIO3UV_OT_grid(Mio3UVOperator):
     def execute(self, context):
         self.start_time()
         tool_settings = context.tool_settings
-        self.objects = self.get_selected_objects(context)
         use_uv_select_sync = tool_settings.use_uv_select_sync
+        objects = self.get_selected_objects(context)
 
         bpy.ops.uv.remove_doubles(threshold=1e-7)
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, extend=False)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync, extend=False)
         if not island_manager.islands:
             self.report({"WARNING"}, "No UV islands found")
             return {"CANCELLED"}

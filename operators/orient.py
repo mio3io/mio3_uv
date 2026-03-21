@@ -24,13 +24,13 @@ class MIO3UV_OT_orient(Mio3UVOperator):
     )
 
     def invoke(self, context, event):
-        self.objects = self.get_selected_objects(context)
-        if not self.objects:
+        objects = self.get_selected_objects(context)
+        if not objects:
             self.report({"WARNING"}, "Object is not selected")
             return {"CANCELLED"}
 
-        selected_face = self.check_selected_face_objects(self.objects)
-        self.island = True if context.scene.mio3uv.island_mode else selected_face
+        face_selected = self.check_selected_face_objects(objects)
+        self.island = True if context.scene.mio3uv.island_mode else face_selected
         return self.execute(context)
 
     def execute(self, context):
@@ -43,11 +43,11 @@ class MIO3UV_OT_orient(Mio3UVOperator):
 
         # UVグループ
 
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
         udim = context.scene.mio3uv.udim
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 

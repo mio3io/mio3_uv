@@ -10,11 +10,11 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        self.objects = self.get_selected_objects(context)
+        objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         islands = island_manager.islands
         selected_count = len(island_manager.islands)
