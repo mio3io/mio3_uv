@@ -2,6 +2,7 @@ import bpy
 from bpy.types import Panel
 from ..operators.view_padding import UV_OT_mio3_guide_padding
 from ..icons import preview_collections
+from ..globals import PADDING_AUTO
 
 
 class MIO3UV_PT_Utility(Panel):
@@ -117,7 +118,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row.prop(props_object, "padding_px", text="")
         row.scale_x = 1
         if props_object.padding_px == "AUTO":
-            row.label(text=str(props_object.calc_padding_px) + "px", translate=False)
+            row.label(text=str(PADDING_AUTO.get(props_object.image_size, 16)) + "px", translate=False)
         else:
             row.label(text="px", translate=False)
 

@@ -89,11 +89,6 @@ class MIO3UV_PG_scene(PropertyGroup):
 
 class MIO3UV_PG_object(PropertyGroup):
     def callback_update_padding(self, context):
-        if self.padding_px == "AUTO":
-            self.calc_padding_px = int(int(self.image_size) / 256 * 2)
-        else:
-            self.calc_padding_px = int(self.padding_px)
-
         view_padding.UV_OT_mio3_guide_padding.redraw(context)
 
     def callback_update_uvmesh_factor(self, context):
@@ -160,7 +155,6 @@ class MIO3UV_PG_object(PropertyGroup):
         default="AUTO",
         update=callback_update_padding,
     )
-    calc_padding_px: IntProperty(name="Calculated Padding (px)", default=16)
 
     uvmesh_factor: FloatProperty(name="Factor", default=1, min=0, max=1, update=callback_update_uvmesh_factor)
     uvmesh_size: FloatProperty(

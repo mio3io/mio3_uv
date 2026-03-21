@@ -5,6 +5,7 @@ from mathutils import Vector
 from bpy.types import SpaceImageEditor
 from gpu_extras.batch import batch_for_shader
 from ..classes import Mio3UVOperator
+from ..globals import PADDING_AUTO
 
 msgbus_owner = object()
 
@@ -23,15 +24,26 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     _handle = None
-    _shader = None
-
     _color = (0.1, 0.5, 1.0, 1)
-    _vertices = []
     _padding = 16 / 1024
+
+    _shader = None
+    _vertices = []
+    _excluded_ops = {
+        "UV_OT_select_linked",
+        "UV_OT_select_more",
+        "UV_OT_select_all",
+    }
 
     @classmethod
     def is_running(cls):
         return cls._handle is not None
+
+    @classmethod
+    def is_relevant_uv_operator(cls, bl_idname):
+        if bl_idname in cls._excluded_ops:
+            return False
+        return bl_idname.startswith(("TRANSFORM_OT_", "UV_OT_", "MIO3UV_"))
 
     @classmethod
     def remove_handler(cls):
@@ -48,14 +60,17 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         if is_running:
             return {"FINISHED"}
 
-        self._shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-
         cls._handle = SpaceImageEditor.draw_handler_add(self.draw_2d, ((self, context)), "WINDOW", "POST_PIXEL")
 
         def callback():
             cls.remove_handler()
 
         bpy.msgbus.subscribe_rna(key=(bpy.types.Object, "mode"), owner=msgbus_owner, args=(), notify=callback)
+
+        self._shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+        self._press_mouse_pos = None
+        self._mouse_pressed = False
+        self._prev_active_op_key = None
 
         self.update_state(context)
         self.update_mesh(context)
@@ -67,10 +82,33 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         cls = self.__class__
         if not cls.is_running():
             return {"FINISHED"}
-        if event.type in ("LEFTMOUSE", "RET") and event.value == "RELEASE":
+
+        active_op = getattr(context, "active_operator", None)
+        current_active_op_key = (active_op.bl_idname, id(active_op)) if active_op else None
+        is_new_active_op = current_active_op_key is not None and current_active_op_key != self._prev_active_op_key
+        is_relevant_active_op = bool(active_op and cls.is_relevant_uv_operator(active_op.bl_idname))
+
+        if is_new_active_op and is_relevant_active_op:
             self.update_mesh(context)
+            self._press_mouse_pos = None
+            self._mouse_pressed = False
+
+        if event.type == "LEFTMOUSE" and event.value == "PRESS":
+            self._press_mouse_pos = (event.mouse_region_x, event.mouse_region_y)
+            self._mouse_pressed = True
+
+        if event.type == "LEFTMOUSE" and event.value == "RELEASE":
+            self._mouse_pressed = False
+            self._press_mouse_pos = None
+
+        if event.type in ("ESC", "RIGHTMOUSE") and event.value == "PRESS":
+            self._press_mouse_pos = None
+            self._mouse_pressed = False
+
         if event.type == "Z" and event.ctrl and event.value == "RELEASE":
             self.update_mesh(context)
+
+        self._prev_active_op_key = current_active_op_key
         return {"PASS_THROUGH"}
 
     @classmethod
@@ -78,11 +116,6 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         cls.update_state(context)
         cls.update_mesh(context)
         reload_view(context)
-
-    @classmethod
-    def update_state(cls, context):
-        obj = context.active_object
-        cls._padding = int(obj.mio3uv.calc_padding_px) / int(obj.mio3uv.image_size)
 
     @classmethod
     def update_mesh(cls, context):
@@ -123,6 +156,15 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
                         cls._vertices.extend([padded_list[i], padded_list[j]])
 
             bm.free()
+
+    @classmethod
+    def update_state(cls, context):
+        obj = context.active_object
+        if obj.mio3uv.padding_px == "AUTO":
+            calc_padding_px = PADDING_AUTO.get(obj.mio3uv.image_size, 16)
+        else:
+            calc_padding_px = int(obj.mio3uv.padding_px)
+        cls._padding = int(calc_padding_px) / int(obj.mio3uv.image_size)
 
     @staticmethod
     def draw_2d(self, context):
