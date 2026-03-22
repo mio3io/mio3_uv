@@ -4,7 +4,7 @@ An easy-to-use, user-friendly UV editing support add-on for everyone from beginn
 
 To preview all the features currently implemented, please refer to the documentation page.
 
-Document [English](https://addon.mio3io.com/#/en/mio3uv/) / [Japanese](https://addon.mio3io.com/#/ja/mio3uv/)
+Documentation [English](https://addon.mio3io.com/#/en/mio3uv/) / [Japanese](https://addon.mio3io.com/#/ja/mio3uv/)
 
 ## Install (from Blender Extensions)
 
@@ -21,7 +21,7 @@ UV Image Editor > Sidebar > Mio3
 
 ## Features
 
-### Unwrap Operations
+### Unwrap Operators
 
 -   **Unwrap**: Unwrap while maintaining the original position, size, and angle as much as possible
 -   **Straight**: Unwrap so that the selected edge loop becomes a straight line
@@ -32,41 +32,36 @@ UV Image Editor > Sidebar > Mio3
 -   **Virtual Mirror**: Unwrap as if the mirror modifier is applied (v1.6)
 
 
-### Align Operations
+### Layout Operators
 
 -   **Align**: Align selected elements to the top, bottom, left, right, or XY center position
--   **Rotate Selected UVs**
--   **Flip Selected UVs**
 -   **Align Vertical/Horizontal Edges Only**: Align edge loops only in vertical or horizontal directions
--   **Align Axis**: Adjust the angle of the island so that the selected edge or island becomes vertical or horizontal
+-   **Align Axis**: Adjust to be vertical to the X or Y axis.
 -   **Orient World**: Align the angle of the island to the Z axis
--   **Align Seams**: Align UV coordinates with the same 3D vertex that are separated by seams
--   **Stretch**: Align the width of islands or UV groups (v1.3)
 -   **Sort**: Sort islands based on coordinates in 3D space
--   **Distribute**: Distribute islands and UVs evenly (v1.3)
+-   **Distribute**: Distribute islands evenly / Distribute UVs based on geometry/equalize edge length(v1.3)
 
-### Vertex Operations
+### Arrange Operators
 
 -   **Relax**: Smooth selected vertices
+-   **Stack**: Stack similar islands
 -   **Merge**: Merge nearby UVs in the selection
 -   **Circle**: Adjust to form a clean circle
 -   **Offset Boundary**: Expand or shrink the boundary UVs of the island
-
-### Island Operations
-
+-   **Align Seams**: Align UV coordinates with the same 3D vertex that are separated by seams
+-   **Stretch**: Align the width of islands or UV groups (v1.3)
 -   **Copy & Paste UV Shape**: Copy and paste the shape while maintaining the original position
--   **Stack**: Stack similar islands
 -   **Shuffle**: Randomly rearrange island positions. If two islands are selected, exchange their positions
 -   **Unfoldify**: Automatically layout selected islands based on their spatial relationships in 3D space
 -   **Average Island Scales**: Adjust size based on the mesh size in 3D space
 -   **Align Body Parts**: Identify body parts based on coordinates and align orientation and order for intuitive layout
 
-### Symmetry Operations
+### Symmetry Operators
 
 -   **Symmetry**: Symmetrize UVs based on 3D space symmetry
 -   **Snap to Symmetry**: Snap to the closest symmetrical UV
 
-### Selection Operations
+### Selection Operators
 
 -   **Select One Direction**: Select UVs on one side based on coordinates in 3D space
 -   **Mirror Selection**: Select symmetrical UVs based on coordinates in 3D space
@@ -84,6 +79,10 @@ UV Image Editor > Sidebar > Mio3
 ### Utils
 
 -   **Original Checker Map** Use a cute original checkered map. (using Geometry Nodes)
--   **Padding Guidelines** Display padding guidelines
+-   **Padding Overlay** Display padding overlay
 -   **UV to Mesh**: Set up a modifier for UV to Mesh. (using Geometry Nodes)(v1.2)
 -   **Exposure Adjustment**: Adjust the exposure of the texture when the UV mesh is difficult to see.(v1.2)
+
+## Credits
+
+This add-on includes code derived from and adapted from Blender source code, licensed under the GNU General Public License.
