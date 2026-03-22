@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
 from ..operators.view_padding import UV_OT_mio3_guide_padding
-from ..icons import preview_collections
+from ..icons import icons
 from ..globals import PADDING_AUTO
 
 
@@ -20,7 +20,6 @@ class MIO3UV_PT_Utility(Panel):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        icons = preview_collections["icons"]
         props_scene = context.scene.mio3uv
 
         split = col.split(factor=0.5)
@@ -28,7 +27,7 @@ class MIO3UV_PT_Utility(Panel):
         split.prop(props_scene, "checker_map_size", text="")
 
         row = col.row(align=True)
-        row.operator("mio3uv.checker_map", icon_value=icons["COLOR_GRID"].icon_id)
+        row.operator("mio3uv.checker_map", icon_value=icons.color_grid)
         row.operator("mio3uv.checker_map_clear", text="", icon="CANCEL")
 
         col.operator(
@@ -49,7 +48,6 @@ class MIO3UV_PT_UVMesh(Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        icons = preview_collections["icons"]
         props_object = context.active_object.mio3uv
 
         modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
@@ -60,13 +58,13 @@ class MIO3UV_PT_UVMesh(Panel):
             row.operator(
                 "mesh.mio3_uvmesh_control",
                 text="Mesh",
-                icon_value=icons["CUBE"].icon_id,
+                icon_value=icons.cube,
                 depress=False if props_object.uvmesh_factor > 0 else True,
             ).mode = "MESH"
             row.operator(
                 "mesh.mio3_uvmesh_control",
                 text="UV",
-                icon_value=icons["UNFOLDIFY"].icon_id,
+                icon_value=icons.unfoldify,
                 depress=True if props_object.uvmesh_factor > 0 else False,
             ).mode = "UV"
             col.row().prop(props_object, "uvmesh_factor", text="Factor")
@@ -97,7 +95,6 @@ class MIO3UV_PT_SubGuidePadding(Panel):
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
         col = layout.column()
         props_object = context.active_object.mio3uv
@@ -108,7 +105,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
         row = col.row(align=True)
         row.operator(
             "uv.mio3_guide_padding",
-            icon_value=icons["PADDING"].icon_id,
+            icon_value=icons.padding,
             depress=True if UV_OT_mio3_guide_padding.is_running() else False,
         )
         row = col.row()

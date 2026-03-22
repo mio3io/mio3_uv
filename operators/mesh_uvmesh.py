@@ -4,7 +4,7 @@ import math
 import bmesh
 from bpy.props import BoolProperty, EnumProperty
 from ..classes import Mio3UVOperator
-from ..icons import preview_collections
+from ..icons import icons
 
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
 NAME_NODE_GROUP_UV_MESH = "Mio3UVMesh"
@@ -171,13 +171,12 @@ def panel_tools(self, context):
     if context.active_object:
         modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
         if modifier:
-            icons = preview_collections["icons"]
             props_object = context.active_object.mio3uv
             row = self.layout.row(align=True)
             row.operator(
                 "mesh.mio3_uvmesh_control",
                 text="",
-                icon_value=icons["UNFOLDIFY"].icon_id if props_object.uvmesh_factor > 0 else icons["CUBE"].icon_id,
+                icon_value=icons.unfoldify if props_object.uvmesh_factor > 0 else icons.cube,
                 depress=True if props_object.uvmesh_factor > 0 else False,
             ).mode = "TOGGLE"
 

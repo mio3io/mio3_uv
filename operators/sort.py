@@ -2,7 +2,7 @@ import bpy
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
-from ..icons import preview_collections
+from ..icons import icons
 from ..classes import UVIslandManager, Mio3UVOperator
 
 
@@ -470,7 +470,6 @@ class MIO3UV_OT_sort(Mio3UVOperator):
                 row_start.y -= island_size.y
 
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
 
         layout.row().prop(self, "aling_mode", text="Align Mode", expand=True)
@@ -497,7 +496,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         split.label(text="Base Axis")
         split.row().prop(self, "axis", expand=True)
 
-        layout.label(text="Align", icon_value=icons["ALIGN_L"].icon_id)
+        layout.label(text="Align", icon_value=icons.align_left)
         layout.row().prop(self, "align_uv", expand=True)
         layout.row().prop(self, "alignment", expand=True)
 
@@ -508,11 +507,11 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             row = split.row(align=True)
             if self.grid_units == "PIXEL":
                 row.prop(self, "grid_x_px", text="")
-                row.prop(self, "grid_link", text="", icon="LINKED", toggle=True)
+                row.prop(self, "grid_link", text="", icon=icons.linked, toggle=True)
                 row.prop(self, "grid_y_px", text="")
             else:
                 row.prop(self, "grid_x", text="")
-                row.prop(self, "grid_link", text="", icon="LINKED", toggle=True)
+                row.prop(self, "grid_link", text="", icon=icons.linked, toggle=True)
                 row.prop(self, "grid_y", text="")
 
             split = layout.split(factor=0.3)

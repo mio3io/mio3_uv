@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Menu, Panel
-from ..icons import preview_collections
+from ..icons import icons
 from ..globals import get_preferences
 
 
@@ -9,7 +9,6 @@ class MIO3UV_PT_auto_body_parts_popover(Panel):
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "WINDOW"
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
 
         col = layout.column(align=True)
@@ -17,13 +16,13 @@ class MIO3UV_PT_auto_body_parts_popover(Panel):
         row.operator("uv.mio3_body_preset", text="Front Hair").type = "HAIR_F"
         row.operator("uv.mio3_body_preset", text="Back Hair").type = "HAIR_B"
         row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text="Hand R", icon_value=icons["HAND_R"].icon_id).type = "HAND_R"
-        row.operator("uv.mio3_body_preset", text="Hand L", icon_value=icons["HAND_L"].icon_id).type = "HAND_L"
+        row.operator("uv.mio3_body_preset", text="Hand R", icon_value=icons.hand_r).type = "HAND_R"
+        row.operator("uv.mio3_body_preset", text="Hand L", icon_value=icons.hand_l).type = "HAND_L"
         row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text="Foot R", icon_value=icons["FOOT_R"].icon_id).type = "FOOT_R"
-        row.operator("uv.mio3_body_preset", text="Foot L", icon_value=icons["FOOT_L"].icon_id).type = "FOOT_L"
+        row.operator("uv.mio3_body_preset", text="Foot R", icon_value=icons.foot_r).type = "FOOT_R"
+        row.operator("uv.mio3_body_preset", text="Foot L", icon_value=icons.foot_l).type = "FOOT_L"
         row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text="Button", icon_value=icons["BUTTON"].icon_id).type = "BUTTON"
+        row.operator("uv.mio3_body_preset", text="Button", icon_value=icons.button).type = "BUTTON"
 
 
 class MIO3UV_PT_options_popover(Panel):

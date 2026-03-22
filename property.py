@@ -1,9 +1,8 @@
 import bpy
-import bmesh
 from bpy.app.handlers import persistent
 from bpy.types import PropertyGroup
-from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty, PointerProperty
-from .icons import preview_collections
+from bpy.props import BoolProperty, FloatProperty, EnumProperty, PointerProperty
+from .icons import icons
 from .operators import view_padding
 from .globals import get_preferences
 
@@ -34,10 +33,9 @@ class MIO3UV_PG_scene(PropertyGroup):
     udim: BoolProperty(name="Use UV Tiles", description="Use UDIM UV Tiles", default=False)
 
     def symmetry_uv_axis_items(self, context):
-        icons = preview_collections["icons"]
         return [
-            ("X", "X", "", icons["AXIS_X"].icon_id, 0),
-            ("Y", "Y", "", icons["AXIS_Y"].icon_id, 1),
+            ("X", "X", "", icons.axis_x, 0),
+            ("Y", "Y", "", icons.axis_y, 1),
         ]
 
     symmetry_uv_axis: EnumProperty(

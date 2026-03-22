@@ -7,7 +7,7 @@ from bmesh.types import BMesh
 from ..classes import Mio3UVOperator
 from ..utils import get_tile_co
 from ..globals import get_preferences
-from ..icons import preview_collections
+from ..icons import icons
 
 
 class MIO3UV_OT_symmetrize(Mio3UVOperator):
@@ -17,19 +17,18 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def symmetry_direction_items(self, context: Context):
-        icons = preview_collections["icons"]
         symmetry_uv_axis = context.scene.mio3uv.symmetry_uv_axis
         if symmetry_uv_axis == "X":
             return [
-                ("NEGATIVE", "-X", "", icons["SYMM_N_X"].icon_id, 0),
-                ("AUTO", "Auto", "The direction is automatically determined based on the UV selection", icons["AUTO"].icon_id, 1),
-                ("POSITIVE", "+X", "", icons["SYMM_P_X"].icon_id, 2),
+                ("NEGATIVE", "-X", "", icons.symm_n_x, 0),
+                ("AUTO", "Auto", "The direction is automatically determined based on the UV selection", icons.auto, 1),
+                ("POSITIVE", "+X", "", icons.symm_p_x, 2),
             ]
         else:
             return [
-                ("NEGATIVE", "-Y", "", icons["SYMM_N_Y"].icon_id, 0),
-                ("AUTO", "Auto", "The direction is automatically determined based on the UV selection", icons["AUTO"].icon_id, 1),
-                ("POSITIVE", "+Y", "", icons["SYMM_P_Y"].icon_id, 2),
+                ("NEGATIVE", "-Y", "", icons.symm_n_y, 0),
+                ("AUTO", "Auto", "The direction is automatically determined based on the UV selection", icons.auto, 1),
+                ("POSITIVE", "+Y", "", icons.symm_p_y, 2),
             ]
 
     center: EnumProperty(

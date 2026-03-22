@@ -3,7 +3,7 @@ import bmesh
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..icons import preview_collections
+from ..icons import icons
 from ..classes import Mio3UVOperator
 
 
@@ -310,16 +310,15 @@ classes = [
 
 
 def menu_context(self, context):
-    icons = preview_collections["icons"]
     self.layout.operator(
         "uv.mio3_seam",
         text=MIO3UV_OT_seam.bl_label,
-        icon_value=icons["SEAM"].icon_id,
+        icon_value=icons.seam,
     )
     self.layout.operator(
         "uv.mio3_seam_boundary",
         text=MIO3UV_OT_seam_boundary.bl_label,
-        icon_value=icons["SEAM"].icon_id,
+        icon_value=icons.seam,
     )
 
 

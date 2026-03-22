@@ -1,5 +1,5 @@
 import bpy
-from ..icons import preview_collections
+from ..icons import icons
 from ..classes.operator import Mio3UVPanel
 from ..globals import get_preferences
 
@@ -12,11 +12,9 @@ class MIO3UV_PT_main(Mio3UVPanel):
     bl_category = "Mio3"
 
     def draw_header(self, context):
-        icons = preview_collections["icons"]
-        self.layout.label(icon_value=icons["UNWRAP2"].icon_id)
+        self.layout.label(icon_value=icons.unwrap)
 
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
         col = layout.column()
 
@@ -39,7 +37,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
         col_unwrap.scale_y = 1.1
 
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons["UNWRAP"].icon_id).axis = "BOTH"
+        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons.unwrap).axis = "BOTH"
         row.scale_x=0.14
         row.operator("uv.mio3_unwrap", text="X").axis = "X"
         row.operator("uv.mio3_unwrap", text="Y").axis = "Y"
@@ -50,11 +48,11 @@ class MIO3UV_PT_main(Mio3UVPanel):
         col_unwrap = col.column(align=True)
 
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_normalize", icon_value=icons["NORMALIZE"].icon_id)
-        row.operator("uv.mio3_straight", icon_value=icons["STRAIGHT"].icon_id).type = "GEOMETRY"
+        row.operator("uv.mio3_normalize", icon_value=icons.normalize)
+        row.operator("uv.mio3_straight", icon_value=icons.straight).type = "GEOMETRY"
         row = col_unwrap.row(align=True)
-        row.operator("uv.mio3_gridify", icon_value=icons["GRID"].icon_id)
-        row.operator("uv.mio3_rectify", icon_value=icons["RECTIFY"].icon_id)
+        row.operator("uv.mio3_gridify", icon_value=icons.grid)
+        row.operator("uv.mio3_rectify", icon_value=icons.rectify)
 
 
 class MIO3UV_PT_align(Mio3UVPanel):
@@ -66,7 +64,6 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
     def draw(self, context):
         # pref = get_preferences()
-        icons = preview_collections["icons"]
         # props_scene = context.scene.mio3uv
         layout = self.layout
         col = layout.column()
@@ -75,17 +72,17 @@ class MIO3UV_PT_align(Mio3UVPanel):
         col_left = split.column()
         # col_left.scale_y = 1.1
         grid = col_left.grid_flow(row_major=True, columns=3, even_columns=True, even_rows=True, align=True)
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T_L"].icon_id).type = "MAX_Y_MIN_X"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T"].icon_id).type = "MAX_Y"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_T_R"].icon_id).type = "MAX_Y_MAX_X"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_L"].icon_id).type = "MIN_X"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_top_left).type = "MAX_Y_MIN_X"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_top).type = "MAX_Y"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_top_right).type = "MAX_Y_MAX_X"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_left).type = "MIN_X"
         dummy = grid.row(align=True)
         dummy.scale_x = 3
-        dummy.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_CENTER"].icon_id).type = "CENTER"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_R"].icon_id).type = "MAX_X"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B_L"].icon_id).type = "MIN_Y_MIN_X"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B"].icon_id).type = "MIN_Y"
-        grid.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_B_R"].icon_id).type = "MIN_Y_MAX_X"
+        dummy.operator("uv.mio3_align", text="", icon_value=icons.align_center).type = "CENTER"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_right).type = "MAX_X"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_bottom_left).type = "MIN_Y_MIN_X"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_bottom).type = "MIN_Y"
+        grid.operator("uv.mio3_align", text="", icon_value=icons.align_bottom_right).type = "MIN_Y_MAX_X"
 
         split.separator(factor=0.4)
         split.scale_x = 0.8
@@ -96,39 +93,39 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
         row = col_right.row(align=True)
         row.scale_x = 2.5
-        row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_Y_CENTER"].icon_id).type = "ALIGN_Y"
-        row.operator("uv.mio3_align", text="", icon_value=icons["ALIGN_X_CENTER"].icon_id).type = "ALIGN_X"
+        row.operator("uv.mio3_align", text="", icon_value=icons.align_y_center).type = "ALIGN_Y"
+        row.operator("uv.mio3_align", text="", icon_value=icons.align_x_center).type = "ALIGN_X"
         row = col_right.row(align=True)
         row.scale_x = 2.5
-        row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_X"].icon_id).axis = "X"
-        row.operator("uv.mio3_align_edges", text="", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
+        row.operator("uv.mio3_align_edges", text="", icon_value=icons.edges_x).axis = "X"
+        row.operator("uv.mio3_align_edges", text="", icon_value=icons.edges_y).axis = "Y"
         row = col_right.row(align=True)
         row.scale_x = 2.5
-        row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_Y"].icon_id).axis="Y"
-        row.operator("uv.mio3_mirror", text="", icon_value=icons["FLIP_X"].icon_id).axis="X"
+        row.operator("uv.mio3_mirror", text="", icon_value=icons.flip_y).axis="Y"
+        row.operator("uv.mio3_mirror", text="", icon_value=icons.flip_x).axis="X"
 
         col_rotate = col.column(align=True)
         col_rotate.scale_y = 1.05
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_rotate", text="90", icon_value=icons["P90"].icon_id).angle = -1.5708
-        row.operator("uv.mio3_rotate", text="180", icon_value=icons["P180"].icon_id).angle = 3.14159
-        row.operator("uv.mio3_rotate", text="90", icon_value=icons["N90"].icon_id).angle = 1.5708
+        row.operator("uv.mio3_rotate", text="90", icon_value=icons.p90).angle = -1.5708
+        row.operator("uv.mio3_rotate", text="180", icon_value=icons.p180).angle = 3.14159
+        row.operator("uv.mio3_rotate", text="90", icon_value=icons.n90).angle = 1.5708
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_orient", icon_value=icons["ROTATE"].icon_id)
-        op = row.operator("uv.align_rotation", text="Orient World", icon_value=icons["Z"].icon_id)
+        row.operator("uv.mio3_orient", icon_value=icons.orient)
+        op = row.operator("uv.align_rotation", text="Orient World", icon_value=icons.z)
         op.method = "GEOMETRY"
         op.axis = "Z"
 
         row = col_rotate.row(align=True)
-        row.operator("uv.mio3_sort", icon_value=icons["ALIGN_X"].icon_id)
-        row.operator("uv.mio3_distribute", icon_value=icons["DIST_X"].icon_id)
+        row.operator("uv.mio3_sort", icon_value=icons.align_x)
+        row.operator("uv.mio3_distribute", icon_value=icons.dist_x)
 
         col = col.column()
         row = col.row(align=True)
-        row.operator("uv.mio3_relax", icon_value=icons["RELAX"].icon_id)
-        row.operator("uv.mio3_stack", icon_value=icons["STACK"].icon_id)
+        row.operator("uv.mio3_relax", icon_value=icons.relax)
+        row.operator("uv.mio3_stack", icon_value=icons.stack)
 
         row = col.row(align=True)
         row.label(text="Fixed Mode")
@@ -146,38 +143,37 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
     bl_category = "Mio3"
 
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
         col = layout.column()
 
         col_vert = col.column(align=True)
         col_vert.scale_y = 1.05
         row = col_vert.row(align=True)
-        row.operator("uv.mio3_align_seam", icon_value=icons["ALIGN_SEAM_Y"].icon_id)
-        row.operator("uv.mio3_merge", icon_value=icons["VERT"].icon_id)
+        row.operator("uv.mio3_align_seam", icon_value=icons.align_seam_y)
+        row.operator("uv.mio3_merge", icon_value=icons.merge)
 
         row = col_vert.row(align=True)
-        row.operator("uv.mio3_circle", icon_value=icons["CIRCLE"].icon_id)
-        row.operator("uv.mio3_offset", icon_value=icons["OFFSET"].icon_id)
+        row.operator("uv.mio3_circle", icon_value=icons.circle)
+        row.operator("uv.mio3_offset", icon_value=icons.offset)
 
         col_iisland = col.column(align=True)
         col_iisland.scale_y = 1.05
 
         row = col_iisland.row(align=True)
-        row.operator("uv.copy", text="Copy", icon_value=icons["COPY"].icon_id)
-        row.operator("uv.mio3_paste", icon_value=icons["PASTE"].icon_id).mode = "PASTE"
+        row.operator("uv.copy", text="Copy", icon_value=icons.copy)
+        row.operator("uv.mio3_paste", icon_value=icons.paste).mode = "PASTE"
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stretch", icon_value=icons["STRATCH"].icon_id)
-        row.operator("uv.mio3_shuffle_island", icon_value=icons["SHUFFLE"].icon_id)
+        row.operator("uv.mio3_stretch", icon_value=icons.stretch)
+        row.operator("uv.mio3_shuffle_island", icon_value=icons.shuffle)
 
         row = col_iisland.row(align=True)
-        row.operator("uv.mio3_stitch", icon_value=icons["STITCH"].icon_id)
-        row.operator("uv.mio3_unfoldify", icon_value=icons["UNFOLDIFY"].icon_id)
+        row.operator("uv.mio3_stitch", icon_value=icons.stitch)
+        row.operator("uv.mio3_unfoldify", icon_value=icons.unfoldify)
         
         row = col_iisland.row(align=True)
-        row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons["CUBE"].icon_id)
+        row.operator("uv.average_islands_scale", text="Average Island Scales", icon_value=icons.cube)
         row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", icon_value=icons["BODY"].icon_id).type = "AUTO"
+        row.operator("uv.mio3_body_preset", icon_value=icons.body).type = "AUTO"
         row.popover("MIO3UV_PT_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
 
 
@@ -189,13 +185,12 @@ class MIO3UV_PT_symmetry(Mio3UVPanel):
     bl_category = "Mio3"
 
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
         col = layout.column()
         row = col.row(align=True)
         row.scale_y = 1.15
-        row.operator("uv.mio3_symmetrize", icon_value=icons["SYMMETRIZE"].icon_id)
-        row.operator("uv.mio3_symmetry_snap", icon_value=icons["SNAP"].icon_id)
+        row.operator("uv.mio3_symmetrize", icon_value=icons.symmetrize)
+        row.operator("uv.mio3_symmetry_snap", icon_value=icons.snap)
         row_option = col.row()
         row = row_option.row(align=True)
         row.scale_x = 2
@@ -215,22 +210,21 @@ class MIO3UV_PT_select(Mio3UVPanel):
     bl_category = "Mio3"
 
     def draw(self, context):
-        icons = preview_collections["icons"]
         layout = self.layout
         col = layout.column()
 
         col2 = col.column(align=True)
         row = col2.row(align=True)
-        row.operator("uv.mio3_select_half", text="-X", icon_value=icons["X_N"].icon_id).direction = "NEGATIVE_X"
-        row.operator("uv.mio3_select_half", text="+X", icon_value=icons["X_P"].icon_id).direction = "POSITIVE_X"
+        row.operator("uv.mio3_select_half", text="-X", icon_value=icons.x_n)
+        row.operator("uv.mio3_select_half", text="+X", icon_value=icons.x_p)
         row.scale_x = 1.3
-        row.operator("uv.mio3_select_mirror3d", icon_value=icons["MIRROR_UV"].icon_id)
+        row.operator("uv.mio3_select_mirror3d", icon_value=icons.mirror_uv)
         row = col2.row(align=True)
-        row.operator("uv.mio3_select_similar", icon_value=icons["SIMILAR"].icon_id)
-        row.operator("uv.mio3_select_boundary", icon_value=icons["BOUND"].icon_id)
+        row.operator("uv.mio3_select_similar", icon_value=icons.similar)
+        row.operator("uv.mio3_select_boundary", icon_value=icons.boundary)
         row = col2.row(align=True)
-        row.operator("uv.mio3_select_edge_direction", text="Horizontal", icon_value=icons["EDGE_X"].icon_id).axis = "X"
-        row.operator("uv.mio3_select_edge_direction", text="Vertical", icon_value=icons["EDGE_Y"].icon_id).axis = "Y"
+        row.operator("uv.mio3_select_edge_direction", text="Horizontal", icon_value=icons.edges_x).axis = "X"
+        row.operator("uv.mio3_select_edge_direction", text="Vertical", icon_value=icons.edges_y).axis = "Y"
 
         row = col.row(align=True)
         row.label(text="Odd UVs")

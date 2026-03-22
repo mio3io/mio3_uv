@@ -2,7 +2,7 @@ import bpy
 import bmesh
 from bpy.props import BoolProperty, FloatProperty
 from mathutils import Vector
-from ..icons import preview_collections
+from ..icons import icons
 from ..classes import UVIslandManager, Mio3UVOperator
 
 
@@ -136,10 +136,9 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
 
 def menu_context(self, context):
-    icons = preview_collections["icons"]
     self.layout.separator()
     self.layout.operator(
-        MIO3UV_OT_unwrap_project.bl_idname, text="Projection Unwrap", icon_value=icons["UNWRAP"].icon_id
+        MIO3UV_OT_unwrap_project.bl_idname, text="Projection Unwrap", icon_value=icons.unwrap
     )
 
 
