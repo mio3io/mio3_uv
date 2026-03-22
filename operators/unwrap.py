@@ -85,6 +85,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         bpy.ops.uv.unwrap(method=self.method, margin=0.001)
 
         for island in island_manager.islands:
+            if island.inplace_flag:
+                self.apply_transform(island, original_keep_samples[island])
             if axis != "BOTH":
                 uv_layer = island.uv_layer
                 for loop, orig_uv in original_axis_uvs.get(island, ()):
@@ -93,8 +95,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                         curr_uv.y = orig_uv.y
                     elif axis == "Y":
                         curr_uv.x = orig_uv.x
-            if island.inplace_flag:
-                self.apply_transform(island, original_keep_samples[island])
 
         island_manager.update_uvmeshes(True)
 
