@@ -1,10 +1,16 @@
-import bpy
 import bmesh
 from mathutils import Vector
 from dataclasses import dataclass, field
 from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
-from functools import cached_property
+
+
+@dataclass
+class UVNodeObject:
+    obj: Object = None
+    bm: BMesh = None
+    uv_layer: BMLayerItem = None
+    uv_sync_valid: bool = False
 
 
 @dataclass
@@ -44,10 +50,7 @@ class UVNode:
 @dataclass
 class UVNodeGroup:
     nodes: list["UVNode"] = field(default_factory=list)
-    obj: Object = None
-    bm: BMesh = None
-    uv_layer: BMLayerItem = None
-    uv_sync_valid: bool = False
+    obj_info: UVNodeObject = None
 
     min_uv: Vector = field(default_factory=lambda: Vector((float("inf"), float("inf"))))
     max_uv: Vector = field(default_factory=lambda: Vector((float("-inf"), float("-inf"))))
@@ -60,6 +63,29 @@ class UVNodeGroup:
         if self.nodes:
             self.update_bounds()
 
+    @property
+    def obj(self):
+        return self.obj_info.obj
+
+    @property
+    def bm(self):
+        return self.obj_info.bm
+
+    @property
+    def uv_layer(self):
+        return self.obj_info.uv_layer
+    
+    @property
+    def uv_sync_valid(self):
+        return self.obj_info.uv_sync_valid
+
+    def has_selected_uv_face(self):
+        "グループ内にUV面選択が含まれるか調べる"
+        faces = {loop.face for node in self.nodes for loop in node.loops}
+        if self.obj_info.uv_sync_valid:
+            return any(face.select for face in faces)
+        return any(face.select and all(loop.uv_select_edge for loop in face.loops) for face in faces)
+
     def __hash__(self):
         return hash((tuple(self.uv), self.vert))
 
@@ -71,7 +97,7 @@ class UVNodeGroup:
     def update_uvs(self):
         "UVノードのUVを更新"
         for node in self.nodes:
-            node.update_uv(self.uv_layer)
+            node.update_uv( self.obj_info.uv_layer)
 
     def deselect_all_uv(self):
         "すべてのUVを非選択にする"
@@ -80,8 +106,8 @@ class UVNodeGroup:
                 loop.uv_select_vert = False
                 loop.uv_select_edge = False
 
-        if self.bm.uv_select_sync_valid:
-            self.bm.uv_select_flush(False)
+        if self.obj_info.bm.uv_select_sync_valid:
+            self.obj_info.bm.uv_select_flush(False)
 
     def store_selection(self):
         "現在のUV選択状態を保存"
@@ -99,8 +125,8 @@ class UVNodeGroup:
                     loop.uv_select_vert = uv_select_vert
                     loop.uv_select_edge = uv_select_edge
 
-        if self.bm.uv_select_sync_valid:
-            self.bm.uv_select_flush_mode()
+        if self.obj_info.bm.uv_select_sync_valid:
+            self.obj_info.bm.uv_select_flush_mode()
 
     def update_bounds(self):
         "バウンディングボックス・中心・min/maxを計算"
@@ -140,15 +166,6 @@ class UVNodeGroup:
 
 
 @dataclass
-class UVNodeGroupCollection:
-    obj: Object = None
-    bm: BMesh = None
-    uv_layer: BMLayerItem = None
-    uv_sync_valid: bool = False
-    groups: list[UVNodeGroup] = field(default_factory=list)
-
-
-@dataclass
 class UVNodeManager:
     objects: list[Object]
     sync: bool = False
@@ -157,11 +174,8 @@ class UVNodeManager:
     bm: BMesh = None
     uv_layer: BMLayerItem = None
 
-    collections: list[UVNodeGroupCollection] = field(default_factory=list)
-
-    @cached_property
-    def groups(self) -> list[UVNodeGroup]:
-        return [item for colle in self.collections for item in colle.groups]
+    object_colle: list[UVNodeObject] = field(default_factory=list)
+    groups: list[UVNodeGroup] = field(default_factory=list)
 
     def __post_init__(self):
         for obj in self.objects:
@@ -172,11 +186,12 @@ class UVNodeManager:
             if self.sync and not uv_sync_valid:
                 bm.uv_select_sync_from_mesh()
 
-            if uv_groups := self.find_uv_nodes(bm, uv_layer, uv_sync_valid):
-                colle = UVNodeGroupCollection(obj, bm, uv_layer, uv_sync_valid)
-                self.collections.append(colle)
-                for group in uv_groups:
-                    colle.groups.append(UVNodeGroup(group, obj, bm, uv_layer))
+            obj_info = UVNodeObject(obj, bm, uv_layer, uv_sync_valid)
+            self.object_colle.append(obj_info)
+
+            uv_groups = self.find_uv_nodes(bm, uv_layer, uv_sync_valid)
+            for group in uv_groups:
+                self.groups.append(UVNodeGroup(group, obj_info))
 
     def find_uv_nodes(self, bm, uv_layer, uv_sync_valid, sub_faces=None):
         uv_nodes = {}
@@ -241,25 +256,6 @@ class UVNodeManager:
         # 接続ごとにグループ分けして返す
         return self.group_uv_nodes(list(uv_nodes.values()))
 
-    def uv_select_set_all(self, select):
-        for colle in self.collections:
-            bm = colle.bm
-            for face in bm.faces:
-                face.uv_select = select
-                for loop in face.loops:
-                    loop.uv_select_vert = select
-                    loop.uv_select_edge = select
-
-    @staticmethod
-    def get_uv_key(uv):
-        return (round(uv.x, 6), round(uv.y, 6))
-
-    def get_loop_key(self, loop, uv_layer):
-        uv_key = self.get_uv_key(loop[uv_layer].uv)
-        if self.node_key_mode == "VERT_AND_UV":
-            return (loop.vert, uv_key)
-        return uv_key
-
     @staticmethod
     def group_uv_nodes(uv_nodes):
         visited = set()
@@ -278,42 +274,62 @@ class UVNodeManager:
                 islands.append(island)
         return islands
 
+    @staticmethod
+    def get_uv_key(uv):
+        return (round(uv.x, 6), round(uv.y, 6))
+
+    def get_loop_key(self, loop, uv_layer):
+        uv_key = self.get_uv_key(loop[uv_layer].uv)
+        if self.node_key_mode == "VERT_AND_UV":
+            return (loop.vert, uv_key)
+        return uv_key
+
     def get_median_center(self):
-        if not self.groups:
+        if not (groups := self.groups):
             return Vector((0, 0))
-        total_count = sum(len(group.nodes) for group in self.groups)
+        total_count = sum(len(group.nodes) for group in groups)
         if total_count == 0:
             return Vector((0, 0))
-        sum_x = sum(group.median_center.x * len(group.nodes) for group in self.groups)
-        sum_y = sum(group.median_center.y * len(group.nodes) for group in self.groups)
+        sum_x = sum(group.median_center.x * len(group.nodes) for group in groups)
+        sum_y = sum(group.median_center.y * len(group.nodes) for group in groups)
         return Vector((sum_x / total_count, sum_y / total_count))
 
     def get_bbox_center(self):
-        if not self.groups:
+        if not (groups := self.groups):
             return Vector((0, 0))
-        min_x = min(group.min_uv.x for group in self.groups)
-        min_y = min(group.min_uv.y for group in self.groups)
-        max_x = max(group.max_uv.x for group in self.groups)
-        max_y = max(group.max_uv.y for group in self.groups)
+        min_x = min(group.min_uv.x for group in groups)
+        min_y = min(group.min_uv.y for group in groups)
+        max_x = max(group.max_uv.x for group in groups)
+        max_y = max(group.max_uv.y for group in groups)
         return Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
 
+    def uv_select_set_all(self, select):
+        for obj_info in self.object_colle:
+            bm = obj_info.bm
+            for face in bm.faces:
+                face.uv_select = select
+                for loop in face.loops:
+                    loop.uv_select_vert = select
+                    loop.uv_select_edge = select
+
     def remove_group(self, group_to_remove):
-        if group_to_remove in self.groups:
-            self.groups.remove(group_to_remove)
+        for group in self.groups:
+            if group is group_to_remove:
+                self.groups.remove(group)
+                break
 
     def update_uvmeshes(self, mesh_sync=False):
-        for colle in self.collections:
-            if self.sync and mesh_sync and colle.bm.uv_select_sync_valid:
-                colle.bm.uv_select_sync_to_mesh()
-            bmesh.update_edit_mesh(colle.obj.data)
+        for obj_info in self.object_colle:
+            if self.sync and mesh_sync and obj_info.uv_sync_valid:
+                obj_info.bm.uv_select_sync_to_mesh()
+            bmesh.update_edit_mesh(obj_info.obj.data)
 
     @classmethod
     def from_island(cls, island, sync=False, sub_faces=None):
         manager = cls(objects=[], sync=sync)
         uv_sync_valid = island.uv_sync_valid
-        if uv_groups := manager.find_uv_nodes(island.bm, island.uv_layer, uv_sync_valid, sub_faces=sub_faces):
-            colle = UVNodeGroupCollection(island.obj, island.bm, island.uv_layer, uv_sync_valid)
-            manager.collections.append(colle)
-            for group in uv_groups:
-                colle.groups.append(UVNodeGroup(group, island.obj, island.bm, island.uv_layer))
+        uv_groups = manager.find_uv_nodes(island.bm, island.uv_layer, uv_sync_valid, sub_faces=sub_faces)
+        obj_info = UVNodeObject(island.obj, island.bm, island.uv_layer, uv_sync_valid)
+        for group in uv_groups:
+            manager.groups.append(UVNodeGroup(group, obj_info))
         return manager

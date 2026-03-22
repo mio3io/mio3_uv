@@ -29,14 +29,8 @@ class MIO3UV_OT_straight(Mio3UVOperator):
 
         node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
 
-        uv_select_mode = context.tool_settings.uv_select_mode
-        if uv_select_mode == "FACE":
-            context.tool_settings.uv_select_mode = "EDGE"
-
         for group in node_manager.groups:
             group.store_selection()
-
-        for group in node_manager.groups:
             straight_uv_nodes(group, self.type, self.keep_length, center=True)
             for node in group.nodes:
                 node.update_uv(group.uv_layer)

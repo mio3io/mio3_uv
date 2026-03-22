@@ -27,19 +27,18 @@ class MIO3UV_OT_circle(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         node_manager = UVNodeManager(self.objects, sync=use_uv_select_sync)
-        if not node_manager.groups:
+        groups = node_manager.groups
+        if not groups:
             return {"CANCELLED"}
 
         if self.composite:
-            base_group = node_manager.groups[0]
-            all_nodes = {node for group in node_manager.groups for node in group.nodes}
-            composite_group = UVNodeGroup(
-                nodes=all_nodes, obj=base_group.obj, bm=base_group.bm, uv_layer=base_group.uv_layer
-            )
+            base_group = groups[0]
+            all_nodes = {node for group in groups for node in group.nodes if group.obj_info == base_group.obj_info}
+            composite_group = UVNodeGroup(all_nodes, base_group.obj_info)
             self.make_circular(composite_group)
             composite_group.update_uvs()
         else:
-            for group in node_manager.groups:
+            for group in groups:
                 self.make_circular(group)
                 group.update_uvs()
 

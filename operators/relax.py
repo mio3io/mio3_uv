@@ -66,6 +66,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
                 fixed_nodes = [False] * len(group.nodes)
                 neighbor_cache = [[] for _ in group.nodes]
                 selection_boundary_cache = {}
+                uv_layer = group.obj_info.uv_layer
 
                 for index, node in enumerate(group.nodes):
                     if keep_boundary:
@@ -78,7 +79,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
                     else:
                         is_boundary_node = False
 
-                    is_pinned = any(loop[group.uv_layer].pin_uv for loop in node.loops) if keep_pin else False
+                    is_pinned = any(loop[uv_layer].pin_uv for loop in node.loops) if keep_pin else False
                     fixed_nodes[index] = len(node.neighbors) <= 1 or is_pinned or is_boundary_node
 
                     if fixed_nodes[index]:
@@ -164,6 +165,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
         nodes = group.relax_nodes
         fixed_nodes = group.relax_fixed_nodes
         neighbor_cache = group.relax_neighbor_cache
+        uv_layer = group.uv_layer
 
         positions = [node.uv.copy() for node in nodes]
         lambda_positions = positions.copy()
@@ -184,7 +186,7 @@ class MIO3UV_OT_relax(Mio3UVOperator):
 
         for index, node in enumerate(nodes):
             node.uv = positions[index]
-            node.update_uv(group.uv_layer)
+            node.update_uv(uv_layer)
 
     def draw(self, context):
         layout = self.layout

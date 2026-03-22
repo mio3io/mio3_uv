@@ -40,10 +40,12 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             island.store_selection()
             # island.deselect_all_uv()
 
+        collections = island_manager.collections
+
         # オブジェクトで並行処理
-        max_length = max(len(colle.islands) for colle in island_manager.collections)
+        max_length = max(len(colle.islands) for colle in collections)
         for i in range(max_length):
-            islands = [colle.islands[i] for colle in island_manager.collections if len(colle.islands) > i]
+            islands = [colle.islands[i] for colle in collections if len(colle.islands) > i]
 
             for island in islands:
                 bm = island.bm

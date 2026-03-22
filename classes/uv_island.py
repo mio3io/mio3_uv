@@ -11,14 +11,17 @@ VER_5_0_1 = bpy.app.version >= (5, 0, 1)
 
 
 @dataclass
-class UVIsland:
-    faces: set[BMFace]
-
-    obj: Object
-    bm: BMesh
-    uv_layer: BMLayerItem
+class UVObject:
+    obj: Object = None
+    bm: BMesh = None
+    uv_layer: BMLayerItem = None
     uv_sync_valid: bool = False
 
+
+@dataclass
+class UVIsland:
+    faces: set[BMFace]
+    obj_info: UVObject = None
     sync: bool = False
     extend: bool = True
     boundary_edge: set[BMEdge] = field(default_factory=set)
@@ -46,12 +49,28 @@ class UVIsland:
     all_uv_count: int = field(init=False, default=0)
 
     @property
+    def obj(self):
+        return self.obj_info.obj
+
+    @property
+    def bm(self):
+        return self.obj_info.bm
+    
+    @property
+    def uv_layer(self):
+        return self.obj_info.uv_layer
+    
+    @property
+    def uv_sync_valid(self):
+        return self.obj_info.uv_sync_valid
+
+    @property
     def center_3d(self):
         return self.center_3d_world if self.orientation_mode == "WORLD" else self.center_3d_local
 
     @cached_property
     def center_3d_world(self):
-        return self.obj.matrix_world @ self.center_3d_local
+        return self.obj_info.obj.matrix_world @ self.center_3d_local
 
     @cached_property
     def center_3d_local(self):
@@ -69,12 +88,12 @@ class UVIsland:
         self.original_height = self.height
 
     def __hash__(self):
-        return hash((frozenset(self.faces), self.obj))
+        return hash((frozenset(self.faces), self.obj_info.obj))
 
     def __eq__(self, other):
         if not isinstance(other, UVIsland):
             return NotImplemented
-        return self.faces == other.faces and self.obj == other.obj
+        return self.faces == other.faces and self.obj_info.obj == other.obj_info.obj
 
     def update_bounds(self):
         uv_points = [loop[self.uv_layer].uv for face in self.faces for loop in face.loops]
@@ -170,12 +189,13 @@ class UVIsland:
 
 @dataclass
 class UVIslandCollection:
-    obj: Object = None
-    bm: BMesh = None
-    uv_layer: BMLayerItem = None
-    uv_sync_valid: bool = False
+    obj_info: UVObject = None
+    # obj: Object = None
+    # bm: BMesh = None
+    # uv_layer: BMLayerItem = None
+    # uv_sync_valid: bool = False
     islands: list[UVIsland] = field(default_factory=list)
-    original_selected_verts: dict[BMVert, bool] = field(default_factory=dict)
+    # original_selected_verts: dict[BMVert, bool] = field(default_factory=dict)
 
 
 @dataclass
@@ -188,11 +208,19 @@ class UVIslandManager:
 
     select_mode: Literal["VERT", "EDGE", "FACE"] = None
     orientation_mode: Literal["WORLD", "LOCAL"] = "WORLD"
-    collections: list[UVIslandCollection] = field(default_factory=list)
 
-    @cached_property
-    def islands(self) -> list[UVIsland]:
-        return [item for colle in self.collections for item in colle.islands]
+    obj_infos: list[UVObject] = field(default_factory=list)
+    islands: list[UVIsland] = field(default_factory=list)
+
+    @property
+    def collections(self):
+        if not self.obj_infos:
+            return []
+        obj_info_dict = {obj_info.obj: obj_info for obj_info in self.obj_infos}
+        colle_dict = {obj: UVIslandCollection(obj_info=obj_info_dict[obj]) for obj in obj_info_dict}
+        for island in self.islands:
+            colle_dict[island.obj].islands.append(island)
+        return list(colle_dict.values())
 
     def __post_init__(self):
         self.find_all_islands()
@@ -200,10 +228,6 @@ class UVIslandManager:
     def find_all_islands(self):
         original_edge_seam = {}
         original_uv_select = {}
-        bmesh_dict = {}
-        uv_layer_dict = {}
-        valid_dict = {}
-
         # シームを区切る 元の選択を保存
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
@@ -213,9 +237,7 @@ class UVIslandManager:
 
             uv_sync_valid = bm.uv_select_sync_valid
 
-            bmesh_dict[obj] = bm
-            uv_layer_dict[obj] = uv_layer
-            valid_dict[obj] = uv_sync_valid
+            self.obj_infos.append(UVObject(obj, bm, uv_layer, uv_sync_valid))
 
             if self.select_mode:
                 bm.select_mode = {self.select_mode}
@@ -224,7 +246,6 @@ class UVIslandManager:
                 bm.uv_select_sync_from_mesh()
 
             original_edge_seam[obj] = {edge: edge.seam for edge in bm.edges}
-
             original_uv_select[obj] = {}
             for face in bm.faces:
                 for loop in face.loops:
@@ -232,8 +253,8 @@ class UVIslandManager:
 
         if self.sync:
             if self.find_all:
-                for obj in self.objects:
-                    bm = bmesh_dict[obj]
+                for obj_info in self.obj_infos:
+                    bm = obj_info.bm
                     bm.uv_select_foreach_set(True, faces=bm.faces)
             elif self.extend:
                 if VER_5_0_1:
@@ -250,30 +271,29 @@ class UVIslandManager:
 
         bpy.ops.uv.seams_from_islands(mark_seams=True)
 
-        for obj in self.objects:
-            bm = bmesh_dict[obj]
-            uv_layer = uv_layer_dict[obj]
-            uv_sync_valid = valid_dict[obj]
+        for obj_info in self.obj_infos:
+            bm = obj_info.bm
+            uv_layer = obj_info.uv_layer
+            uv_sync_valid = obj_info.uv_sync_valid
 
-            obj_islands = self.find_islands(bm, uv_layer, obj, uv_sync_valid)
+            obj_islands = self.find_islands(obj_info)
 
             # 元の選択に戻す
-            for uv, (uv_select_vert, uv_select_edge) in original_uv_select[obj].items():
+            for uv, (uv_select_vert, uv_select_edge) in original_uv_select[obj_info.obj].items():
                 uv.uv_select_vert = uv_select_vert
                 uv.uv_select_edge = uv_select_edge
 
             if bm.uv_select_sync_valid:
                 bm.uv_select_flush(False)
 
-            for edge, seam in original_edge_seam[obj].items():
+            for edge, seam in original_edge_seam[obj_info.obj].items():
                 edge.seam = seam
 
-            if obj_islands:
-                colle = UVIslandCollection(obj, bm, uv_layer, uv_sync_valid)
-                self.collections.append(colle)
-                colle.islands.extend(obj_islands)
+            for island in obj_islands:
+                self.islands.append(island)
 
-    def find_islands(self, bm: BMesh, uv_layer: BMLayerItem, obj: Object, uv_sync_valid: bool) -> list[UVIsland]:
+    def find_islands(self, obj_info: UVObject) -> list[UVIsland]:
+        bm = obj_info.bm
         target_faces = set()
         if self.find_all:
             if self.sync:
@@ -313,7 +333,7 @@ class UVIslandManager:
                                 boundary_edges.add(edge)
 
                 if island_faces:
-                    new_island = UVIsland(island_faces, obj, bm, uv_layer, uv_sync_valid, self.sync, self.extend)
+                    new_island = UVIsland(island_faces, obj_info, self.sync, self.extend)
                     new_island.face_count = face_count
                     new_island.uv_count = uv_count
                     new_island.edge_count = len(island_edges)
@@ -358,8 +378,6 @@ class UVIslandManager:
 
     def sort_all_islands(self, key, reverse=False):
         self.islands.sort(key=key, reverse=reverse)
-        for colle in self.collections:
-            colle.islands.sort(key=key, reverse=reverse)
 
     def set_orientation_mode(self, mode):
         if self.orientation_mode != mode:
@@ -368,7 +386,7 @@ class UVIslandManager:
                 island.orientation_mode = mode
 
     def update_uvmeshes(self, mesh_sync=False):
-        for colle in self.collections:
-            if self.sync and mesh_sync and colle.bm.uv_select_sync_valid:
-                colle.bm.uv_select_sync_to_mesh()
-            bmesh.update_edit_mesh(colle.obj.data)
+        for obj_info in self.obj_infos:
+            if self.sync and mesh_sync and obj_info.bm.uv_select_sync_valid:
+                obj_info.bm.uv_select_sync_to_mesh()
+            bmesh.update_edit_mesh(obj_info.obj.data)

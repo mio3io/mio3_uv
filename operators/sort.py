@@ -507,11 +507,11 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             row = split.row(align=True)
             if self.grid_units == "PIXEL":
                 row.prop(self, "grid_x_px", text="")
-                row.prop(self, "grid_link", text="", icon=icons.linked, toggle=True)
+                row.prop(self, "grid_link", text="", icon="LINKED", toggle=True)
                 row.prop(self, "grid_y_px", text="")
             else:
                 row.prop(self, "grid_x", text="")
-                row.prop(self, "grid_link", text="", icon=icons.linked, toggle=True)
+                row.prop(self, "grid_link", text="", icon="LINKED", toggle=True)
                 row.prop(self, "grid_y", text="")
 
             split = layout.split(factor=0.3)

@@ -36,7 +36,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         groups = []
         for colle in island_manager.collections:
             islands = colle.islands
-            bm = colle.bm
+            bm = colle.obj_info.bm
             if islands:
                 if self.group:
                     face_groups = self.find_groups(bm)
