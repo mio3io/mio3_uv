@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
-from ..utils import straight_uv_nodes
+from ..utils.utils import straight_uv_nodes
 from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator, UVIsland
 
 

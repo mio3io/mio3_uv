@@ -5,7 +5,7 @@ from bpy.types import Context
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from bmesh.types import BMesh
 from ..classes import Mio3UVOperator
-from ..utils import get_tile_co
+from ..utils.utils import get_tile_co
 from ..globals import get_preferences
 from ..icons import icons
 

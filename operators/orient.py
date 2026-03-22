@@ -1,9 +1,10 @@
 import bpy
 import math
-from mathutils import Vector, Matrix
+from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
 from ..classes import UVIslandManager, Mio3UVOperator
-from ..utils import get_uv_from_mirror_offset, rotate_uv_faces
+from ..utils.utils import get_uv_from_mirror_offset, rotate_uv_faces
+from ..utils.uv_manager_utils import find_rotation_auto, rotate_island
 
 
 class MIO3UV_OT_orient(Mio3UVOperator):
@@ -35,22 +36,31 @@ class MIO3UV_OT_orient(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-
-        # アイランド
-        if self.island:
-            bpy.ops.uv.align_rotation(method="AUTO")
-            return {"FINISHED"}
-
-        # UVグループ
-
         objects = self.get_selected_objects(context)
-        udim = context.scene.mio3uv.udim
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-
+        udim = context.scene.mio3uv.udim
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 
+        if self.island:
+            self.align_island_rotation(island_manager)
+        else:
+            self.align_edge_rotation(island_manager, udim)
+
+        island_manager.update_uvmeshes(True)
+
+        self.print_time()
+        return {"FINISHED"}
+
+    def align_island_rotation(self, island_manager):
+        for island in island_manager.islands:
+            angle = find_rotation_auto(island)
+            if angle != 0.0:
+                rotate_island(island, angle)
+
+
+    def align_edge_rotation(self, island_manager, udim):
         for island in island_manager.islands:
             uv_layer = island.uv_layer
             loop_uv1, loop_uv2 = self.get_selected_edge_loop(island)
@@ -88,17 +98,6 @@ class MIO3UV_OT_orient(Mio3UVOperator):
                     for l in face.loops:
                         l[uv_layer].uv.y += move_delta
 
-        island_manager.update_uvmeshes(True)
-
-        self.print_time()
-        return {"FINISHED"}
-
-    def get_udim_co(self, is_udim, co, island):
-        if is_udim:
-            return Vector((int(island.center.x) + co.x, int(island.center.y) + co.y))
-        else:
-            return co
-
     def get_selected_edge_loop(self, island):
         uv_layer = island.uv_layer
         if island.sync:
@@ -115,6 +114,12 @@ class MIO3UV_OT_orient(Mio3UVOperator):
                         if loop.uv_select_vert and loop.link_loop_next.uv_select_vert:
                             return (loop[uv_layer], loop.link_loop_next[uv_layer])
         return (None, None)
+
+    def get_udim_co(self, is_udim, co, island):
+        if is_udim:
+            return Vector((int(island.center.x) + co.x, int(island.center.y) + co.y))
+        else:
+            return co
 
     def draw(self, context):
         layout = self.layout

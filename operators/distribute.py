@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty, IntProperty, EnumProperty
 from ..classes import UVIslandManager, UVNodeManager, UVNodeGroup, Mio3UVOperator
-from ..utils import straight_uv_nodes
+from ..utils.utils import straight_uv_nodes
 
 
 class MIO3UV_OT_distribute(Mio3UVOperator):

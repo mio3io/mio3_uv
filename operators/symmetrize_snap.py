@@ -1,10 +1,9 @@
 import bpy
-import bmesh
 from bisect import bisect_left, bisect_right
 from mathutils import Vector
 from bpy.props import FloatProperty, EnumProperty
 from ..classes import Mio3UVOperator, UVNodeManager
-from ..utils import get_tile_co
+from ..utils.utils import get_tile_co
 
 
 class MIO3UV_OT_symmetry_snap(Mio3UVOperator):

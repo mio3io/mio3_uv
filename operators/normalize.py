@@ -32,37 +32,31 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
         return {"FINISHED"}
 
     def normalize_island(self, context, island):
-        current_width = island.width
-        current_height = island.height
+        width = island.width
+        height = island.height
 
         if self.keep_aspect:
-            scale_factor = 1 / max(current_width, current_height)
+            scale_factor = 1 / max(width, height)
             scale_x = scale_y = scale_factor
         else:
-            scale_x = 1 / current_width
-            scale_y = 1 / current_height
+            scale_x = 1 / width
+            scale_y = 1 / height
 
         self.apply_scale(context, island, scale_x, scale_y)
 
     def normalize_all_islands(self, context, islands):
-        min_uv = Vector((float('inf'), float('inf')))
-        max_uv = Vector((float('-inf'), float('-inf')))
+        min_uv = Vector((min(island.min_uv.x for island in islands), min(island.min_uv.y for island in islands)))
+        max_uv = Vector((max(island.max_uv.x for island in islands), max(island.max_uv.y for island in islands)))
 
-        for island in islands:
-            min_uv.x = min(min_uv.x, island.min_uv.x)
-            min_uv.y = min(min_uv.y, island.min_uv.y)
-            max_uv.x = max(max_uv.x, island.max_uv.x)
-            max_uv.y = max(max_uv.y, island.max_uv.y)
-
-        total_width = max_uv.x - min_uv.x
-        total_height = max_uv.y - min_uv.y
+        width = max_uv.x - min_uv.x
+        height = max_uv.y - min_uv.y
 
         if self.keep_aspect:
-            scale_factor = 1 / max(total_width, total_height)
+            scale_factor = 1 / max(width, height)
             scale_x = scale_y = scale_factor
         else:
-            scale_x = 1 / total_width
-            scale_y = 1 / total_height
+            scale_x = 1 / width
+            scale_y = 1 / height
 
         for island in islands:
             self.apply_scale(context, island, scale_x, scale_y, min_uv)
@@ -72,7 +66,7 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
         for face in island.faces:
             for loop in face.loops:
                 selected_loops.append(loop)
-        
+
         anchor = self.get_anchor(context, island.center)
 
         min_uv = global_min_uv if global_min_uv else island.min_uv

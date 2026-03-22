@@ -4,7 +4,7 @@ import math
 from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes import UVIslandManager, Mio3UVOperator
-from ..utils import uv_select_set_face, uv_select_set_all, get_uv_selected_edges
+from ..utils.utils import uv_select_set_face, uv_select_set_all, get_uv_selected_edges
 
 
 class MIO3UV_OT_auto_uv_sync(bpy.types.Operator):

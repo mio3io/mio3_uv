@@ -23,24 +23,19 @@ class MIO3UV_OT_offset(Mio3UVOperator):
         self.start_time()
         objects = self.get_selected_objects(context)
 
-        if context.tool_settings.uv_select_mode in {"FACE", "ISLAND"}:
-            context.tool_settings.uv_select_mode = "VERTEX"
-
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            context.tool_settings.mesh_select_mode = (True, False, False)
 
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         for island in island_manager.islands:
-            self.expand_uv_boundary_outward(island, self.offset)
+            self.expand_uv_boundary(island, self.offset)
 
         island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}
 
-    def expand_uv_boundary_outward(self, island, offset):
+    def expand_uv_boundary(self, island, offset):
         uv_layer = island.uv_layer
 
         selected_uv_edges = []

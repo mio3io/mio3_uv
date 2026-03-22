@@ -1,8 +1,9 @@
 import bpy
 import bmesh
-from bpy.props import BoolProperty, FloatProperty
 from mathutils import Vector
+from bpy.props import BoolProperty, FloatProperty
 from ..classes import UVIslandManager, Mio3UVOperator
+from ..utils.uv_manager_utils import find_rotation_geometry, rotate_island
 
 
 class MIO3UV_OT_unfoldify(Mio3UVOperator):
@@ -19,10 +20,6 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
 
     def execute(self, context):
         self.start_time()
-
-        if self.align_rotation:
-            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
-
         objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -32,6 +29,12 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             return {"CANCELLED"}
 
         island_manager.set_orientation_mode("LOCAL")
+
+        if self.align_rotation:
+             for island in island_manager.islands:
+                 angle = find_rotation_geometry(island, axis="Z")
+                 rotate_island(island, angle)
+                 island.update_bounds()
 
         groups = []
         for colle in island_manager.collections:

@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
-from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
+from ..classes import UVIslandManager, UVIsland, UVNodeManager, UVNodeGroup, UVNode, Mio3UVOperator
 
 
 class MIO3UV_OT_align(Mio3UVOperator):
@@ -129,7 +129,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
         }
         return corner_map.get(align_type, [align_type])
 
-    def group_current_value(self, group, alignment_type, axis):
+    def group_current_value(self, group: UVNodeGroup, alignment_type, axis):
         coords = [node.uv.x if axis == 0 else node.uv.y for node in group.nodes]
         if alignment_type in ["MAX_X", "MAX_Y"]:
             return max(coords)
@@ -137,7 +137,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             return min(coords)
         return (min(coords) + max(coords)) / 2
 
-    def align_uv_nodes(self, context, node_manager, alignment_type, align_to):
+    def align_uv_nodes(self, context, node_manager: UVNodeManager, alignment_type, align_to):
         if self.edge_mode and self.island:
             self.align_groups(context, node_manager.groups, alignment_type, align_to)
         elif self.edge_mode:
@@ -154,7 +154,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             for node in group.nodes:
                 node.select = True
 
-    def align_groups(self, context, groups, alignment_type, align_to):
+    def align_groups(self, context, groups: list[UVNodeGroup], alignment_type, align_to):
         if not groups:
             return
 
@@ -173,7 +173,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             self.align_groups(context, groups, "ALIGN_X", align_to)
             self.align_groups(context, groups, "ALIGN_Y", align_to)
 
-    def align_nodes(self, context, nodes, alignment_type, align_to):
+    def align_nodes(self, context, nodes: list[UVNode], alignment_type, align_to):
         uv_coords = [node.uv for node in nodes]
 
         if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X", "MAX_Y", "MIN_Y", "ALIGN_Y"]:
@@ -191,7 +191,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
                 node.uv.x = center_x
                 node.uv.y = center_y
 
-    def align_islands(self, context, islands, align_type, align_to):
+    def align_islands(self, context, islands: list[UVIsland], align_type, align_to):
         if align_type in ["MAX_Y", "MIN_Y", "MIN_X", "MAX_X"]:
             target = self.get_target_value(context, islands, align_type, align_to)
             axis = 0 if align_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
@@ -340,6 +340,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
             return Vector((int(center.x) + co.x, int(center.y) + co.y))
         else:
             return co
+
 
 def register():
     bpy.utils.register_class(MIO3UV_OT_align)
