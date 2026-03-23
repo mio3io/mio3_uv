@@ -1,6 +1,5 @@
 import bpy
 import math
-import numpy as np
 from bpy.props import EnumProperty
 from mathutils import Vector
 from ..classes import UVIslandManager, Mio3UVOperator
@@ -42,22 +41,23 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         if not island_manager.islands:
             return {"CANCELLED"}
 
-        all_centers = np.array([island.center_3d for island in island_manager.islands])
-        avg_center = Vector(np.mean(all_centers, axis=0))
+        all_centers = [island.center_3d for island in island_manager.islands]
+        avg_center = self.average_vectors(all_centers)
 
         bound_box = [Vector(point) @ context.active_object.matrix_world for point in context.active_object.bound_box]
-        min_co = Vector(np.min(bound_box, axis=0))
-        max_co = Vector(np.max(bound_box, axis=0))
+        min_co = Vector((min(point.x for point in bound_box), min(point.y for point in bound_box), min(point.z for point in bound_box)))
+        max_co = Vector((max(point.x for point in bound_box), max(point.y for point in bound_box), max(point.z for point in bound_box)))
+        body_reference = self.get_body_reference(island_manager, max_co, min_co)
 
         if self.type == "AUTO":
-            parts_type = self.get_humanoid_parts(avg_center, max_co, min_co)
+            parts_type = self.get_humanoid_parts(avg_center, max_co, min_co, body_reference)
             if parts_type == "HEAD":
                 parts_type = "HAIR_F"
         else:
             parts_type = self.type
 
         if parts_type == "BODY":
-            self.find_groups(context, island_manager, max_co, min_co)
+            self.find_groups(context, island_manager, max_co, min_co, body_reference)
             island_manager.update_uvmeshes()
         else:
             if parts_type in {"HAND_R", "HAND_L"}:
@@ -94,21 +94,38 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 
-    def get_humanoid_parts(self, avg_center, max_co, min_co):
+    def get_body_reference(self, island_manager, max_co, min_co):
         dimensions = max_co - min_co
-        rel_x = (avg_center.x - min_co.x) / dimensions.x
-        rel_z = (avg_center.z - min_co.z) / dimensions.z
-        # center_x = (min_co.x + max_co.x) / 2
-        x = avg_center.x
+        center_x = (min_co.x + max_co.x) / 2
+        half_width = max(dimensions.x * 0.5, 1e-6)
+        center_margin = min(0.12, max(0.06, 0.08 * (0.8 / max(dimensions.z, 1e-6))))
+
+        return {
+            "center_x": center_x,
+            "half_width": half_width,
+            "center_margin": center_margin,
+        }
+
+    def get_humanoid_parts(self, avg_center, max_co, min_co, body_reference=None):
+        humanoid_scale = max_co - min_co
+        width = max(humanoid_scale.x, 1e-6)
+        height = max(humanoid_scale.z, 1e-6)
+        rel_z = (avg_center.z - min_co.z) / height
+        center_x = body_reference["center_x"] if body_reference else (min_co.x + max_co.x) / 2
+        half_width = body_reference["half_width"] if body_reference else max(width * 0.5, 1e-6)
+        center_margin = body_reference["center_margin"] if body_reference else 0.08
+        relative_center_x = (avg_center.x - center_x) / half_width
+
         #  Legs Bottom 45%
-        if rel_z < 0.45 and rel_x < 0.6:
-            return "FOOT_R"
-        if rel_z < 0.45 and rel_x >= 0.6:
-            return "FOOT_L"
+        if rel_z < 0.45:
+            leg_center_margin = center_margin * min(1.0, max(0.0, (rel_z - 0.28) / 0.17))
+            if abs(relative_center_x) <= leg_center_margin:
+                return "BODY"
+            return "FOOT_R" if relative_center_x < 0 else "FOOT_L"
         # Arms
-        if rel_x < 0.35:  # L 35%
+        if relative_center_x < -0.35:
             return "HAND_R"
-        elif rel_x > 0.65:  # R 35%
+        elif relative_center_x > 0.35:
             return "HAND_L"
         # body
         if rel_z > 0.80:  # Top 20%
@@ -116,7 +133,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         else:
             return "BODY"
 
-    def find_groups(self, context, island_manager, max_co, min_co):
+    def find_groups(self, context, island_manager, max_co, min_co, body_reference):
         anchor_positions = {
             "BODY": {"position": Vector((0.5, 0.5)), "direction": Vector((1, 0))},
             "HAND_R": {"position": Vector((0.3, 0.7)), "direction": Vector((-1, 0))},
@@ -128,7 +145,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
 
         parts_groups = {parts: [] for parts in anchor_positions.keys()}
         for island in island_manager.islands:
-            parts_type = self.get_humanoid_parts(island.center_3d, max_co, min_co)
+            parts_type = self.get_humanoid_parts(island.center_3d, max_co, min_co, body_reference)
             parts_groups[parts_type].append(island)
 
         for parts_type, islands in parts_groups.items():
@@ -165,8 +182,8 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         for island in island_manager.islands:
             island_bounds.append((island, island.min_uv, island.max_uv))
 
-        all_min = np.min([bounds[1] for bounds in island_bounds], axis=0)
-        all_max = np.max([bounds[2] for bounds in island_bounds], axis=0)
+        all_min = Vector((min(bounds[1].x for bounds in island_bounds), min(bounds[1].y for bounds in island_bounds)))
+        all_max = Vector((max(bounds[2].x for bounds in island_bounds), max(bounds[2].y for bounds in island_bounds)))
 
         if self.align_uv == "X":
             offset = Vector((all_min[0], all_max[1]))
@@ -197,6 +214,13 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                 axis = "Z"
             return find_rotation_geometry(island, axis)
         raise ValueError("Unsupported rotation method: {}".format(method))
+
+    @staticmethod
+    def average_vectors(vectors):
+        total = vectors[0].copy()
+        for vector in vectors[1:]:
+            total += vector
+        return total / len(vectors)
 
 
     def draw(self, context):
