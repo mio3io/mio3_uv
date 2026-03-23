@@ -3,7 +3,15 @@ import math
 from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector, Matrix
 from ..classes import UVIslandManager, Mio3UVOperator
-import mathutils
+from ..utils.uv_follow import uv_follow, build_uv_loop_index, collect_shared_uv_loops
+
+
+def calculate_uv_area(uv_coords):
+    area = 0.0
+    for index, uv in enumerate(uv_coords):
+        next_uv = uv_coords[(index + 1) % len(uv_coords)]
+        area += uv.x * next_uv.y - next_uv.x * uv.y
+    return abs(area) * 0.5
 
 
 class MIO3UV_OT_grid(Mio3UVOperator):
@@ -29,58 +37,27 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         use_uv_select_sync = tool_settings.use_uv_select_sync
         objects = self.get_selected_objects(context)
 
-        bpy.ops.uv.remove_doubles(threshold=1e-7)
-
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync, extend=False)
         if not island_manager.islands:
             self.report({"WARNING"}, "No UV islands found")
             return {"CANCELLED"}
 
+        uv_loop_index_cache = {}
         for island in island_manager.islands:
-            island.store_selection()
-            # island.deselect_all_uv()
+            bm = island.bm
+            uv_layer = island.uv_layer
+            obj = island.obj
 
-        collections = island_manager.collections
+            if obj not in uv_loop_index_cache:
+                uv_loop_index_cache[obj] = build_uv_loop_index(bm, uv_layer)
 
-        # オブジェクトで並行処理
-        max_length = max(len(colle.islands) for colle in collections)
-        for i in range(max_length):
-            islands = [colle.islands[i] for colle in collections if len(colle.islands) > i]
+            f_act = self.get_base_face(uv_layer, island.faces)
+            if not f_act:
+                continue
 
-            for island in islands:
-                bm = island.bm
-                uv_layer = island.uv_layer
-
-                island.restore_selection()
-
-                quad = self.get_base_face(uv_layer, island.faces)
-                if not quad:
-                    island.deselect_all_uv()
-                    continue
-                bm.faces.active = quad
-
-                self.align_rect(uv_layer, bm.faces.active)
-
-                for face in island.faces:
-                    if all(loop.uv_select_vert for loop in face.loops):
-                        for loop in face.loops:
-                            loop[uv_layer].pin_uv = True
-                    else:
-                        for loop in face.loops:
-                            loop[uv_layer].pin_uv = False
-            try:
-                bpy.ops.uv.follow_active_quads(mode=self.mode)
-            except:
-                pass
-
-            for island in islands:
-                island.deselect_all_uv()
-
-        for island in island_manager.islands:
-            island.restore_selection()
-
-        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
-        bpy.ops.uv.pin(clear=True)
+            shared_uvs = collect_shared_uv_loops(uv_layer, island.faces, uv_loop_index_cache[obj])
+            self.align_rect(uv_layer, f_act)
+            uv_follow(self.mode, island, f_act, shared_uvs)
 
         island_manager.update_uvmeshes()
 
@@ -121,7 +98,8 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
     def align_rect(self, uv_layer, active_face):
 
-        uv_coords = [loop[uv_layer].uv for loop in active_face.loops]
+        uv_coords = [loop[uv_layer].uv.copy() for loop in active_face.loops]
+        original_area = calculate_uv_area(uv_coords)
         min_uv = Vector((min(uv.x for uv in uv_coords), min(uv.y for uv in uv_coords)))
         max_uv = Vector((max(uv.x for uv in uv_coords), max(uv.y for uv in uv_coords)))
         center_uv = (min_uv + max_uv) / 2
@@ -141,25 +119,37 @@ class MIO3UV_OT_grid(Mio3UVOperator):
             uv_rotated = rot_matrix @ local + center_uv
             rotated_uvs.append(uv_rotated)
 
-        min_x = min(uv.x for uv in rotated_uvs)
-        max_x = max(uv.x for uv in rotated_uvs)
-        min_y = min(uv.y for uv in rotated_uvs)
-        max_y = max(uv.y for uv in rotated_uvs)
+        sorted_by_y = sorted(zip(rotated_uvs, active_face.loops), key=lambda pair: (pair[0].y, pair[0].x))
+        bottom_pairs = sorted(sorted_by_y[:2], key=lambda pair: pair[0].x)
+        top_pairs = sorted(sorted_by_y[2:], key=lambda pair: pair[0].x)
+        corner_pairs = [bottom_pairs[0], bottom_pairs[1], top_pairs[1], top_pairs[0]]
+        ordered_uvs = [uv for uv, _loop in corner_pairs]
 
+        width_average = ((ordered_uvs[1] - ordered_uvs[0]).length + (ordered_uvs[2] - ordered_uvs[3]).length) / 2
+        height_average = ((ordered_uvs[2] - ordered_uvs[1]).length + (ordered_uvs[3] - ordered_uvs[0]).length) / 2
+
+        if width_average <= 0 or height_average <= 0:
+            width = max(max(uv.x for uv in rotated_uvs) - min(uv.x for uv in rotated_uvs), 1e-8)
+            height = max(max(uv.y for uv in rotated_uvs) - min(uv.y for uv in rotated_uvs), 1e-8)
+        else:
+            aspect_ratio = width_average / height_average
+            if original_area > 0:
+                width = math.sqrt(original_area * aspect_ratio)
+                height = math.sqrt(original_area / aspect_ratio)
+            else:
+                width = width_average
+                height = height_average
+
+        half_width = width / 2
+        half_height = height / 2
         new_uvs = [
-            Vector((min_x, min_y)),
-            Vector((max_x, min_y)),
-            Vector((max_x, max_y)),
-            Vector((min_x, max_y)),
+            Vector((center_uv.x - half_width, center_uv.y - half_height)),
+            Vector((center_uv.x + half_width, center_uv.y - half_height)),
+            Vector((center_uv.x + half_width, center_uv.y + half_height)),
+            Vector((center_uv.x - half_width, center_uv.y + half_height)),
         ]
 
-        center = Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
-        sorted_pairs = sorted(
-            zip(rotated_uvs, active_face.loops),
-            key=lambda pair: ((pair[0] - center).angle_signed(Vector((1, 0))) if (pair[0] - center).length > 0 else 0),
-        )
-
-        for (_, loop), new_uv in zip(sorted_pairs, new_uvs):
+        for (_old_uv, loop), new_uv in zip(corner_pairs, new_uvs):
             loop[uv_layer].uv = new_uv
 
     def draw(self, context):
