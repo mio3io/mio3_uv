@@ -1,9 +1,50 @@
 import bpy
 import math
-from bpy.props import EnumProperty
+from dataclasses import dataclass
+from bpy.props import EnumProperty, FloatProperty
+from bpy.app.translations import pgettext_iface as tt_iface
 from mathutils import Vector
 from ..classes import UVIslandManager, Mio3UVOperator
 from ..utils.uv_manager_utils import find_rotation_auto, find_rotation_geometry, rotate_island
+
+
+@dataclass(frozen=True)
+class BodyReference:
+    min_xyz: Vector
+    max_xyz: Vector
+    width: float
+    height: float
+    center_x: float
+    half_width: float
+    center_margin: float
+
+    @classmethod
+    def from_object(cls, obj):
+        bp = [Vector(point) @ obj.matrix_world for point in obj.bound_box]
+        min_xyz = Vector((min(point.x for point in bp), min(point.y for point in bp), min(point.z for point in bp)))
+        max_xyz = Vector((max(point.x for point in bp), max(point.y for point in bp), max(point.z for point in bp)))
+        dimensions = max_xyz - min_xyz
+        width = max(dimensions.x, 1e-6)
+        height = max(dimensions.z, 1e-6)
+        return cls(
+            min_xyz=min_xyz,
+            max_xyz=max_xyz,
+            width=width,
+            height=height,
+            center_x=(min_xyz.x + max_xyz.x) / 2,
+            half_width=max(dimensions.x * 0.5, 1e-6),
+            center_margin=min(0.12, max(0.06, 0.08 * (0.8 / height))),
+        )
+
+
+@dataclass
+class PartGroup:
+    position: Vector
+    direction: Vector
+    rotation_operations: tuple = (("GEOMETRY", "Z"),)
+    flip: bool = False
+    sort_axis: str = "X"
+    sort_reverse: bool = True
 
 
 class MIO3UV_OT_body_preset(Mio3UVOperator):
@@ -19,106 +60,124 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         default="AUTO",
         items=[
             ("AUTO", "Auto", ""),
+            ("BODY", "Body", ""),
+            ("HAIR_F", "Front Hair", ""),
+            ("HAIR_B", "Back Hair", ""),
             ("HAND_R", "Hand R", ""),
             ("HAND_L", "Hand L", ""),
             ("FOOT_R", "Foot R", ""),
             ("FOOT_L", "Foot L", ""),
-            ("HAIR_F", "Front Hair", ""),
-            ("HAIR_B", "Back Hair", ""),
             ("BUTTON", "Button", ""),
-            ("BODY", "Body", ""),
         ],
     )
 
+    @classmethod
+    def description(cls, context, properties):
+        dicts = {
+            "AUTO": "Automatically detects body parts and classifies or arranges them",
+            "BUTTON": "Align the vertically positioned parts",
+        }
+        return tt_iface(dicts.get(properties.type, "Align the body parts in the appropriate order and orientation"))
+
     align_uv: EnumProperty(name="Align", default="X", items=[("X", "Align H", ""), ("Y", "Align V", "")])
+    spacing: FloatProperty(name="Spacing", default=0.001, min=0.0, max=1.0, precision=3, step=0.1)
+
+    PARTS_GROUP = {
+        "BODY": PartGroup(position=Vector((0.5, 0.5)), direction=Vector((1, 0))),
+        "HEAD": PartGroup(
+            position=Vector((0.5, 0.9)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "Z"),),
+            sort_axis="X",
+            sort_reverse=False,
+        ),
+        "HAIR_F": PartGroup(
+            position=Vector((0.5, 0.9)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "Z"),),
+            sort_axis="X",
+            sort_reverse=False,
+        ),
+        "HAIR_B": PartGroup(
+            position=Vector((0.5, 0.9)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "Z"),),
+            sort_axis="X",
+            sort_reverse=True,
+        ),
+        "HAND_R": PartGroup(
+            position=Vector((0.3, 0.7)),
+            direction=Vector((-1, 0)),
+            rotation_operations=(("GEOMETRY", "X"), ("AUTO", None)),
+            flip=True,
+            sort_axis="Y",
+            sort_reverse=False,
+        ),
+        "HAND_L": PartGroup(
+            position=Vector((0.7, 0.7)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "X"), ("AUTO", None)),
+            sort_axis="Y",
+            sort_reverse=True,
+        ),
+        "FOOT_R": PartGroup(
+            position=Vector((0.3, 0.2)),
+            direction=Vector((-1, 0)),
+            rotation_operations=(("GEOMETRY", "Y"), ("AUTO", None)),
+            flip=True,
+        ),
+        "FOOT_L": PartGroup(
+            position=Vector((0.7, 0.2)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "Y"), ("AUTO", None)),
+            flip=True,
+        ),
+        "BUTTON": PartGroup(
+            position=Vector((0.5, 0.5)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "Z"),),
+            sort_axis="Z",
+            sort_reverse=False,
+        ),
+    }
 
     def execute(self, context):
         self.start_time()
         objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
+        body_reference = BodyReference.from_object(context.active_object)
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 
-        all_centers = [island.center_3d for island in island_manager.islands]
-        avg_center = self.average_vectors(all_centers)
-
-        bound_box = [Vector(point) @ context.active_object.matrix_world for point in context.active_object.bound_box]
-        min_co = Vector((min(point.x for point in bound_box), min(point.y for point in bound_box), min(point.z for point in bound_box)))
-        max_co = Vector((max(point.x for point in bound_box), max(point.y for point in bound_box), max(point.z for point in bound_box)))
-        body_reference = self.get_body_reference(island_manager, max_co, min_co)
+        avg_center_3d = self.average_vectors(island_manager)
 
         if self.type == "AUTO":
-            parts_type = self.get_humanoid_parts(avg_center, max_co, min_co, body_reference)
-            if parts_type == "HEAD":
-                parts_type = "HAIR_F"
+            parts_type = self.find_humanoid_part(avg_center_3d, body_reference)
         else:
             parts_type = self.type
 
         if parts_type == "BODY":
-            self.find_groups(context, island_manager, max_co, min_co, body_reference)
-            island_manager.update_uvmeshes()
+            self.auto_body_mapping(context, island_manager, body_reference)
         else:
-            if parts_type in {"HAND_R", "HAND_L"}:
-                self.rotation_islands(island_manager, (("GEOMETRY", "X"), ("AUTO", None)))
-            elif parts_type in {"FOOT_R", "FOOT_L"}:
-                self.rotation_islands(island_manager, (("GEOMETRY", "Y"), ("AUTO", None)))
-            elif parts_type in {"HAIR_F", "HAIR_B"}:
-                self.rotation_islands(island_manager, (("GEOMETRY", "Z"),))
-            else:
-                self.rotation_islands(island_manager, (("GEOMETRY", "Z"),))
-
-            if parts_type in {"HAND_R", "FOOT_R", "FOOT_L"}:
-                for island in island_manager.islands:
-                    rotate_island(island, math.pi)
-
-            if parts_type == "BUTTON":
-                self.sort_axis(island_manager, "Z", reverse=False)
-            elif parts_type == "HAIR_F":
-                self.sort_axis(island_manager, "X", reverse=False)
-            elif parts_type == "HAIR_B":
-                self.sort_axis(island_manager, "X", reverse=True)
-            elif parts_type == "HAND_R":
-                self.sort_axis(island_manager, "Y", reverse=False)
-            elif parts_type == "HAND_L":
-                self.sort_axis(island_manager, "Y", reverse=True)
-            else:
-                self.sort_axis(island_manager, "X", reverse=True)
-
+            part_group = self.PARTS_GROUP[parts_type]
+            self.sort_axis(island_manager, part_group.sort_axis, reverse=part_group.sort_reverse)
+            self.rotation_islands(island_manager, part_group)
             self.align_islands(island_manager)
 
-            island_manager.update_uvmeshes(True)
-
+        island_manager.update_uvmeshes(True)
         self.print_time()
         self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 
-    def get_body_reference(self, island_manager, max_co, min_co):
-        dimensions = max_co - min_co
-        center_x = (min_co.x + max_co.x) / 2
-        half_width = max(dimensions.x * 0.5, 1e-6)
-        center_margin = min(0.12, max(0.06, 0.08 * (0.8 / max(dimensions.z, 1e-6))))
-
-        return {
-            "center_x": center_x,
-            "half_width": half_width,
-            "center_margin": center_margin,
-        }
-
-    def get_humanoid_parts(self, avg_center, max_co, min_co, body_reference=None):
-        humanoid_scale = max_co - min_co
-        width = max(humanoid_scale.x, 1e-6)
-        height = max(humanoid_scale.z, 1e-6)
-        rel_z = (avg_center.z - min_co.z) / height
-        center_x = body_reference["center_x"] if body_reference else (min_co.x + max_co.x) / 2
-        half_width = body_reference["half_width"] if body_reference else max(width * 0.5, 1e-6)
-        center_margin = body_reference["center_margin"] if body_reference else 0.08
-        relative_center_x = (avg_center.x - center_x) / half_width
+    def find_humanoid_part(self, avg_center, body_reference):
+        rel_z = (avg_center.z - body_reference.min_xyz.z) / body_reference.height
+        relative_center_x = (avg_center.x - body_reference.center_x) / body_reference.half_width
 
         #  Legs Bottom 45%
         if rel_z < 0.45:
-            leg_center_margin = center_margin * min(1.0, max(0.0, (rel_z - 0.28) / 0.17))
+            leg_center_margin = body_reference.center_margin * min(1.0, max(0.0, (rel_z - 0.28) / 0.17))
             if abs(relative_center_x) <= leg_center_margin:
                 return "BODY"
             return "FOOT_R" if relative_center_x < 0 else "FOOT_L"
@@ -133,33 +192,24 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         else:
             return "BODY"
 
-    def find_groups(self, context, island_manager, max_co, min_co, body_reference):
-        anchor_positions = {
-            "BODY": {"position": Vector((0.5, 0.5)), "direction": Vector((1, 0))},
-            "HAND_R": {"position": Vector((0.3, 0.7)), "direction": Vector((-1, 0))},
-            "HAND_L": {"position": Vector((0.7, 0.7)), "direction": Vector((1, 0))},
-            "FOOT_R": {"position": Vector((0.3, 0.2)), "direction": Vector((-1, 0))},
-            "FOOT_L": {"position": Vector((0.7, 0.2)), "direction": Vector((1, 0))},
-            "HEAD": {"position": Vector((0.5, 0.9)), "direction": Vector((1, 0))},
-        }
-
-        parts_groups = {parts: [] for parts in anchor_positions.keys()}
+    def auto_body_mapping(self, context, island_manager, body_reference):
+        parts_groups = {parts: [] for parts in self.PARTS_GROUP.keys()}
         for island in island_manager.islands:
-            parts_type = self.get_humanoid_parts(island.center_3d, max_co, min_co, body_reference)
+            parts_type = self.find_humanoid_part(island.center_3d, body_reference)
             parts_groups[parts_type].append(island)
 
         for parts_type, islands in parts_groups.items():
             if islands:
-                anchor = anchor_positions[parts_type]
-                start_position = anchor["position"]
-                direction = anchor["direction"]
+                anchor = self.PARTS_GROUP[parts_type]
+                start_position = anchor.position.copy()
+                direction = anchor.direction
 
                 islands.sort(key=lambda island: island.width * island.height, reverse=True)
 
                 current_position = start_position.copy()
                 for island in islands:
                     offset = current_position - island.center
-                    island.move(offset)
+                    island.move(offset, True)
                     current_position += direction * (island.width)
 
     def sort_axis(self, island_manager, axis, reverse=False):
@@ -178,56 +228,56 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         island_manager.islands.sort(key=sort_func, reverse=reverse)
 
     def align_islands(self, island_manager):
-        island_bounds = []
-        for island in island_manager.islands:
-            island_bounds.append((island, island.min_uv, island.max_uv))
-
-        all_min = Vector((min(bounds[1].x for bounds in island_bounds), min(bounds[1].y for bounds in island_bounds)))
-        all_max = Vector((max(bounds[2].x for bounds in island_bounds), max(bounds[2].y for bounds in island_bounds)))
+        islands = island_manager.islands
+        min_x = min(island.min_uv.x for island in islands)
+        max_x = max(island.max_uv.x for island in islands)
+        max_y = max(island.max_uv.y for island in islands)
 
         if self.align_uv == "X":
-            offset = Vector((all_min[0], all_max[1]))
+            offset = Vector((min_x, max_y))
         else:
-            offset = Vector((all_min[0] + island_bounds[0][0].width, all_max[1]))
+            offset = Vector(((min_x + max_x) * 0.5, max_y))
 
-        for island, min_uv, max_uv in island_bounds:
+        for island in islands:
             if self.align_uv == "X":
-                island_offset = Vector((offset.x - min_uv[0], offset.y - max_uv[1]))
-                island.move(island_offset)
-                offset.x += island.width + 0.01
+                island_offset = Vector((offset.x - island.min_uv.x, offset.y - island.max_uv.y))
+                island.move(island_offset, True)
+                offset.x += island.width + self.spacing
             else:
-                island_offset = Vector((offset.x - max_uv[0], offset.y - max_uv[1]))
-                island.move(island_offset)
-                offset.y -= island.height + 0.01
+                island_offset = Vector((offset.x - island.center.x, offset.y - island.max_uv.y))
+                island.move(island_offset, True)
+                offset.y -= island.height + self.spacing
 
-    def rotation_islands(self, island_manager, operations):
+    def rotation_islands(self, island_manager, part_group):
         for island in island_manager.islands:
-            for method, axis in operations:
-                angle = self.find_island_rotation_angle(island, method=method, axis=axis)
+            for method, axis in part_group.rotation_operations:
+                if method == "AUTO":
+                    angle = find_rotation_auto(island.uv_layer, island.faces)
+                if method == "GEOMETRY":
+                    if axis is None:
+                        axis = "Z"
+                    angle = find_rotation_geometry(island.uv_layer, island.faces, axis=axis)
                 rotate_island(island, angle)
 
-    def find_island_rotation_angle(self, island, method="AUTO", axis=None):
-        if method == "AUTO":
-            return find_rotation_auto(island)
-        if method == "GEOMETRY":
-            if axis is None:
-                axis = "Z"
-            return find_rotation_geometry(island, axis)
-        raise ValueError("Unsupported rotation method: {}".format(method))
+            if part_group.flip:
+                rotate_island(island, math.pi)
+
+            island.update_bounds()
 
     @staticmethod
-    def average_vectors(vectors):
-        total = vectors[0].copy()
-        for vector in vectors[1:]:
+    def average_vectors(island_manager):
+        all_center_3d = [island.center_3d for island in island_manager.islands]
+        total = all_center_3d[0].copy()
+        for vector in all_center_3d[1:]:
             total += vector
-        return total / len(vectors)
-
+        return total / len(all_center_3d)
 
     def draw(self, context):
         layout = self.layout
-        row = layout.row()
-        row.label(text="Align")
-        row.prop(self, "align_uv", expand=True)
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        layout.row().prop(self, "align_uv", expand=True)
+        layout.prop(self, "spacing")
 
 
 def register():

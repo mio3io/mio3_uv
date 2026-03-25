@@ -22,14 +22,14 @@ def rotate_island(island, angle):
             loop[island.uv_layer].uv = Vector((new_u, new_v))
 
 
-def find_rotation_auto(island):
+def find_rotation_auto(uv_layer, faces):
     sum_u = 0.0
     sum_v = 0.0
 
-    for face in island.faces:
-        prev_uv = face.loops[-1][island.uv_layer].uv
+    for face in faces:
+        prev_uv = face.loops[-1][uv_layer].uv
         for loop in face.loops:
-            uv = loop[island.uv_layer].uv
+            uv = loop[uv_layer].uv
             delta_u = uv.x - prev_uv.x
             delta_v = uv.y - prev_uv.y
             edge_angle = math.atan2(delta_v, delta_u)
@@ -41,11 +41,10 @@ def find_rotation_auto(island):
     return -math.atan2(sum_v, sum_u) / 4.0
 
 
-def find_rotation_geometry(island, axis):
-    uv_layer = island.uv_layer
+def find_rotation_geometry(uv_layer, faces, axis):
     sum_u_co = Vector((0.0, 0.0, 0.0))
     sum_v_co = Vector((0.0, 0.0, 0.0))
-    for face in island.faces:
+    for face in faces:
         for fan in range(2, len(face.loops)):
             delta_uv0 = face.loops[fan - 1][uv_layer].uv - face.loops[0][uv_layer].uv
             delta_uv1 = face.loops[fan][uv_layer].uv - face.loops[0][uv_layer].uv

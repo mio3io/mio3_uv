@@ -135,7 +135,6 @@ class MIO3UV_OT_seam(Mio3UVOperator):
 
         if self.unwrap:
             bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
-            bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
 
         self.print_time()
         return {"FINISHED"}

@@ -179,8 +179,8 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         if self.group_type == "NONE":
             return [island_manager.islands]
         elif self.group_type == "OBJECT":
-            for colle in island_manager.collections:
-                groups.append(colle.islands)
+            for oi in island_manager.collections:
+                groups.append([island for island in island_manager.islands if island.obj_info == oi])
             groups.sort(key=lambda x: x[0].obj.name, reverse=self.reverse)
         elif self.group_type == "DISTANCE":
 
@@ -521,7 +521,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         else:
             layout.separator()
             row = layout.row()
-            row.label(text="Island Margin", text_ctxt="Operator")
+            row.label(text="Island Spacing", text_ctxt="Operator")
             row.prop(self, "item_spacing", text="")
             layout.separator(factor=1)
 
@@ -552,7 +552,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             split.enabled = False
 
         if self.aling_mode != "FIXED":
-            split.label(text="Group Margin")
+            split.label(text="Group Spacing")
             split.prop(self, "group_spacing", text="")
 
         layout.prop(self, "reverse")

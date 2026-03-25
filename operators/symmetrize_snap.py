@@ -221,11 +221,8 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
 
     def get_symmetry_center(self, context, uv_layer, loops):
         if self.center == "SELECT":
-            original = context.space_data.cursor_location.copy()
-            bpy.ops.uv.snap_cursor(target="SELECTED")
-            selection_loc = context.space_data.cursor_location.copy()
-            bpy.ops.uv.cursor_set(location=original)
-            return selection_loc
+            uvs = [loop[uv_layer].uv for loop in loops if loop.uv_select_vert]
+            return sum(uvs, Vector((0, 0))) / len(uvs) if uvs else Vector((0.5, 0.5))
         elif self.center == "CURSOR":
             return context.space_data.cursor_location.copy()
         else:

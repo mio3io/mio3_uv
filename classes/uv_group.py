@@ -10,7 +10,7 @@ class UVNodeObject:
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
-    uv_sync_valid: bool = False
+    original_uv_select_sync_valid: bool = False
 
 
 @dataclass
@@ -74,17 +74,13 @@ class UVNodeGroup:
     @property
     def uv_layer(self):
         return self.obj_info.uv_layer
-    
-    @property
-    def uv_sync_valid(self):
-        return self.obj_info.uv_sync_valid
 
-    def has_selected_uv_face(self):
-        "グループ内にUV面選択が含まれるか調べる"
-        faces = {loop.face for node in self.nodes for loop in node.loops}
-        if self.obj_info.uv_sync_valid:
-            return any(face.select for face in faces)
-        return any(face.select and all(loop.uv_select_edge for loop in face.loops) for face in faces)
+    # def has_selected_uv_face(self):
+    #     "グループ内にUV面選択が含まれるか調べる"
+    #     faces = {loop.face for node in self.nodes for loop in node.loops}
+    #     if self.obj_info.bm.uv_select_sync_valid:
+    #         return any(face.select for face in faces)
+    #     return any(face.select and all(loop.uv_select_edge for loop in face.loops) for face in faces)
 
     def __hash__(self):
         return hash((tuple(self.uv), self.vert))
@@ -97,17 +93,17 @@ class UVNodeGroup:
     def update_uvs(self):
         "UVノードのUVを更新"
         for node in self.nodes:
-            node.update_uv( self.obj_info.uv_layer)
+            node.update_uv(self.obj_info.uv_layer)
 
-    def deselect_all_uv(self):
-        "すべてのUVを非選択にする"
+    def uv_select_set_all(self, select):
+        "グループ内のすべてのUVを選択/非選択にする"
         for node in self.nodes:
             for loop in node.loops:
-                loop.uv_select_vert = False
-                loop.uv_select_edge = False
+                loop.uv_select_vert = select
+                loop.uv_select_edge = select
 
         if self.obj_info.bm.uv_select_sync_valid:
-            self.obj_info.bm.uv_select_flush(False)
+            self.obj_info.bm.uv_select_flush_mode()
 
     def store_selection(self):
         "現在のUV選択状態を保存"
@@ -169,12 +165,12 @@ class UVNodeGroup:
 class UVNodeManager:
     objects: list[Object]
     sync: bool = False
-    node_key_mode: str = "UV" # "UV" or "VERT_AND_UV"
+    node_key_mode: str = "UV"  # "UV" or "VERT_AND_UV"
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
 
-    object_colle: list[UVNodeObject] = field(default_factory=list)
+    collections: list[UVNodeObject] = field(default_factory=list)
     groups: list[UVNodeGroup] = field(default_factory=list)
 
     def __post_init__(self):
@@ -187,13 +183,13 @@ class UVNodeManager:
                 bm.uv_select_sync_from_mesh()
 
             obj_info = UVNodeObject(obj, bm, uv_layer, uv_sync_valid)
-            self.object_colle.append(obj_info)
+            self.collections.append(obj_info)
 
-            uv_groups = self.find_uv_nodes(bm, uv_layer, uv_sync_valid)
+            uv_groups = self.find_uv_nodes(bm, uv_layer)
             for group in uv_groups:
                 self.groups.append(UVNodeGroup(group, obj_info))
 
-    def find_uv_nodes(self, bm, uv_layer, uv_sync_valid, sub_faces=None):
+    def find_uv_nodes(self, bm, uv_layer, sub_faces=None):
         uv_nodes = {}
 
         def add_uv_node(loop):
@@ -208,7 +204,7 @@ class UVNodeManager:
 
         # faces = 面の頂点のループを含めて対象にする
         # sub_faces = 面のループのみを対象にする
-        
+
         # 選択されているループを座標をキーにしたノードグループにする（!!sync_uv_from_meshしていること）
         # ToDo: 座標をキーにすると閉じたループの場合一緒に始点と終点のノードができない
 
@@ -304,7 +300,7 @@ class UVNodeManager:
         return Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
 
     def uv_select_set_all(self, select):
-        for obj_info in self.object_colle:
+        for obj_info in self.collections:
             bm = obj_info.bm
             for face in bm.faces:
                 face.uv_select = select
@@ -319,17 +315,17 @@ class UVNodeManager:
                 break
 
     def update_uvmeshes(self, mesh_sync=False):
-        for obj_info in self.object_colle:
-            if self.sync and mesh_sync and obj_info.uv_sync_valid:
-                obj_info.bm.uv_select_sync_to_mesh()
-            bmesh.update_edit_mesh(obj_info.obj.data)
+        for info in self.collections:
+            if self.sync and mesh_sync and info.bm.uv_select_sync_valid:
+                info.bm.uv_select_sync_to_mesh()
+            bmesh.update_edit_mesh(info.obj.data)
 
     @classmethod
     def from_island(cls, island, sync=False, sub_faces=None):
         manager = cls(objects=[], sync=sync)
-        uv_sync_valid = island.uv_sync_valid
-        uv_groups = manager.find_uv_nodes(island.bm, island.uv_layer, uv_sync_valid, sub_faces=sub_faces)
-        obj_info = UVNodeObject(island.obj, island.bm, island.uv_layer, uv_sync_valid)
+        uv_groups = manager.find_uv_nodes(island.bm, island.uv_layer, sub_faces=sub_faces)
+        info = UVNodeObject(island.obj, island.bm, island.uv_layer, island.obj_info.original_uv_select_sync_valid)
+        manager.collections.append(info)
         for group in uv_groups:
-            manager.groups.append(UVNodeGroup(group, obj_info))
+            manager.groups.append(UVNodeGroup(group, info))
         return manager

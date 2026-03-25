@@ -28,18 +28,18 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
             bpy.ops.object.mode_set(mode="EDIT")
 
             bm = bmesh.from_edit_mesh(obj.data)
-            uv_layer = bm.loops.layers.uv.active
+            uv_layer = bm.loops.layers.uv.verify()
 
             selected_faces = [face for face in bm.faces if face.select]
             if not selected_faces:
                 continue
 
-            if not self.units:
-                self.project_faces(selected_faces, uv_layer)
-            else:
+            if self.units:
                 face_groups = self.find_groups(selected_faces)
                 for _, group in enumerate(face_groups):
                     self.project_faces(group, uv_layer)
+            else:
+                self.project_faces(selected_faces, uv_layer)
 
             bmesh.update_edit_mesh(obj.data)
 

@@ -58,7 +58,7 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
             pair_group = []
             for group in node_manager.groups:
                 if len(group.nodes) == 1:
-                    group.deselect_all_uv()
+                    group.uv_select_set_all(False)
                 else:
                     pair_group.append(group)
         else:

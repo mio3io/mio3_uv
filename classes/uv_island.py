@@ -15,7 +15,7 @@ class UVObject:
     obj: Object = None
     bm: BMesh = None
     uv_layer: BMLayerItem = None
-    uv_sync_valid: bool = False
+    original_uv_select_sync_valid: bool = False
 
 
 @dataclass
@@ -55,14 +55,10 @@ class UVIsland:
     @property
     def bm(self):
         return self.obj_info.bm
-    
+
     @property
     def uv_layer(self):
         return self.obj_info.uv_layer
-    
-    @property
-    def uv_sync_valid(self):
-        return self.obj_info.uv_sync_valid
 
     @property
     def center_3d(self):
@@ -156,19 +152,12 @@ class UVIsland:
         if self.bm.uv_select_sync_valid:
             self.bm.uv_select_flush_mode()
 
-    def select_all_uv(self):
+    def uv_select_set_all(self, select):
         for face in self.faces:
-            face.uv_select = True
+            face.uv_select = select
             for loop in face.loops:
-                loop.uv_select_vert = True
-                loop.uv_select_edge = True
-
-    def deselect_all_uv(self):
-        for face in self.faces:
-            face.uv_select = False
-            for loop in face.loops:
-                loop.uv_select_vert = False
-                loop.uv_select_edge = False
+                loop.uv_select_vert = select
+                loop.uv_select_edge = select
 
     @cached_property
     def is_any_uv_selected(self):
@@ -188,17 +177,6 @@ class UVIsland:
 
 
 @dataclass
-class UVIslandCollection:
-    obj_info: UVObject = None
-    # obj: Object = None
-    # bm: BMesh = None
-    # uv_layer: BMLayerItem = None
-    # uv_sync_valid: bool = False
-    islands: list[UVIsland] = field(default_factory=list)
-    # original_selected_verts: dict[BMVert, bool] = field(default_factory=dict)
-
-
-@dataclass
 class UVIslandManager:
     objects: list[Object]
 
@@ -209,18 +187,8 @@ class UVIslandManager:
     select_mode: Literal["VERT", "EDGE", "FACE"] = None
     orientation_mode: Literal["WORLD", "LOCAL"] = "WORLD"
 
-    obj_infos: list[UVObject] = field(default_factory=list)
+    collections: list[UVObject] = field(default_factory=list)
     islands: list[UVIsland] = field(default_factory=list)
-
-    @property
-    def collections(self):
-        if not self.obj_infos:
-            return []
-        obj_info_dict = {obj_info.obj: obj_info for obj_info in self.obj_infos}
-        colle_dict = {obj: UVIslandCollection(obj_info=obj_info_dict[obj]) for obj in obj_info_dict}
-        for island in self.islands:
-            colle_dict[island.obj].islands.append(island)
-        return list(colle_dict.values())
 
     def __post_init__(self):
         self.find_all_islands()
@@ -237,7 +205,7 @@ class UVIslandManager:
 
             uv_sync_valid = bm.uv_select_sync_valid
 
-            self.obj_infos.append(UVObject(obj, bm, uv_layer, uv_sync_valid))
+            self.collections.append(UVObject(obj, bm, uv_layer, uv_sync_valid))
 
             if self.select_mode:
                 bm.select_mode = {self.select_mode}
@@ -253,7 +221,7 @@ class UVIslandManager:
 
         if self.sync:
             if self.find_all:
-                for obj_info in self.obj_infos:
+                for obj_info in self.collections:
                     bm = obj_info.bm
                     bm.uv_select_foreach_set(True, faces=bm.faces)
             elif self.extend:
@@ -271,10 +239,9 @@ class UVIslandManager:
 
         bpy.ops.uv.seams_from_islands(mark_seams=True)
 
-        for obj_info in self.obj_infos:
+        for obj_info in self.collections:
             bm = obj_info.bm
             uv_layer = obj_info.uv_layer
-            uv_sync_valid = obj_info.uv_sync_valid
 
             obj_islands = self.find_islands(obj_info)
 
@@ -376,6 +343,16 @@ class UVIslandManager:
         ranges = [x_range, y_range]
         return ["X", "Y"][ranges.index(max(ranges))]
 
+    def uv_select_set_all(self, select):
+        for info in self.collections:
+            bm = info.bm
+            if bm.uv_select_sync_valid:
+                bm.uv_select_foreach_set(select, faces=bm.faces)
+                bm.uv_select_flush_mode()
+            else:
+                for island in [island for island in self.islands if island.obj_info == info]:
+                    island.uv_select_set_all(select)
+
     def sort_all_islands(self, key, reverse=False):
         self.islands.sort(key=key, reverse=reverse)
 
@@ -386,7 +363,7 @@ class UVIslandManager:
                 island.orientation_mode = mode
 
     def update_uvmeshes(self, mesh_sync=False):
-        for obj_info in self.obj_infos:
-            if self.sync and mesh_sync and obj_info.bm.uv_select_sync_valid:
-                obj_info.bm.uv_select_sync_to_mesh()
-            bmesh.update_edit_mesh(obj_info.obj.data)
+        for info in self.collections:
+            if self.sync and mesh_sync and info.bm.uv_select_sync_valid:
+                info.bm.uv_select_sync_to_mesh()
+            bmesh.update_edit_mesh(info.obj.data)

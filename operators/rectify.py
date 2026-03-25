@@ -93,7 +93,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
             if len(selected_uvs) >= 4:
                 valid_islands.append((island, selected_uvs))
 
-            island.deselect_all_uv()
+            island.uv_select_set_all(False)
 
         for island, selected_uvs in valid_islands:
             island.restore_selection()
@@ -121,7 +121,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                     if self.pin:
                         loop[uv_layer].pin_uv = True
 
-            island.deselect_all_uv()
+            island.uv_select_set_all(False)
 
             boundary_loops = set()
             for (curr_loops, _), (next_loops, _) in zip(corners, corners[1:] + [corners[0]]):
@@ -155,7 +155,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
         if self.unwrap:
             for island, _ in valid_islands:
-                island.select_all_uv()
+                island.uv_select_set_all(True)
                 for face in island.faces:
                     face.select = True
             bpy.ops.uv.unwrap(method=self.method, margin=0.001)
@@ -167,8 +167,10 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
         if not self.pin:
             for island, _ in valid_islands:
-                island.select_all_uv()
-            bpy.ops.uv.pin(clear=True)
+                uv_layer = island.uv_layer
+                for face in island.faces:
+                    for loop in face.loops:
+                        loop[uv_layer].pin_uv = False
 
         for island, _ in valid_islands:
             island.restore_selection()

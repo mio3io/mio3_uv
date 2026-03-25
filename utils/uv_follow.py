@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: 2009-2023 Blender Authors
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Modifications:
+# - Adapted for this add-on
+# - Minor changes by Mio (2026)
 
 
 def get_uv_key(uv):
@@ -40,7 +44,7 @@ def sync_shared_uv_loops(uv_layer, shared_uvs):
             loop[uv_layer].uv = uv
 
 
-def uv_follow(extend_mode, island, f_act, shared_uvs):
+def uv_follow(extend_blend, island, f_act, shared_uvs):
     bm = island.bm
     uv_layer = island.uv_layer
     faces = island.faces
@@ -122,6 +126,9 @@ def uv_follow(extend_mode, island, f_act, shared_uvs):
         l_b_inner[:] = l_a_inner
         l_b_outer[:] = l_a_inner + ((l_a_inner - l_a_outer) * fac)
 
+    def blend_length_average_factor(ratio, blend):
+        return ratio + ((1.0 - ratio) * blend)
+
     def apply_uv(_f_prev, l_prev, _f_next):
         l_a = [None, None, None, None]
         l_b = [None, None, None, None]
@@ -162,11 +169,11 @@ def uv_follow(extend_mode, island, f_act, shared_uvs):
         l_a_uv = [l[uv_layer].uv for l in l_a]
         l_b_uv = [l[uv_layer].uv for l in l_b]
 
-        if extend_mode == "LENGTH_AVERAGE":
+        if extend_blend < 1.0:
             d1 = edge_lengths[l_a[1].edge.index][0]
             d2 = edge_lengths[l_b[2].edge.index][0]
             try:
-                fac = d2 / d1
+                fac = blend_length_average_factor(d2 / d1, extend_blend)
             except ZeroDivisionError:
                 fac = 1.0
         else:
@@ -191,7 +198,7 @@ def uv_follow(extend_mode, island, f_act, shared_uvs):
     # -------------------------------------------
     # Calculate average length per loop if needed.
 
-    if extend_mode == "LENGTH_AVERAGE":
+    if extend_blend < 1.0:
         bm.edges.index_update()
         edge_lengths = [None] * len(bm.edges)
 

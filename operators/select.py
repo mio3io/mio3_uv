@@ -4,7 +4,7 @@ import math
 from mathutils import Vector, kdtree
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes import UVIslandManager, Mio3UVOperator
-from ..utils.utils import uv_select_set_face, uv_select_set_all, get_uv_selected_edges
+from ..utils.utils import uv_select_set_face, uv_select_set_all
 
 
 class MIO3UV_OT_auto_uv_sync(bpy.types.Operator):
@@ -126,14 +126,14 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
         if not source_island:
             return {"CANCELLED"}
 
-        source_island.select_all_uv()
+        source_island.uv_select_set_all(True)
 
         for island in island_manager.islands:
             if island == source_island:
                 continue
-            island.deselect_all_uv()
+            island.uv_select_set_all(False)
             if not self.is_different(island, source_face_count, source_edge_count):
-                island.select_all_uv()
+                island.uv_select_set_all(True)
 
         island_manager.update_uvmeshes(True)
 
@@ -326,56 +326,53 @@ class MIO3UV_OT_select_boundary(Mio3UVOperator):
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
         check_selected = self.check_selected_face_objects(objects)
-        if not check_selected:
-            bpy.ops.uv.select_all(action="SELECT")
-
-        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync, find_all=True)
 
         use_seam = self.use_seam
         use_mesh_boundary = self.use_mesh_boundary
         use_uv_boundary = self.use_uv_boundary
 
-        for colle in island_manager.collections:
-            for island in colle.islands:
-                uv_layer = island.uv_layer
-                boundary_edges = island.boundary_edge if use_uv_boundary else ()
+        for island in island_manager.islands:
+            uv_layer = island.uv_layer
+            boundary_edges = island.boundary_edge if use_uv_boundary else ()
 
-                uv_to_loops = {}
-                selected_uv_coords = set()
-                uv_to_loops_get = uv_to_loops.get
-                for face in island.faces:
-                    for loop in face.loops:
-                        uv_coord = tuple(loop[uv_layer].uv)
-                        bucket = uv_to_loops_get(uv_coord)
-                        if bucket is None:
-                            bucket = []
-                            uv_to_loops[uv_coord] = bucket
-                        bucket.append(loop)
+            uv_to_loops = {}
+            selected_uv_coords = set()
+            selected_edges = set()
+            for face in island.faces:
+                for loop in face.loops:
+                    uv_key = tuple(loop[uv_layer].uv)
+                    bucket = uv_to_loops.get(uv_key)
+                    if bucket is None:
+                        bucket = []
+                        uv_to_loops[uv_key] = bucket
+                    bucket.append(loop)
+
+                    if check_selected:
                         if loop.uv_select_vert:
-                            selected_uv_coords.add(uv_coord)
+                            selected_uv_coords.add(uv_key)
+                        if loop.uv_select_edge:
+                            selected_edges.add(loop.edge)
+                    else:
+                        selected_uv_coords.add(uv_key)
+                        selected_edges.add(loop.edge)
 
-                original_selected_edges = get_uv_selected_edges(island.faces)
+            island.uv_select_set_all(False)
 
-                island.deselect_all_uv()
-
-                boundary_uv_coords = set()
-                for uv_coord in selected_uv_coords:
-                    loops = uv_to_loops[uv_coord]
-                    for loop in loops:
-                        edge = loop.edge
-                        if (
-                            (use_uv_boundary and edge in boundary_edges)
-                            or (use_mesh_boundary and edge.is_boundary)
-                            or (use_seam and edge.seam)
-                        ):
-                            boundary_uv_coords.add(uv_coord)
-                            if edge in original_selected_edges:
-                                loop.uv_select_edge = True
-                            break
-
-                for uv_coord in boundary_uv_coords:
-                    for loop in uv_to_loops[uv_coord]:
-                        loop.uv_select_vert = True
+            for uv_key in selected_uv_coords:
+                loops = uv_to_loops[uv_key]
+                for loop in loops:
+                    edge = loop.edge
+                    if (
+                        (use_uv_boundary and edge in boundary_edges)
+                        or (use_mesh_boundary and edge.is_boundary)
+                        or (use_seam and edge.seam)
+                    ):
+                        if edge in selected_edges:
+                            loop.uv_select_edge = True
+                        for shared_loop in loops:
+                            shared_loop.uv_select_vert = True
+                        break
 
         island_manager.update_uvmeshes(True)
 
@@ -414,53 +411,48 @@ class MIO3UV_OT_select_edge_direction(Mio3UVOperator):
             context.tool_settings.uv_select_mode = "EDGE"
 
         check_selected = self.check_selected_face_objects(objects)
-        if not check_selected:
-            bpy.ops.uv.select_all(action="SELECT")
-
-        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync, find_all=True)
 
         axis = self.axis
 
-        for colle in island_manager.collections:
-            for island in colle.islands:
-                uv_to_loops = {}
-                uv_layer = island.uv_layer
+        for island in island_manager.islands:
+            uv_to_loops = {}
+            uv_layer = island.uv_layer
+            selected_edges = set()
 
-                for face in island.faces:
-                    for loop in face.loops:
-                        uv_coord = tuple(loop[uv_layer].uv)
-                        if uv_coord not in uv_to_loops:
-                            uv_to_loops[uv_coord] = []
-                        uv_to_loops[uv_coord].append(loop)
+            for face in island.faces:
+                for loop in face.loops:
+                    uv_key = tuple(loop[uv_layer].uv)
+                    bucket = uv_to_loops.get(uv_key)
+                    if bucket is None:
+                        bucket = []
+                        uv_to_loops[uv_key] = bucket
+                    bucket.append(loop)
 
-                original_selected_edges = get_uv_selected_edges(island.faces)
+                    if check_selected:
+                        if loop.uv_select_edge:
+                            selected_edges.add(loop.edge)
+                    else:
+                        selected_edges.add(loop.edge)
 
-                island.deselect_all_uv()
+            island.uv_select_set_all(False)
 
-                direction_matched_edges = set()
-                for edge in original_selected_edges:
-                    for loop in edge.link_loops:
-                        if loop.face not in island.faces:
-                            continue
+            for edge in selected_edges:
+                for loop in edge.link_loops:
+                    if loop.face not in island.faces:
+                        continue
 
-                        if self.is_direction(loop, axis, uv_layer):
-                            direction_matched_edges.add(edge)
-                            break
-
-                selected_uv_coords = set()
-                for edge in direction_matched_edges:
-                    for loop in edge.link_loops:
-                        if loop.face in island.faces:
-                            loop.uv_select_edge = True
-                            uv_coord1 = tuple(loop[uv_layer].uv)
-                            uv_coord2 = tuple(loop.link_loop_next[uv_layer].uv)
-                            selected_uv_coords.add(uv_coord1)
-                            selected_uv_coords.add(uv_coord2)
-
-                for uv_coord in selected_uv_coords:
-                    loops = uv_to_loops[uv_coord]
-                    for loop in loops:
-                        loop.uv_select_vert = True
+                    if self.is_direction(loop, axis, uv_layer):
+                        for shared_loop in edge.link_loops:
+                            if shared_loop.face in island.faces:
+                                shared_loop.uv_select_edge = True
+                                for uv_loops in (
+                                    uv_to_loops[tuple(shared_loop[uv_layer].uv)],
+                                    uv_to_loops[tuple(shared_loop.link_loop_next[uv_layer].uv)],
+                                ):
+                                    for uv_loop in uv_loops:
+                                        uv_loop.uv_select_vert = True
+                        break
 
         island_manager.update_uvmeshes(True)
 

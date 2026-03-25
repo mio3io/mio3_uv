@@ -75,7 +75,7 @@ class MIO3UV_OT_stack(Mio3UVOperator):
                 if island == source_island:
                     continue
                 if not self.is_different(island, base_face_count):
-                    island.select_all_uv()
+                    island.uv_select_set_all(True)
                     for face in island.faces:
                         face.select = True
                     processed.add(island)

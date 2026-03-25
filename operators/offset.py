@@ -8,11 +8,11 @@ from ..classes.operator import Mio3UVOperator
 class MIO3UV_OT_offset(Mio3UVOperator):
     bl_idname = "uv.mio3_offset"
     bl_label = "Offset"
-    bl_description = "Expand/Shrink UV Borders"
+    bl_description = "Expand/Shrink UV Borders. Ensure space for the overlapping rim created by Solidify."
     bl_options = {"REGISTER", "UNDO"}
 
     offset: FloatProperty(
-        name="Offset", description="Offset to expand UV boundary", default=0.001, min=-1.0, max=1.0, step=0.01
+        name="Offset", description="Offset to expand UV boundary.", default=0.001, min=-1.0, max=1.0, step=0.01
     )
     keep_pin: BoolProperty(name="Keep Pin", default=False)
     use_seam: BoolProperty(name="Seam", default=True)

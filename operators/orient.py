@@ -55,10 +55,9 @@ class MIO3UV_OT_orient(Mio3UVOperator):
 
     def align_island_rotation(self, island_manager):
         for island in island_manager.islands:
-            angle = find_rotation_auto(island)
+            angle = find_rotation_auto(island.uv_layer, island.faces)
             if angle != 0.0:
                 rotate_island(island, angle)
-
 
     def align_edge_rotation(self, island_manager, udim):
         for island in island_manager.islands:

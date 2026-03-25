@@ -60,6 +60,7 @@ translation_dict = {
         ("*", "Unwrap boundary to rectangle using four corners or a range as reference"): "基準のコーナー4点または範囲を選択し境界が矩形になるように展開する",
         ("Operator", "Gridify"): "グリッド",
         ("*", "Align UVs of a quadrangle in a grid"): "四角形のUVをグリッド状に整列させる",
+        ("*", "Evenness"): "均一化",
         ("Operator", "Projection Unwrap"): "投影展開",
         ("*", "Unwrap linked faces"): "リンク面を展開",
         ("*", "Unwrap by linked mesh"): "メッシュごとに投影",
@@ -82,6 +83,7 @@ translation_dict = {
         ("*", "Edge Mode"): "辺モード",
         ("*", "Process each edge loops"): "エッジループ毎に処理する",
         ("*", "Process multiple edge loops as a single group"): "複数のエッジループをひとつのグループとして処理する",
+        ("*", "[Island Mode] Center\n[Vertex Mode] Straighten"): "アイランドモード: 中心\n頂点モード: 直線化",
 
         ("*", "Align UVs to the target position"): "UVをターゲット位置に整列",
         ("*", "Move UVs to the target position while keeping their relative spacing"): "UVをターゲット位置に移動（相対的な間隔を保持）",
@@ -119,14 +121,14 @@ translation_dict = {
         ("Operator", "Circular"): "円形",
         ("*", "Shape the edge loop into a circular shape"): "エッジループを円形に整える",
         ("Operator", "Offset"): "オフセット",
-        ("*", "Expand/Shrink UV Borders"): "境界のUVを拡大/縮小する",
+        ("*", "Expand/Shrink UV Borders. Ensure space for the overlapping rim created by Solidify."): "UVの境界を拡大/縮小します。ソリッド化で重なってしまったリムのスペースを確保します",
 
         # Island
         ("Operator", "Sort Islands"): "アイランドをソート",
         ("*", "Rearrange islands based on coordinates in 3D space"): "3D空間の座標に基づきアイランドを並び替え",
         ("*", "Sort Method"): "ソート方式",
         ("*", "Start Angle (Clock)"): "開始角度（時計）",
-        ("Operator", "Island Margin"): "アイランドの間隔",
+        ("Operator", "Island Spacing"): "アイランドの間隔",
 
         ("Operator", "Stack"): "重ねる",
         ("*", "Overlap similar UV shapes"): "類似した形状のUVシェイプを重ねます",
@@ -144,7 +146,7 @@ translation_dict = {
         ("*", "Grid Size"): "グリッド幅",
         ("*", "Align Type"): "整列タイプ",
         ("*", "Align by group"): "グループごとに整列",
-        ("*", "Group Margin"): "グループの間隔",
+        ("*", "Group Spacing"): "グループの間隔",
         ("*", "Fixed Width"): "固定幅",
 
         ("Operator", "Unfoldify"): "展開配置",
@@ -163,6 +165,9 @@ translation_dict = {
         ("Operator", "Button"): "ボタン",
         ("Operator", "Front Hair"): "前髪",
         ("Operator", "Back Hair"): "後髪",
+        ("*", "Automatically detects body parts and classifies or arranges them"): "体の部位を自動的に検出し、分類または整列します",
+        ("*", "Align the body parts in the appropriate order and orientation"): "体の部位を適切な順序と方向に整列します",
+        ("*", "Align the vertically positioned parts"): "垂直に配置された部位を整列します",
 
         # Symmetrize
         ("*", "Symmetrize based on 3D space"): "3D空間の対称性に基づきUVを対称化します",

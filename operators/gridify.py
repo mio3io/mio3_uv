@@ -1,6 +1,6 @@
 import bpy
 import math
-from bpy.props import BoolProperty, EnumProperty
+from bpy.props import BoolProperty, FloatProperty
 from mathutils import Vector, Matrix
 from ..classes import UVIslandManager, Mio3UVOperator
 from ..utils.uv_follow import uv_follow, build_uv_loop_index, collect_shared_uv_loops
@@ -22,13 +22,13 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
     normalize: BoolProperty(name="Normalize", default=False)
     keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
-    even: BoolProperty(name="Even", default=False)
-    mode: EnumProperty(
-        name="Method",
-        items=[
-            ("LENGTH_AVERAGE", "Standard", ""),
-            ("EVEN", "Even", ""),
-        ],
+    shape_blend: FloatProperty(
+        name="Evenness",
+        description="0 keeps average edge-length scaling, 1 makes spacing even",
+        default=0,
+        min=0.0,
+        max=1.0,
+        step=10
     )
 
     def execute(self, context):
@@ -57,7 +57,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
             shared_uvs = collect_shared_uv_loops(uv_layer, island.faces, uv_loop_index_cache[obj])
             self.align_rect(uv_layer, f_act)
-            uv_follow(self.mode, island, f_act, shared_uvs)
+            uv_follow(self.shape_blend, island, f_act, shared_uvs)
 
         island_manager.update_uvmeshes()
 
@@ -86,7 +86,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
                 area_diff = abs(face.calc_area() - avg_area)
 
-                angle_weight = 0.5
+                angle_weight = 0.2
                 area_weight = 1.0
                 score = angle_weight * max_angle_diff + area_weight * (area_diff / avg_area)
 
@@ -156,8 +156,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         layout = self.layout
         layout.use_property_decorate = False
         layout.use_property_split = True
-        row = layout.row()
-        row.prop(self, "mode", expand=True)
+        layout.prop(self, "shape_blend")
         layout.prop(self, "normalize")
 
         row = layout.row()

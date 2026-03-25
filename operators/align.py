@@ -1,7 +1,9 @@
 import bpy
 from mathutils import Vector
+from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, EnumProperty
 from ..classes import UVIslandManager, UVIsland, UVNodeManager, UVNodeGroup, UVNode, Mio3UVOperator
+from ..utils.utils import straight_uv_nodes
 
 
 class MIO3UV_OT_align(Mio3UVOperator):
@@ -47,6 +49,24 @@ class MIO3UV_OT_align(Mio3UVOperator):
         ],
         default="BBOX",
     )
+    
+    @classmethod
+    def description(cls, context, properties):
+        align_type_desc = {
+            "MAX_Y": "Top",
+            "MIN_Y": "Bottom",
+            "MIN_X": "Left",
+            "MAX_X": "Right",
+            "ALIGN_S": "Straighten",
+            "ALIGN_X": "Center Y",
+            "ALIGN_Y": "Center X",
+            "CENTER": "[Island Mode] Center\n[Vertex Mode] Straighten",
+            "MAX_Y_MIN_X": "Left Top",
+            "MAX_Y_MAX_X": "Right Top",
+            "MIN_Y_MIN_X": "Left Bottom",
+            "MIN_Y_MAX_X": "Right Bottom",
+        }.get(properties.type, properties.type)
+        return tt_iface(align_type_desc)
 
     def draw(self, context):
         layout = self.layout
@@ -57,7 +77,10 @@ class MIO3UV_OT_align(Mio3UVOperator):
         col.enabled = self.island and not self.edge_mode
         layout.prop(self, "edge_mode")
         layout.prop(self, "island")
-        layout.prop(self, "align_to", expand=True)
+        col = layout.column()
+        col.prop(self, "align_to", expand=True)
+        if self.type == "CENTER" and (not self.island or not self.edge_mode):
+            col.enabled = False
 
     def invoke(self, context, event):
         objects = self.get_selected_objects(context)
@@ -86,6 +109,16 @@ class MIO3UV_OT_align(Mio3UVOperator):
         self.avg_center = Vector((0.5, 0.5))
 
         if self.type == "ALIGN_S":
+            if not self.island:
+                node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
+                for group in node_manager.groups:
+                    straight_uv_nodes(group, mode="NONE", keep_length=False, center=False)
+                    group.update_uvs()
+
+                node_manager.update_uvmeshes()
+            return {"FINISHED"}
+
+        if not self.island and self.type == "CENTER":
             try:
                 bpy.ops.uv.align(axis="ALIGN_S")
             except:
@@ -169,9 +202,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
                         node.uv.x += offset
                     else:
                         node.uv.y += offset
-        elif alignment_type == "CENTER":
-            self.align_groups(context, groups, "ALIGN_X", align_to)
-            self.align_groups(context, groups, "ALIGN_Y", align_to)
+
 
     def align_nodes(self, context, nodes: list[UVNode], alignment_type, align_to):
         uv_coords = [node.uv for node in nodes]
