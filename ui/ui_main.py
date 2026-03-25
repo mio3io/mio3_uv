@@ -219,10 +219,7 @@ class MIO3UV_PT_select(Mio3UVPanel):
         row.operator("uv.mio3_select_mirror3d", icon_value=icons.mirror_uv)
         row = col2.row(align=True)
         row.operator("uv.mio3_select_similar", icon_value=icons.similar)
-        row.operator("uv.mio3_select_boundary", icon_value=icons.boundary)
-        row = col2.row(align=True)
-        row.operator("uv.mio3_select_edge_direction", text="Horizontal", icon_value=icons.edges_x).axis = "X"
-        row.operator("uv.mio3_select_edge_direction", text="Vertical", icon_value=icons.edges_y).axis = "Y"
+        row.operator("uv.mio3_select_edge", icon_value=icons.boundary)
 
         row = col.row(align=True)
         row.label(text="Odd UVs")

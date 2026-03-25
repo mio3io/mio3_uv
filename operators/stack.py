@@ -16,17 +16,11 @@ class MIO3UV_OT_paste(Mio3UVOperator):
 
     def execute(self, context):
         objects = self.get_selected_objects(context)
-
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        if use_uv_select_sync:
-            mesh_select_mode = self.store_mesh_select_mode(context, (False, False, True))
 
-        island_manager = UVIslandManager(objects)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if self.mode == "AUTO":
             bpy.ops.uv.copy()
-
-        for island in island_manager.islands:
-            island.store_selection()
 
         bpy.ops.uv.paste()
 
@@ -35,9 +29,6 @@ class MIO3UV_OT_paste(Mio3UVOperator):
                 island.update_bounds()
                 offset = island.original_center - island.center
                 island.move(offset)
-
-        if use_uv_select_sync:
-            self.restore_mesh_select_mode(context, mesh_select_mode)
 
         island_manager.update_uvmeshes()
 
@@ -56,17 +47,16 @@ class MIO3UV_OT_stack(Mio3UVOperator):
         self.start_time()
         self.objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
-        # context.tool_settings.mesh_select_mode = (False, False, True)
 
-        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True, select_mode="FACE")
+        island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True)
 
-        source_islands = [i for i in island_manager.islands if i.is_any_uv_selected]
-        among_islands = source_islands if self.selected else island_manager.islands
+        selected_islands = [i for i in island_manager.islands if i.is_any_uv_selected]
+        among_islands = selected_islands if self.selected else island_manager.islands
 
         bpy.ops.uv.copy()
 
         processed = set()
-        for source_island in source_islands:
+        for source_island in selected_islands:
             if source_island in processed:
                 continue
             base_face_count = len(source_island.faces)

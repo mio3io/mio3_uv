@@ -51,6 +51,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
             if node_manager.groups:
                 self.align_uv_nodes(node_manager, self.axis)
 
+        for island in island_manager.islands:
             island.restore_selection()
 
         island_manager.update_uvmeshes(True)

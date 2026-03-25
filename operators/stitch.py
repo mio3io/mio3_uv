@@ -16,7 +16,7 @@ class MIO3UV_OT_stitch(Mio3UVOperator):
         objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        island_manager = UVIslandManager(objects, sync=use_uv_select_sync, select_mode="EDGE")
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if not island_manager.islands:
             return {"CANCELLED"}
 

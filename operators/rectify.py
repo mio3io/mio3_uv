@@ -35,7 +35,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
     def draw(self, context):
         layout = self.layout
-
+        layout.use_property_split = False
+        layout.use_property_decorate = False
         split = layout.split(factor=0.4)
         split.label(text="Scale")
         sub = split.row()
@@ -44,9 +45,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         split = layout.split(factor=0.4)
         split.label(text="Align UVs")
         split.prop(self, "distribute", text="")
-
         split = layout.split(factor=0.4)
-        split.use_property_split = False
         split.prop(self, "unwrap")
         sub = split.row()
 
@@ -54,7 +53,6 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         sub.enabled = self.unwrap
 
         layout.use_property_split = True
-        layout.use_property_decorate = False
         layout.prop(self, "stretch")
         layout.prop(self, "pin")
 
@@ -78,8 +76,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
         valid_islands: list[tuple[UVIsland, dict]] = []
         for island in island_manager.islands:
-            bm, uv_layer = island.bm, island.uv_layer
-            bm.select_mode = {"VERT"}
+            uv_layer = island.uv_layer
             island.store_selection()
 
             selected_uvs = {}
@@ -97,7 +94,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
         for island, selected_uvs in valid_islands:
             island.restore_selection()
-            bm, uv_layer = island.bm, island.uv_layer
+            uv_layer = island.uv_layer
 
             bbox_vectors = [Vector(uvkey) for uvkey in selected_uvs.keys()]
             bbox_uvs = self.get_bbox_uvs(bbox_vectors)
