@@ -2,7 +2,6 @@ import bpy
 import bmesh
 from mathutils import Vector
 from dataclasses import dataclass, field
-from typing import Literal
 from bpy.types import Object
 from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
 from functools import cached_property
@@ -24,11 +23,6 @@ class UVIsland:
     obj_info: UVObject = None
     sync: bool = False
     extend: bool = True
-    boundary_edge: set[BMEdge] = field(default_factory=set)
-
-    face_count: int = field(init=False, default=0)
-    uv_count: int = field(init=False, default=0)
-    edge_count: int = field(init=False, default=0)
 
     orientation_mode: str = "WORLD"
 
@@ -184,8 +178,7 @@ class UVIslandManager:
     extend: bool = True  # 選択しているUVを境界まで拡張する
     find_all: bool = False  # すべてのアイランドを対象にする
 
-    select_mode: Literal["VERT", "EDGE", "FACE"] = None
-    orientation_mode: Literal["WORLD", "LOCAL"] = "WORLD"
+    orientation_mode = "WORLD"  # "WORLD" or "LOCAL"
 
     collections: list[UVObject] = field(default_factory=list)
     islands: list[UVIsland] = field(default_factory=list)
@@ -194,9 +187,6 @@ class UVIslandManager:
         self.find_all_islands()
 
     def find_all_islands(self):
-        original_edge_seam = {}
-        original_uv_select = {}
-        # シームを区切る 元の選択を保存
         for obj in self.objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
@@ -205,118 +195,142 @@ class UVIslandManager:
 
             uv_sync_valid = bm.uv_select_sync_valid
 
-            self.collections.append(UVObject(obj, bm, uv_layer, uv_sync_valid))
-
-            if self.select_mode:
-                bm.select_mode = {self.select_mode}
+            obj_info = UVObject(obj, bm, uv_layer, uv_sync_valid)
+            self.collections.append(obj_info)
 
             if self.sync and not uv_sync_valid:
                 bm.uv_select_sync_from_mesh()
 
-            original_edge_seam[obj] = {edge: edge.seam for edge in bm.edges}
-            original_uv_select[obj] = {}
-            for face in bm.faces:
-                for loop in face.loops:
-                    original_uv_select[obj][loop] = (loop.uv_select_vert, loop.uv_select_edge)
+            self.find_islands(obj_info, all=self.find_all, extend=self.extend, sync=self.sync)
 
-        if self.sync:
-            if self.find_all:
-                for obj_info in self.collections:
-                    bm = obj_info.bm
-                    bm.uv_select_foreach_set(True, faces=bm.faces)
-            elif self.extend:
-                if VER_5_0_1:
-                    bpy.ops.uv.select_linked()
-                else:
-                    bpy.ops.uv.select_more()
-                    bpy.ops.uv.select_more()
-                    bpy.ops.uv.select_linked()
-        else:
-            if self.find_all:
-                bpy.ops.uv.select_all(action="SELECT")  # シームを切る
-            elif self.extend:
-                bpy.ops.uv.select_linked()
-
-        bpy.ops.uv.seams_from_islands(mark_seams=True)
-
-        for obj_info in self.collections:
-            bm = obj_info.bm
-            uv_layer = obj_info.uv_layer
-
-            obj_islands = self.find_islands(obj_info)
-
-            # 元の選択に戻す
-            for uv, (uv_select_vert, uv_select_edge) in original_uv_select[obj_info.obj].items():
-                uv.uv_select_vert = uv_select_vert
-                uv.uv_select_edge = uv_select_edge
-
-            if bm.uv_select_sync_valid:
-                bm.uv_select_flush(False)
-
-            for edge, seam in original_edge_seam[obj_info.obj].items():
-                edge.seam = seam
-
-            for island in obj_islands:
-                self.islands.append(island)
-
-    def find_islands(self, obj_info: UVObject) -> list[UVIsland]:
+    def find_islands(self, obj_info: UVObject, all=False, extend=False, sync=False):
         bm = obj_info.bm
-        target_faces = set()
-        if self.find_all:
-            if self.sync:
-                target_faces = set(bm.faces)
+        uv_layer = obj_info.uv_layer
+        eps_eq = 1e-14
+
+        def get_selected_faces(bm, sync):
+            selected_faces = set()
+            if sync:
+                if extend:
+                    for face in bm.faces:
+                        if face.hide:
+                            continue
+                        for loop in face.loops:
+                            if loop.uv_select_vert:
+                                selected_faces.add(face)
+                                break
+                else:
+                    for face in bm.faces:
+                        if face.hide:
+                            continue
+                        if face.uv_select:
+                            selected_faces.add(face)
             else:
-                target_faces = {face for face in bm.faces if face.select}
+                if extend:
+                    for face in bm.faces:
+                        if face.select:
+                            for loop in face.loops:
+                                if loop.uv_select_vert:
+                                    selected_faces.add(face)
+                                    break
+                else:
+                    for face in bm.faces:
+                        if face.select and face.uv_select:
+                            selected_faces.add(face)
+            return selected_faces
+
+        if all:
+            if sync:
+                seed_faces = {f for f in bm.faces if not f.hide}
+            else:
+                seed_faces = {f for f in bm.faces if f.select}
         else:
-            for face in bm.faces:
-                if face.select:
-                    for loop in face.loops:
-                        if loop.uv_select_vert and face not in target_faces:
-                            target_faces.add(face)
-                            break
+            seed_faces = get_selected_faces(bm, sync)
+        if not seed_faces:
+            return
 
-        islands = []
-        processed_faces = set()
-        for face in target_faces:
-            if face not in processed_faces:
-                island_faces = set()
-                island_edges = set()
-                boundary_edges = set()
-                faces_to_check = [face]
-                face_count = 0
-                uv_count = 0
-                while faces_to_check:
-                    current_face = faces_to_check.pop()
-                    if current_face in target_faces and current_face not in processed_faces:
-                        island_faces.add(current_face)
-                        processed_faces.add(current_face)
-                        face_count += 1
-                        uv_count += len(current_face.loops)
-                        for edge in current_face.edges:
-                            island_edges.add(edge)
-                            if not edge.seam:
-                                faces_to_check.extend(edge.link_faces)
-                            else:
-                                boundary_edges.add(edge)
+        can_extend = all or extend
+        visited = set()
+        visited_add = visited.add
 
-                if island_faces:
-                    new_island = UVIsland(island_faces, obj_info, self.sync, self.extend)
-                    new_island.face_count = face_count
-                    new_island.uv_count = uv_count
-                    new_island.edge_count = len(island_edges)
-                    new_island.boundary_edge = boundary_edges
-                    islands.append(new_island)
+        for seed in seed_faces:
+            if seed in visited:
+                continue
 
-        return islands
+            island = set()
+            island_add = island.add
+            stack = [seed]
+            stack_append = stack.append
+
+            while stack:
+                face = stack.pop()
+                if face in visited:
+                    continue
+                visited_add(face)
+                island_add(face)
+
+                for loop in face.loops:
+                    edge = loop.edge
+                    if edge.seam:
+                        continue
+                    link_loops = edge.link_loops
+                    if len(link_loops) != 2:
+                        continue
+
+                    linked_loop = link_loops[1] if link_loops[0].face is face else link_loops[0]
+                    linked_face = linked_loop.face
+                    if linked_face in visited or linked_face.hide:
+                        continue
+                    if not can_extend and linked_face not in seed_faces:
+                        continue
+
+                    a = loop[uv_layer].uv
+                    b = loop.link_loop_next[uv_layer].uv
+                    c = linked_loop[uv_layer].uv
+                    d = linked_loop.link_loop_next[uv_layer].uv
+
+                    if loop.vert is linked_loop.vert:
+                        du = a.x - c.x
+                        dv = a.y - c.y
+                        if du * du + dv * dv > eps_eq:
+                            continue
+                        du = b.x - d.x
+                        dv = b.y - d.y
+                    else:
+                        du = a.x - d.x
+                        dv = a.y - d.y
+                        if du * du + dv * dv > eps_eq:
+                            continue
+                        du = b.x - c.x
+                        dv = b.y - c.y
+
+                    if du * du + dv * dv > eps_eq:
+                        continue
+
+                    stack_append(linked_face)
+
+            if island:
+                new_island = UVIsland(island, obj_info, self.sync, self.extend)
+                self.islands.append(new_island)
 
     def get_median_center(self):
         if not self.islands:
             return Vector((0, 0))
-        total_count = sum(island.uv_count for island in self.islands)
+        total_count = 0
+        sum_x = 0.0
+        sum_y = 0.0
+
+        for island in self.islands:
+            uv_count = sum(len(face.loops) for face in island.faces)
+            if uv_count == 0:
+                continue
+            center = island.median_center
+            total_count += uv_count
+            sum_x += center.x * uv_count
+            sum_y += center.y * uv_count
+
         if total_count == 0:
             return Vector((0, 0))
-        sum_x = sum(island.median_center.x * island.uv_count for island in self.islands)
-        sum_y = sum(island.median_center.y * island.uv_count for island in self.islands)
         return Vector((sum_x / total_count, sum_y / total_count))
 
     def get_bbox_center(self):
