@@ -114,9 +114,7 @@ class MIO3UV_PT_align(Mio3UVPanel):
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_orient", icon_value=icons.orient)
-        op = row.operator("uv.align_rotation", text="Orient World", icon_value=icons.z)
-        op.method = "GEOMETRY"
-        op.axis = "Z"
+        row.operator("uv.mio3_orient_world", text="Orient World", icon_value=icons.z).axis = "Z"
 
         row = col_rotate.row(align=True)
         row.operator("uv.mio3_sort", icon_value=icons.align_x)

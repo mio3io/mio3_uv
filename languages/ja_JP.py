@@ -98,6 +98,7 @@ translation_dict = {
         ("*", "Align the selected edge or island to an axis"): "選択した辺またはアイランドを軸に揃えます",
         ("Operator", "Align Axis"): "軸整列",
         ("Operator", "Orient World"): "ワールド方向",
+        ("*", "Align the selected islands to the world axis"): "選択したアイランドをワールド軸に揃えます",
         ("Operator", "Align Seam"): "シーム整列",
         ("*", "Align UVs of the same 3D vertex split by a seam"): "シームで別れた同じ3D頂点を持つUV座標を整列します",
         ("*", "Align the width of islands or UV groups"): "アイランドやUVグループの幅を揃える",
