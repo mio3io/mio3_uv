@@ -67,10 +67,6 @@ class UVIsland:
         verts = [v.co for face in self.faces for v in face.verts]
         return sum(verts, Vector()) / len(verts)
 
-    @cached_property
-    def original_selection_uvs(self):
-        return self.selection_loops
-
     def __post_init__(self):
         self.update_bounds()
         self.original_center = self.center.copy()
@@ -131,7 +127,7 @@ class UVIsland:
 
         self.all_uv_count = len(all_uvs)
         self.selection_uv_count = len(select_uvs)
-        return self.original_selection_uvs
+        # return self.original_selection_uvs
 
     def restore_selection(self):
         for face in self.faces:

@@ -11,15 +11,6 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
     bl_description = "Unwrap boundary to rectangle using four corners or a range as reference"
     bl_options = {"REGISTER", "UNDO"}
 
-    def unwrap_method_items(self, context):
-        items = [
-            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
-            ("CONFORMAL", "Conformal", "Conformal mapping method"),
-        ]
-        if bpy.app.version >= (4, 3, 0):
-            items.append(("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"))
-        return items
-
     bbox_type: EnumProperty(
         name="Scale",
         items=[("AVERAGE", "Average", ""), ("BBOX", "Max", "")],
@@ -28,7 +19,14 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         name="Align UVs",
         items=[("GEOMETRY", "Geometry", ""), ("EVEN", "Even", ""), ("NONE", "None", "")],
     )
-    method: EnumProperty(name="Unwrap Method", items=unwrap_method_items)
+    method: EnumProperty(
+        name="Unwrap Method",
+        items=[
+            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
+            ("CONFORMAL", "Conformal", "Conformal mapping method"),
+            ("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"),
+        ],
+    )
     unwrap: BoolProperty(name="Unwrap", default=True)
     stretch: BoolProperty(name="Stretch", default=False)
     pin: BoolProperty(name="Pinned", default=True)

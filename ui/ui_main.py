@@ -38,12 +38,12 @@ class MIO3UV_PT_main(Mio3UVPanel):
 
         row = col_unwrap.row(align=True)
         row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons.unwrap).axis = "BOTH"
-        row.scale_x=0.14
+        row.scale_x=0.11
         row.operator("uv.mio3_unwrap", text="X").axis = "X"
         row.operator("uv.mio3_unwrap", text="Y").axis = "Y"
         row.scale_x=1
-        row.separator(factor=0.2)
-        row.operator("uv.mio3_unwrap_mirrored", text="", icon="MOD_MIRROR")
+        row.operator("uv.mio3_unwrap_project", text="", icon_value=icons.camera)
+        row.operator("uv.mio3_unwrap_mirrored", text="", icon_value=icons.mirror_uv)
 
         col_unwrap = col.column(align=True)
 

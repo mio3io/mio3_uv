@@ -19,18 +19,13 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
             return tt_iface("Unwrap Vertical(Y) Only")
         return tt_iface("UV Unwrap")
 
-    def unwrap_method_items(self, context):
-        items = [
-            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
-            ("CONFORMAL", "Conformal", "Conformal mapping method"),
-        ]
-        if bpy.app.version >= (4, 3, 0):
-            items.append(("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"))
-        return items
-
     method: EnumProperty(
         name="Method",
-        items=unwrap_method_items,
+        items=[
+            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
+            ("CONFORMAL", "Conformal", "Conformal mapping method"),
+            ("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"),
+        ],
     )
     axis: EnumProperty(
         name="Direction",

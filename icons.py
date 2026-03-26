@@ -7,7 +7,6 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), "icons")
 
 icon_names = [
     "unwrap",
-    "unwrap2",
     "rectify",
     "grid",
     "straight",
@@ -43,7 +42,6 @@ icon_names = [
     "stack",
     "dist_x",
     "dist_y",
-    "grid_sorting",
     "seam",
     "relax",
     "copy",
@@ -69,13 +67,13 @@ icon_names = [
     "boundary",
     "shuffle",
     "circle",
-    "dist_uvs",
     "offset",
     "stitch",
     "stretch",
     "cube",
     "auto",
     "padding",
+    "camera",
 ]
 
 

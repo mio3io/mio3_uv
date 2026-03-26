@@ -24,12 +24,16 @@ def build_uv_loop_index(bm, uv_layer):
 
 def collect_shared_uv_loops(uv_layer, faces, uv_loop_index):
     shared_uvs = {}
+    selected_faces = set(faces)
 
     for face in faces:
         for loop in face.loops:
             key = (loop.vert, get_uv_key(loop[uv_layer].uv))
             if key not in shared_uvs:
-                shared_uvs[key] = {"source": loop, "loops": uv_loop_index.get(key, [])}
+                loops = uv_loop_index.get(key, [])
+                if not any(other_loop.face not in selected_faces for other_loop in loops):
+                    continue
+                shared_uvs[key] = {"source": loop, "loops": loops}
 
     return shared_uvs
 
