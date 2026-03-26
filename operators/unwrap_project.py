@@ -43,8 +43,8 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
         use_uv_select_sync = context.scene.tool_settings.use_uv_select_sync
 
-        # 非同期3Dモード
-        if not use_uv_select_sync:
+        # 3Dモード
+        if context.area.type == "VIEW_3D":
             for obj in objects:
                 context.view_layer.objects.active = obj
                 bm = bmesh.from_edit_mesh(obj.data)
@@ -57,7 +57,8 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
                 bmesh.update_edit_mesh(obj.data)
             if self.link_unwrap:
-                bpy.ops.uv.select_all(action="SELECT")
+                if not use_uv_select_sync:
+                    bpy.ops.uv.select_all(action="SELECT")
                 bpy.ops.uv.pin(clear=False)
                 bpy.ops.mesh.select_linked(delimit={"SEAM"})
                 bpy.ops.uv.unwrap(method=self.method)

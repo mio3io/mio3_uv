@@ -105,30 +105,30 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
             sort_axis="X",
             sort_reverse=True,
         ),
+        "HAND_L": PartGroup(
+            position=Vector((0.8, 0.7)),
+            direction=Vector((1, 0)),
+            rotation_operations=(("GEOMETRY", "X"), ("AUTO", None)),
+            sort_axis="Y",
+            sort_reverse=True,
+        ),
         "HAND_R": PartGroup(
-            position=Vector((0.3, 0.7)),
+            position=Vector((0.2, 0.7)),
             direction=Vector((-1, 0)),
             rotation_operations=(("GEOMETRY", "X"), ("AUTO", None)),
             flip=True,
             sort_axis="Y",
             sort_reverse=False,
         ),
-        "HAND_L": PartGroup(
-            position=Vector((0.7, 0.7)),
+        "FOOT_L": PartGroup(
+            position=Vector((0.7, 0.2)),
             direction=Vector((1, 0)),
-            rotation_operations=(("GEOMETRY", "X"), ("AUTO", None)),
-            sort_axis="Y",
-            sort_reverse=True,
+            rotation_operations=(("GEOMETRY", "Y"), ("AUTO", None)),
+            flip=True,
         ),
         "FOOT_R": PartGroup(
             position=Vector((0.3, 0.2)),
             direction=Vector((-1, 0)),
-            rotation_operations=(("GEOMETRY", "Y"), ("AUTO", None)),
-            flip=True,
-        ),
-        "FOOT_L": PartGroup(
-            position=Vector((0.7, 0.2)),
-            direction=Vector((1, 0)),
             rotation_operations=(("GEOMETRY", "Y"), ("AUTO", None)),
             flip=True,
         ),
@@ -161,10 +161,10 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         if parts_type == "BODY":
             self.auto_body_mapping(context, island_manager, body_reference)
         else:
-            part_group = self.PARTS_GROUP[parts_type]
-            self.sort_axis(island_manager, part_group.sort_axis, reverse=part_group.sort_reverse)
-            self.rotation_islands(island_manager, part_group)
-            self.align_islands(island_manager)
+            part_info = self.PARTS_GROUP[parts_type]
+            self.sort_axis(island_manager, part_info.sort_axis, reverse=part_info.sort_reverse)
+            self.rotation_islands(island_manager.islands, part_info)
+            self.align_islands(island_manager.islands)
 
         island_manager.update_uvmeshes(True)
         self.print_time()
@@ -193,18 +193,18 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
             return "BODY"
 
     def auto_body_mapping(self, context, island_manager, body_reference):
-        parts_groups = {parts: [] for parts in self.PARTS_GROUP.keys()}
+        part_infos = {parts: [] for parts in self.PARTS_GROUP.keys()}
         for island in island_manager.islands:
             parts_type = self.find_humanoid_part(island.center_3d, body_reference)
-            parts_groups[parts_type].append(island)
+            part_infos[parts_type].append(island)
 
-        for parts_type, islands in parts_groups.items():
+        for parts_type, islands in part_infos.items():
             if islands:
-                anchor = self.PARTS_GROUP[parts_type]
-                start_position = anchor.position.copy()
-                direction = anchor.direction
+                part_info = self.PARTS_GROUP[parts_type]
+                start_position = part_info.position.copy()
+                direction = part_info.direction
 
-                islands.sort(key=lambda island: island.width * island.height, reverse=True)
+                islands.sort(key=lambda island: len(island.faces), reverse=True)
 
                 current_position = start_position.copy()
                 for island in islands:
@@ -227,8 +227,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
 
         island_manager.islands.sort(key=sort_func, reverse=reverse)
 
-    def align_islands(self, island_manager):
-        islands = island_manager.islands
+    def align_islands(self, islands):
         min_x = min(island.min_uv.x for island in islands)
         max_x = max(island.max_uv.x for island in islands)
         max_y = max(island.max_uv.y for island in islands)
@@ -248,15 +247,16 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                 island.move(island_offset, True)
                 offset.y -= island.height + self.spacing
 
-    def rotation_islands(self, island_manager, part_group):
-        for island in island_manager.islands:
+    def rotation_islands(self, islands, part_group):
+        for island in islands:
+            world_matrix = island.obj.matrix_world
             for method, axis in part_group.rotation_operations:
                 if method == "AUTO":
                     angle = find_rotation_auto(island.uv_layer, island.faces)
                 if method == "GEOMETRY":
                     if axis is None:
                         axis = "Z"
-                    angle = find_rotation_geometry(island.uv_layer, island.faces, axis=axis)
+                    angle = find_rotation_geometry(island.uv_layer, island.faces, axis, "WORLD", world_matrix)
                 rotate_island(island, angle)
 
             if part_group.flip:

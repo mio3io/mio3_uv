@@ -2,6 +2,19 @@ import math
 from mathutils import Matrix, Vector
 
 
+AXIS_INDEX_MAP = {
+    "X": 0,
+    "Y": 1,
+    "Z": 2,
+}
+
+SECONDARY_AXIS_MAP = {
+    "X": "Z",
+    "Y": "Z",
+    "Z": "Y",
+}
+
+
 def rotate_island(island, angle):
     if angle == 0.0:
         return False
@@ -41,30 +54,57 @@ def find_rotation_auto(uv_layer, faces):
     return -math.atan2(sum_v, sum_u) / 4.0
 
 
-def find_rotation_geometry(uv_layer, faces, axis):
+def find_rotation_geometry(uv_layer, faces, axis, space="LOCAL", matrix_world=None):
     sum_u_co = Vector((0.0, 0.0, 0.0))
     sum_v_co = Vector((0.0, 0.0, 0.0))
-    for face in faces:
-        for fan in range(2, len(face.loops)):
-            delta_uv0 = face.loops[fan - 1][uv_layer].uv - face.loops[0][uv_layer].uv
-            delta_uv1 = face.loops[fan][uv_layer].uv - face.loops[0][uv_layer].uv
 
-            mat = Matrix((delta_uv0, delta_uv1))
-            mat.invert_safe()
+    if space == "LOCAL":
+        for face in faces:
+            for fan in range(2, len(face.loops)):
+                delta_uv0 = face.loops[fan - 1][uv_layer].uv - face.loops[0][uv_layer].uv
+                delta_uv1 = face.loops[fan][uv_layer].uv - face.loops[0][uv_layer].uv
 
-            delta_co0 = face.loops[fan - 1].vert.co - face.loops[0].vert.co
-            delta_co1 = face.loops[fan].vert.co - face.loops[0].vert.co
-            w = delta_co0.cross(delta_co1).length
-            sum_u_co += (delta_co0 * mat[0][0] + delta_co1 * mat[0][1]) * w
-            sum_v_co += (delta_co0 * mat[1][0] + delta_co1 * mat[1][1]) * w
+                mat = Matrix((delta_uv0, delta_uv1))
+                mat.invert_safe()
 
-    if axis == "X":
-        axis_index = 0
-    elif axis == "Y":
-        axis_index = 1
-    elif axis == "Z":
-        axis_index = 2
+                base_co = face.loops[0].vert.co
+                delta_co0 = face.loops[fan - 1].vert.co - base_co
+                delta_co1 = face.loops[fan].vert.co - base_co
+                w = delta_co0.cross(delta_co1).length
+                sum_u_co += (delta_co0 * mat[0][0] + delta_co1 * mat[0][1]) * w
+                sum_v_co += (delta_co0 * mat[1][0] + delta_co1 * mat[1][1]) * w
+    elif space == "WORLD":
+        if matrix_world is None:
+            raise ValueError("matrix_world is required when space is WORLD")
+
+        for face in faces:
+            for fan in range(2, len(face.loops)):
+                delta_uv0 = face.loops[fan - 1][uv_layer].uv - face.loops[0][uv_layer].uv
+                delta_uv1 = face.loops[fan][uv_layer].uv - face.loops[0][uv_layer].uv
+
+                mat = Matrix((delta_uv0, delta_uv1))
+                mat.invert_safe()
+
+                base_co = matrix_world @ face.loops[0].vert.co
+                delta_co0 = (matrix_world @ face.loops[fan - 1].vert.co) - base_co
+                delta_co1 = (matrix_world @ face.loops[fan].vert.co) - base_co
+                w = delta_co0.cross(delta_co1).length
+                sum_u_co += (delta_co0 * mat[0][0] + delta_co1 * mat[0][1]) * w
+                sum_v_co += (delta_co0 * mat[1][0] + delta_co1 * mat[1][1]) * w
     else:
+        raise ValueError("Unsupported geometry space: {}".format(space))
+
+    if axis not in AXIS_INDEX_MAP:
         raise ValueError("Unsupported geometry axis: {}".format(axis))
 
-    return math.atan2(sum_u_co[axis_index], sum_v_co[axis_index])
+    axis_index = AXIS_INDEX_MAP[axis]
+    primary_u = sum_u_co[axis_index]
+    primary_v = sum_v_co[axis_index]
+
+    if math.isclose(primary_u, 0.0, abs_tol=1e-8) and math.isclose(primary_v, 0.0, abs_tol=1e-8):
+        secondary_axis = SECONDARY_AXIS_MAP.get(axis)
+        if secondary_axis is not None:
+            secondary_index = AXIS_INDEX_MAP[secondary_axis]
+            return math.atan2(sum_u_co[secondary_index], sum_v_co[secondary_index])
+
+    return math.atan2(primary_u, primary_v)

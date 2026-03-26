@@ -156,7 +156,7 @@ class MIO3UV_OT_orient_world(Mio3UVOperator):
             return {"CANCELLED"}
 
         for island in island_manager.islands:
-            angle = find_rotation_geometry(island.uv_layer, island.faces, self.axis)
+            angle = find_rotation_geometry(island.uv_layer, island.faces, self.axis, "WORLD", island.obj.matrix_world)
             if angle != 0.0:
                 rotate_island(island, angle)
 

@@ -65,7 +65,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
 
         if self.align_rotation:
             for island in island_manager.islands:
-                angle = find_rotation_geometry(island.uv_layer, island.faces, axis="Z")
+                angle = find_rotation_geometry(island.uv_layer, island.faces, "Z", "WORLD", island.obj.matrix_world)
                 rotate_island(island, angle)
                 island.update_bounds()
 
