@@ -58,6 +58,13 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
         if mode != "OBJECT":
             bpy.ops.object.mode_set(mode="EDIT")
 
+        for area in context.screen.areas:
+            if area.type == "VIEW_3D":
+                for space in area.spaces:
+                    if space.type == "VIEW_3D":
+                        space.shading.type = "SOLID"
+                        space.shading.color_type = "TEXTURE"
+
         return {"FINISHED"}
 
     def get_material(self):
