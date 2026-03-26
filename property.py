@@ -56,7 +56,7 @@ class MIO3UV_PG_scene(PropertyGroup):
         default="AUTO",
     )
     checker_map_size: EnumProperty(
-        name="Checker Map Size",
+        name="Size",
         description="Choose an image size",
         items=ITEMS_TEXTURE_SIZE,
         default=2,
@@ -136,7 +136,7 @@ class MIO3UV_PG_object(PropertyGroup):
     )
 
     padding_px: EnumProperty(
-        name="Padding (px)",
+        name="Padding",
         items=[
             ("AUTO", "Auto", ""),
             ("4", "4", ""),

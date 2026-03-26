@@ -42,8 +42,8 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
     }
 
     bl_idname = "uv.mio3_unfoldify"
-    bl_label = "Unfoldify"
-    bl_description = "Arrange islands vertically and horizontally based on their positional relationships in 3D space"
+    bl_label = "Map"
+    bl_description = "Organize UV islands by their structural separation and spatial relationships in 3D space"
     bl_options = {"REGISTER", "UNDO"}
 
     align_rotation: BoolProperty(name="Orient World", default=True)

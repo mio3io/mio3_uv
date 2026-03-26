@@ -151,8 +151,8 @@ translation_dict = {
         ("*", "Group Spacing"): "グループの間隔",
         ("*", "Fixed Width"): "固定幅",
 
-        ("Operator", "Unfoldify"): "展開配置",
-        ("*", "Arrange islands vertically and horizontally based on their positional relationships in 3D space"): "3D空間の位置関係に基づきアイランドを配置します",
+        ("Operator", "Map"): "マップ",
+        ("*", "Organize UV islands by their structural separation and spatial relationships in 3D space"): "3D空間の構造的分離と位置関係に基づいてUVアイランドを整列します",
         ("*", "Group Rearrange"): "グループ化して再配置",
         ("*", "Group by Linked Faces"): "接続した面でグループ化",
         ("*", "Based on Active"): "アクティブをベースに",
@@ -202,6 +202,7 @@ translation_dict = {
 
         # Utils
         ("Operator", "Checker Map"): "チェッカーマップ",
+        ("*", "Checker Map"): "チェッカーマップ",
         ("Operator", "Clear Checker Map"): "チェッカーマップをクリア",
         ("*", "Set the checker map (using Geometry Nodes)"): "チェッカーマップを設定します（ジオメトリノードを使用）",
         ("Operator", "Preview Padding"): "パディング表示",

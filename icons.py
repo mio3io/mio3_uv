@@ -6,6 +6,7 @@ from bpy.utils import previews
 ICON_DIR = os.path.join(os.path.dirname(__file__), "icons")
 
 icon_names = [
+    "paw",
     "unwrap",
     "rectify",
     "grid",
@@ -74,6 +75,7 @@ icon_names = [
     "auto",
     "padding",
     "camera",
+    "map",
 ]
 
 
