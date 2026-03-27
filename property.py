@@ -16,7 +16,7 @@ ITEMS_TEXTURE_SIZE = [
 ]
 
 
-class MIO3UV_PG_scene(PropertyGroup):
+class SCENE_PG_mio3uv(PropertyGroup):
     edge_mode: BoolProperty(name="Edge Mode", description="Edge Mode", default=False)
     island_mode: BoolProperty(name="Island Mode", description="Island Mode", default=False)
 
@@ -72,8 +72,27 @@ class MIO3UV_PG_scene(PropertyGroup):
 
     exposure: FloatProperty(name="Exposure Level", default=-5, min=-7, max=5, step=10, update=callback_update_exposure)
 
+    def callback_update_texture_size_x(self, context):
+        if self.texture_size_link:
+            current_index = [i for i, item in enumerate(ITEMS_TEXTURE_SIZE) if item[0] == self.texture_size_x][0]
+            self["texture_size_y"] = current_index
 
-class MIO3UV_PG_object(PropertyGroup):
+    def callback_update_texture_size_y(self, context):
+        if self.texture_size_link:
+            current_index = [i for i, item in enumerate(ITEMS_TEXTURE_SIZE) if item[0] == self.texture_size_y][0]
+            self["texture_size_x"] = current_index
+
+    texture_size_x: EnumProperty(
+        name="Size X", items=ITEMS_TEXTURE_SIZE, default="2048", update=callback_update_texture_size_x
+    )
+    texture_size_y: EnumProperty(
+        name="Size Y", items=ITEMS_TEXTURE_SIZE, default="2048", update=callback_update_texture_size_y
+    )
+    texture_size_link: BoolProperty(name="Size Link", default=True)
+    texel_density: FloatProperty(name="Texel Density", default=256, min=0.01, max=10000, step=10, precision=1)
+
+
+class OBJECT_PG_mio3uv(PropertyGroup):
     def callback_update_padding(self, context):
         view_padding.UV_OT_mio3_guide_padding.redraw(context)
 
@@ -100,33 +119,6 @@ class MIO3UV_PG_object(PropertyGroup):
                 modifier[node_group.inputs["Size"].identifier] = self.uvmesh_size
 
     realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance", default=False)
-
-    def callback_update_texture_size_x(self, context):
-        if self.texture_size_link:
-            current_index = [i for i, item in enumerate(ITEMS_TEXTURE_SIZE) if item[0] == self.texture_size_x][0]
-            self["texture_size_y"] = current_index
-
-    def callback_update_texture_size_y(self, context):
-        if self.texture_size_link:
-            current_index = [i for i, item in enumerate(ITEMS_TEXTURE_SIZE) if item[0] == self.texture_size_y][0]
-            self["texture_size_x"] = current_index
-
-    texture_size_x: EnumProperty(
-        name="Size X",
-        description="Choose an image size",
-        items=ITEMS_TEXTURE_SIZE,
-        default="2048",
-        update=callback_update_texture_size_x,
-    )
-    texture_size_y: EnumProperty(
-        name="Size Y",
-        description="Choose an image size",
-        items=ITEMS_TEXTURE_SIZE,
-        default="2048",
-        update=callback_update_texture_size_y,
-    )
-    texture_size_link: BoolProperty(name="Size Link", default=True)
-
     image_size: EnumProperty(
         name="Size",
         description="Choose an image size",
@@ -155,7 +147,7 @@ class MIO3UV_PG_object(PropertyGroup):
     )
 
 
-class MIO3UV_PG_image(PropertyGroup):
+class IMAGE_PG_mio3uv(PropertyGroup):
     def callback_update_use_exposure(self, context):
         if hasattr(context, "edit_image"):
             context.edit_image.use_view_as_render = self.use_exposure
@@ -178,6 +170,26 @@ class MIO3UV_PG_image(PropertyGroup):
         for scene in bpy.data.scenes:
             if hasattr(scene, "mio3uv") and scene.mio3uv.use_exposure:
                 scene.view_settings.exposure = 0
+
+
+class WM_PG_mio3uv(PropertyGroup):
+    texel_preset_buttons: BoolProperty(
+        name="Show Preset Buttons", default=False, description="Show quick set buttons for common texel densities"
+    )
+    texel_density_coverage_type: EnumProperty(
+        name="Type",
+        description="Calculate UV coverage inside the 0-1 UV space based on visible or selected UV faces",
+        items=[
+            ("VISIBLE", "Visible", ""),
+            ("SELECT", "Selected", ""),
+        ],
+    )
+    texel_density_percent: FloatProperty(name="Coverage", default=0, precision=4, subtype="PERCENTAGE")
+    texel_use_checker: BoolProperty(
+        name="Use Checker Size",
+        description="Use Mio3UV checker size if available. \nDisable if the actual texture size differs from the checker size",
+        default=False,
+    )
 
 
 def callback_use_uv_select_sync():
@@ -207,26 +219,29 @@ def load_handler(scene):
 
 
 classes = [
-    MIO3UV_PG_scene,
-    MIO3UV_PG_object,
-    MIO3UV_PG_image,
+    SCENE_PG_mio3uv,
+    OBJECT_PG_mio3uv,
+    IMAGE_PG_mio3uv,
+    WM_PG_mio3uv,
 ]
 
 
 def register():
     for c in classes:
         bpy.utils.register_class(c)
-    bpy.types.Scene.mio3uv = PointerProperty(type=MIO3UV_PG_scene)
-    bpy.types.Object.mio3uv = PointerProperty(type=MIO3UV_PG_object)
-    bpy.types.Image.mio3uv = PointerProperty(type=MIO3UV_PG_image)
+    bpy.types.WindowManager.mio3uv = PointerProperty(type=WM_PG_mio3uv)
+    bpy.types.Scene.mio3uv = PointerProperty(type=SCENE_PG_mio3uv)
+    bpy.types.Object.mio3uv = PointerProperty(type=OBJECT_PG_mio3uv)
+    bpy.types.Image.mio3uv = PointerProperty(type=IMAGE_PG_mio3uv)
     handler_register()
 
 
 def unregister():
-    MIO3UV_PG_image.reset_images()
+    IMAGE_PG_mio3uv.reset_images()
     del bpy.types.Image.mio3uv
     del bpy.types.Object.mio3uv
     del bpy.types.Scene.mio3uv
+    del bpy.types.WindowManager.mio3uv
     for c in classes:
         bpy.utils.unregister_class(c)
 

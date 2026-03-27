@@ -173,6 +173,7 @@ class UVIslandManager:
     sync: bool = False  # 選択同期
     extend: bool = True  # 選択しているUVを境界まで拡張する
     find_all: bool = False  # すべてのアイランドを対象にする
+    mesh_all: bool = False  # メッシュ全体を対象にする
 
     orientation_mode = "WORLD"  # "WORLD" or "LOCAL"
 
@@ -235,13 +236,16 @@ class UVIslandManager:
                             selected_faces.add(face)
             return selected_faces
 
-        if all:
-            if sync:
-                seed_faces = {f for f in bm.faces if not f.hide}
-            else:
-                seed_faces = {f for f in bm.faces if f.select}
+        if self.mesh_all:
+                seed_faces = set(bm.faces)
         else:
-            seed_faces = get_selected_faces(bm, sync)
+            if all:
+                if sync:
+                    seed_faces = {f for f in bm.faces if not f.hide}
+                else:
+                    seed_faces = {f for f in bm.faces if f.select}
+            else:
+                seed_faces = get_selected_faces(bm, sync)
         if not seed_faces:
             return
 

@@ -76,6 +76,10 @@ icon_names = [
     "padding",
     "camera",
     "map",
+    "gear",
+    "td_get",
+    "td_set",
+    "options",
 ]
 
 

@@ -214,5 +214,23 @@ translation_dict = {
 
         ("*", "Adjusts Exposure if image is set"): "画像が設定されている場合に露光を調整します",
         ("*", "Please display an image if you want to use pixel units"): "ピクセル単位を使用する場合は画像を表示してください",
+
+        # Texel Density
+        ("Operator", "Texel Density Get"): "テクセル密度を取得",
+        ("*", "Get the texel density of the selected UVs"): "選択したUVのテクセル密度を取得します",
+        ("Operator", "Texel Density Set"): "テクセル密度を適用",
+        ("*", "Set the texel density of the selected UVs"): "選択したUVのテクセル密度を適用します",
+        ("*", "Texel Density Calculation"): "テクセル密度の計算",
+        ("Operator", "Calculate Coverage"): "カバレッジを計算",
+        ("*", "Calculate UV coverage (occupancy) inside the 0-1 UV space"): "0-1のUV空間内でUVのカバレッジ（占有率）を計算します",
+        ("*", "UV Coverage"): "UVカバレッジ",
+        ("*", "Calculate UV coverage inside the 0-1 UV space based on visible or selected UV faces"): "0-1のUV空間内で、表示されているUV面または選択されているUV面に基づいてUVのカバレッジを計算します",
+        ("*", "Use Checker Size"): "チェッカーマップのサイズを使用",
+        ("*", "Use Mio3UV checker size if available. \nDisable if the actual texture size differs from the checker size"): "利用可能な場合はMio3UVのチェッカーマップのサイズを使用します。\n実際のテクスチャサイズがチェッカーマップのサイズと異なる場合は無効にしてください",
+        ("*", "Show Preset Buttons"): "プリセットボタンを表示",
+        ("*", "Show quick set buttons for common texel densities"): "一般的なテクセル密度のクイックセットボタンを表示します",
+
+
+        ("*", ""): "",
     }
 }  # fmt: skip

@@ -41,6 +41,7 @@ from .operators import body_preset
 from .operators import view_padding
 from .operators import view_checker_map
 from .operators import mesh_uvmesh
+from .operators import texel
 
 from .ui import ui_main
 
@@ -82,6 +83,7 @@ modules = [
     view_padding,
     view_checker_map,
     mesh_uvmesh,
+    texel,
     ui_main,
     property,
 ]
