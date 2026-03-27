@@ -26,19 +26,16 @@ class MIO3UV_PT_main(Mio3UVPanel):
     def draw(self, context):
         layout = self.layout
         col = layout.column(align=True)
-
         row = col.row(align=True)
+        row.popover("MIO3UV_PT_options_popover", text="", icon_value=icons.paw)
+        row.separator(factor=0.3)
         row.prop(context.space_data, "pivot_point", icon_only=True, expand=True)
-
         row2 = row.row(align=False)
         row2.alignment = "RIGHT"
-
         row3 = row.row(align=True)
         row3.operator("uv.snap_cursor", text="", icon="CURSOR").target = "SELECTED"
-        # row3.operator("ed.undo", text="", icon="LOOP_BACK")
         row3.separator(factor=0.3)
         row3.operator("uv.mio3_pin", text="", icon="PINNED").clear = False
-        # row3.operator("uv.mio3_pin", text="", icon="UNPINNED").clear = True
         row3.separator(factor=0.3)
         row3.operator(
             "uv.mio3_guide_padding",
@@ -46,16 +43,17 @@ class MIO3UV_PT_main(Mio3UVPanel):
             depress=True if UV_OT_mio3_guide_padding.is_running() else False,
             text="",
         )
-        row3.popover("MIO3UV_PT_options_popover", text="", icon_value=icons.paw)
 
         col.separator(factor=0.4)
 
-        row = col.row(align=True)
-        row.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons.unwrap).axis = "BOTH"
-        row.scale_x = 0.11
+        split = col.split(align=True)
+        split.scale_y = 1.18
+        split.operator("uv.mio3_unwrap", text="Unwrap", icon_value=icons.unwrap).axis = "BOTH"
+        row = split.row(align=True)
+        row.scale_x = 0.1
         row.operator("uv.mio3_unwrap", text="X").axis = "X"
         row.operator("uv.mio3_unwrap", text="Y").axis = "Y"
-        row.scale_x = 1
+        row.scale_x = 1.15
         row.operator("uv.mio3_unwrap_project", text="", icon_value=icons.camera)
         row.operator("uv.mio3_unwrap_mirrored", text="", icon_value=icons.mirror_uv)
         col.separator(factor=0.2)
@@ -138,7 +136,9 @@ class MIO3UV_PT_align(Mio3UVPanel):
         split = col.split(factor=0.5, align=True)
         row = split.row(align=True)
         row.operator("uv.mio3_texel_density_get", text="Get", icon_value=icons.td_get)
-        row.operator("uv.mio3_texel_density_set", text="Set", icon_value=icons.td_set).td = context.scene.mio3uv.texel_density
+        row.operator("uv.mio3_texel_density_set", text="Set", icon_value=icons.td_set).td = (
+            context.scene.mio3uv.texel_density
+        )
         row = split.row(align=True)
         row.prop(context.scene.mio3uv, "texel_density", text="")
         row.popover("MIO3UV_PT_texel_popover", text="", icon_value=icons.gear)
@@ -197,7 +197,6 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
         row = col.row(align=True)
         row.operator("uv.mio3_body_preset", icon_value=icons.body).type = "AUTO"
         row.popover("MIO3UV_PT_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
-
 
 
 class MIO3UV_PT_symmetry(Mio3UVPanel):
@@ -296,14 +295,13 @@ class MIO3UV_PT_options_popover(Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.ui_units_x = 12
+        layout.ui_units_x = 11
         props_s = context.scene.mio3uv
         props_o = context.object.mio3uv
 
         layout.label(text="Padding", icon_value=icons.options)
-        box = layout.box()
 
-        col = box.column()
+        col = layout.column()
         col.operator(
             "uv.mio3_guide_padding",
             icon_value=icons.padding,
@@ -324,15 +322,19 @@ class MIO3UV_PT_options_popover(Panel):
         layout.separator(factor=0.5)
 
         layout.label(text="Checker Map", icon_value=icons.options)
-        box = layout.box()
-        col = box.column()
+        col = layout.column(align=True)
         split = col.split(factor=0.33, align=True)
         split.prop(props_s, "checker_map_size", text="")
         row = split.row(align=True)
-        row.operator("mio3uv.checker_map", icon_value=icons.color_grid)
+        row.operator("mio3uv.checker_map", icon_value=icons.color_grid).size = props_s.checker_map_size
         row.operator("mio3uv.checker_map_clear", text="", icon="CANCEL")
+        col.separator(factor=0.3)
+        row = col.row(align=True)
+        row.operator("mio3uv.checker_map", text="1024", icon_value=icons.color_grid).size = "1024"
+        row.operator("mio3uv.checker_map", text="2048", icon_value=icons.color_grid).size = "2048"
+        row.operator("mio3uv.checker_map", text="4096", icon_value=icons.color_grid).size = "4096"
+        col.separator(factor=0.3)
         col.operator("mio3uv.checker_map_cleanup", text="Cleanup All Checker Maps", icon="TRASH")
-
         layout.separator(factor=0.5)
 
         props_image = context.edit_image.mio3uv if context.edit_image is not None else context.scene.mio3uv
@@ -388,11 +390,12 @@ class MIO3UV_PT_Utility(Panel):
 
     def draw(self, context):
         layout = self.layout
+        prefs = get_preferences()
+        props_object = context.active_object.mio3uv
+        modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
+
         layout.use_property_split = True
         layout.use_property_decorate = False
-        props_object = context.active_object.mio3uv
-
-        modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
 
         if modifier:
             col = layout.column(align=False)
@@ -425,6 +428,14 @@ class MIO3UV_PT_Utility(Panel):
             row = layout.row()
             row.alignment = "CENTER"
             row.label(text="Add Modifier")
+
+        # UI移動のメッセージ
+        if prefs.ui_help:
+            layout.use_property_split = False
+            layout.label(
+                text="Padding and checker map have been relocated to the top-left paw icon menu", icon_value=icons.paw
+            )
+            layout.prop(prefs, "ui_help", text="Don’t show this again", toggle=True)
 
 
 classes = [

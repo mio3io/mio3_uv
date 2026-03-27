@@ -167,30 +167,14 @@ class MIO3UV_OT_uvmesh_clear(Mio3UVOperator):
         return {"FINISHED"}
 
 
-def panel_tools(self, context):
-    if context.active_object:
-        modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
-        if modifier:
-            props_object = context.active_object.mio3uv
-            row = self.layout.row(align=True)
-            row.operator(
-                "mesh.mio3_uvmesh_control",
-                text="",
-                icon_value=icons.unfoldify if props_object.uvmesh_factor > 0 else icons.cube,
-                depress=True if props_object.uvmesh_factor > 0 else False,
-            ).mode = "TOGGLE"
-
-
 classes = [MIO3UV_OT_uvmesh, MIO3UV_OT_uvmesh_control, MIO3UV_OT_uvmesh_clear]
 
 
 def register():
     for c in classes:
         bpy.utils.register_class(c)
-    bpy.types.VIEW3D_HT_tool_header.append(panel_tools)
 
 
 def unregister():
-    bpy.types.VIEW3D_HT_tool_header.remove(panel_tools)
     for c in classes:
         bpy.utils.unregister_class(c)

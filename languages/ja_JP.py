@@ -1,13 +1,15 @@
 translation_dict = {
     "ja_JP": {
-        # Options
+        # Preferences
+        ("*", "Help Messages"): "ヘルプメッセージ",
+        ("*", "Don’t show this again"): "二度と表示しない",
+        ("*", "Padding and checker map have been relocated to the top-left paw icon menu"): "パディングとチェッカーマップは左上のパウアイコンメニューに移動しました",
         ("*", "UV Sync Auto Select"): "選択同期で自動選択",
         ("*", "Legacy UI Layout"): "従来のUIレイアウト",
         ("*", "Use UV Tiles"): "UVタイルを使用する",
         ("*", "Use UDIM UV Tiles"): "UDIM形式のUVタイルを使用する",
         ("*", "Symmetry Priority "): "対称操作の優先",
         ("*", "Specifies which side to use as the reference during automatic symmetry."): "自動対称化の際にどちら側を基準にするかを指定します",
-
 
         # 🍑 Common
         ("Operator", "Horizontal"): "水平",
@@ -29,7 +31,6 @@ translation_dict = {
         ("*", "Right Top"): "右上",
         ("*", "Right Bottom"): "右下",
         ("*", "Reference Direction"): "基準の方向",
-
 
         ("*", "Wrap Count"): "折り返し",
         ("*", "Reverse Order"): "順番を反転",
@@ -207,11 +208,13 @@ translation_dict = {
         ("*", "Set the checker map (using Geometry Nodes)"): "チェッカーマップを設定します（ジオメトリノードを使用）",
         ("Operator", "Preview Padding"): "パディング表示",
         ("*", "Preview the padding lines"): "パディングのラインをプレビューします",
+        ("Operator", "Cleanup All Checker Maps"): "チェッカーマップをクリーンアップ",
+        ("*", "Cleanup checker map images, materials, modifiers, and geometry nodes"): "チェッカーマップの画像、マテリアル、モディファイア、ジオメトリノードをクリーンアップします",
+
         ("*", "Warning: This option may poor performance"): "警告: このオプションはパフォーマンスが低下する可能性があります",
         ("Operator", "UV Mesh"): "UV Mesh",
         ("*", "Auto Scaling"): "自動スケール",
         ("*", "Set up a modifier for UV to Mesh (using Geometry Nodes)"): "UV to Mesh 用のモディファイアを設定します（ジオメトリノードを使用）",
-
         ("*", "Adjusts Exposure if image is set"): "画像が設定されている場合に露光を調整します",
         ("*", "Please display an image if you want to use pixel units"): "ピクセル単位を使用する場合は画像を表示してください",
 
@@ -229,7 +232,6 @@ translation_dict = {
         ("*", "Use Mio3UV checker size if available. \nDisable if the actual texture size differs from the checker size"): "利用可能な場合はMio3UVのチェッカーマップのサイズを使用します。\n実際のテクスチャサイズがチェッカーマップのサイズと異なる場合は無効にしてください",
         ("*", "Show Preset Buttons"): "プリセットボタンを表示",
         ("*", "Show quick set buttons for common texel densities"): "一般的なテクセル密度のクイックセットボタンを表示します",
-
 
         ("*", ""): "",
     }

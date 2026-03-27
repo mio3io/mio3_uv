@@ -1,6 +1,8 @@
 import bpy
 import os
+from bpy.props import EnumProperty
 from ..classes import Mio3UVGlobalOperator
+        
 
 CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images", "checker_maps")
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
@@ -14,7 +16,18 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
     bl_description = "Set the checker map (using Geometry Nodes)"
     bl_options = {"REGISTER", "UNDO"}
 
-    size = None
+    size: EnumProperty(
+        name="Size",
+        description="Checker map texture size",
+        items=[
+            ("512", "512", ""),
+            ("1024", "1024", ""),
+            ("2048", "2048", ""),
+            ("4096", "4096", ""),
+            ("8192", "8192", ""),
+        ],
+        default="2048",
+    )
 
     @classmethod
     def poll(cls, context):
@@ -26,17 +39,17 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
         if not selected_objects:
             return {"CANCELLED"}
 
-        self.size = int(context.scene.mio3uv.checker_map_size)
+        size = int(self.size)
 
         mode = context.active_object.mode
         if mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
 
-        existing_material = self.get_material()
+        existing_material = self.get_material(size)
         if existing_material:
             mat = existing_material
         else:
-            mat = self.create_new_material()
+            mat = self.create_new_material(size)
 
         existing_geometry_node = self.get_node_groups()
         if existing_geometry_node:
@@ -67,8 +80,8 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
 
         return {"FINISHED"}
 
-    def get_material(self):
-        return bpy.data.materials.get("Mio3CheckerMapMat_{}".format(self.size))
+    def get_material(self, size):
+        return bpy.data.materials.get("Mio3CheckerMapMat_{}".format(size))
 
     def get_node_groups(self):
         return bpy.data.node_groups.get(NAME_NODE_GROUP_OVERRIDE)
@@ -91,8 +104,8 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
             self.report({"ERROR"}, "Failed import node group")
         return None
 
-    def create_new_material(self):
-        mat = bpy.data.materials.new(name="Mio3CheckerMapMat_{}".format(self.size))
+    def create_new_material(self, size):
+        mat = bpy.data.materials.new(name="Mio3CheckerMapMat_{}".format(size))
         mat.use_nodes = True
 
         nodes = mat.node_tree.nodes
@@ -117,14 +130,14 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
         links.new(node_image.outputs["Color"], node_bsdf.inputs["Base Color"])
         links.new(node_bsdf.outputs["BSDF"], node_output.inputs["Surface"])
 
-        image_name = "chocomint_{}.png".format(self.size)
+        image_name = "chocomint_{}.png".format(size)
         image_path = os.path.join(bpy.path.abspath(CHECKER_MAP_DIR), image_name)
 
         if os.path.exists(image_path):
             image = bpy.data.images.load(image_path)
         else:
             self.report({"WARNING"}, "Image not found: {}. Using default color grid.".format(image_path))
-            image = bpy.data.images.new("Mio3CheckerMapTex_{}".format(self.size), width=self.size, height=self.size)
+            image = bpy.data.images.new("Mio3CheckerMapTex_{}".format(size), width=size, height=size)
             image.generated_type = "COLOR_GRID"
 
         node_image.image = image
@@ -157,8 +170,8 @@ class MIO3UV_OT_checker_map_clear(Mio3UVGlobalOperator):
 
 class MIO3UV_OT_checker_map_cleanup(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map_cleanup"
-    bl_label = "Cleanup Checker Maps"
-    bl_description = "Cleanup Checker Maps"
+    bl_label = "Cleanup All Checker Maps"
+    bl_description = "Cleanup checker map images, materials, modifiers, and geometry nodes"
     bl_options = {"REGISTER", "UNDO", "INTERNAL"}
 
     @classmethod
@@ -166,7 +179,7 @@ class MIO3UV_OT_checker_map_cleanup(Mio3UVGlobalOperator):
         return context.active_object is not None
     
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
         removed_modifiers = 0

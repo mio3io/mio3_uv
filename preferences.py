@@ -21,6 +21,7 @@ class MIO3UV_preferences(AddonPreferences):
         default="POSITIVE",
         options=set(),
     )
+    ui_help: BoolProperty(name="Help Messages", default=True, options=set())
 
     def draw(self, context):
         layout = self.layout
@@ -29,6 +30,7 @@ class MIO3UV_preferences(AddonPreferences):
         col = layout.column()
         col.prop(self, "default_symmetry_priority")
         col.prop(self, "auto_uv_sync")
+        col.prop(self, "ui_help", text="Help Messages")
 
 
 def register():
