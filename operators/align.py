@@ -79,7 +79,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
         layout.prop(self, "island")
         col = layout.column()
         col.prop(self, "align_to", expand=True)
-        if self.type == "CENTER" and (not self.island or not self.edge_mode):
+        if self.type == "CENTER" and (not self.island or self.edge_mode):
             col.enabled = False
 
     def invoke(self, context, event):
