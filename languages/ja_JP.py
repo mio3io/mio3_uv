@@ -194,6 +194,8 @@ translation_dict = {
         ("*", "Select Flipped UV Faces"): "反転したUV面を選択します",
         ("*", "Select Zero Area UV Faces"): "領域がゼロのUVを選択",
         ("Operator", "Edges"): "エッジ",
+        ("*", "Edge Count"): "エッジ数",
+        ("*", "Area"): "面積",
         ("*", "Select edges based on their direction in UV space"): "UV空間でのエッジの方向に基づいてエッジを選択します",
         ("*", "UV Space Boundary"): "UV上の境界",
         ("Operator", "Select Edge Loops"): "エッジループを選択",

@@ -103,7 +103,9 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
     bl_description = "Select Similar"
     bl_options = {"REGISTER", "UNDO"}
 
-    check_edges: BoolProperty(name="Check Edges", description="", default=True)
+    edges: BoolProperty(name="Edge Count", description="", default=True)
+    area: BoolProperty(name="Area", description="", default=False)
+    area_threshold: FloatProperty(name="Threshold", default=0.005, min=0.001, precision=3, step=0.1)
 
     def execute(self, context):
         self.start_time()
@@ -112,15 +114,15 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
 
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync, find_all=True)
 
-        check_edges = self.check_edges
         source_island = None
         source_face_count = 0
         source_edge_count = 0
         for island in island_manager.islands:
-            if any(all(loop.uv_select_vert for loop in face.loops) for face in island.faces):
+            if any(face.uv_select for face in island.faces):
                 source_island = island
                 source_face_count = len(source_island.faces)
-                source_edge_count = self.get_island_edge_count(source_island) if check_edges else None
+                source_edge_count = self.get_island_edge_count(source_island) if self.edges else None
+                source_area = self.get_island_area(source_island) if self.area else None
                 break
 
         if not source_island:
@@ -132,7 +134,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
             if island == source_island:
                 continue
             island.uv_select_set_all(False)
-            if not self.is_different(island, source_face_count, source_edge_count):
+            if not self.is_different(island, source_face_count, source_edge_count, source_area):
                 island.uv_select_set_all(True)
 
         island_manager.update_uvmeshes(True)
@@ -143,13 +145,28 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
     def get_island_edge_count(self, island):
         return len({edge for face in island.faces for edge in face.edges})
 
-    def is_different(self, island, base_face_count, base_edge_count):
+    def get_island_area(self, island):
+        return sum(face.calc_area() for face in island.faces)
+
+    def is_different(self, island, base_face_count, base_edge_count, base_area):
         if len(island.faces) != base_face_count:
             return True
-        if self.check_edges and self.get_island_edge_count(island) != base_edge_count:
+        if self.edges and self.get_island_edge_count(island) != base_edge_count:
+            return True
+        if self.area and abs(self.get_island_area(island) - base_area) > self.area_threshold:
             return True
         return False
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        layout.prop(self, "edges")
+        layout.prop(self, "area")
+        col = layout.column()
+        col.prop(self, "area_threshold")
+        if self.area != True:
+            col.enabled = False
 
 class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
     bl_idname = "uv.mio3_select_mirror3d"
@@ -353,7 +370,7 @@ class MIO3UV_OT_select_edge(Mio3UVOperator):
 
         self.print_time()
         return {"FINISHED"}
-    
+
     def select_boundary(self, objects, use_uv_select_sync):
         check_selected = self.check_selected_face_objects(objects)
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync, find_all=True)

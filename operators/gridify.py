@@ -75,7 +75,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         avg_area = total_area / len(selected_faces)
 
         for face in selected_faces:
-            if len(face.loops) == 4 and all(loop.uv_select_vert for loop in face.loops):
+            if len(face.loops) == 4 and face.uv_select:
                 max_angle_diff = 0
                 for i in range(4):
                     v1 = face.loops[i][uv_layer].uv - face.loops[(i - 1) % 4][uv_layer].uv
