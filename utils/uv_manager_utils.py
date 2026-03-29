@@ -27,12 +27,13 @@ def rotate_island(island, angle):
     delta_u = mid_u - cos_angle * mid_u + sin_angle * mid_v
     delta_v = mid_v - sin_angle * mid_u - cos_angle * mid_v
 
+    uv_layer = island.uv_layer
     for face in island.faces:
         for loop in face.loops:
-            uv = loop[island.uv_layer].uv
+            uv = loop[uv_layer].uv
             new_u = cos_angle * uv.x - sin_angle * uv.y + delta_u
             new_v = sin_angle * uv.x + cos_angle * uv.y + delta_v
-            loop[island.uv_layer].uv = Vector((new_u, new_v))
+            loop[uv_layer].uv = Vector((new_u, new_v))
 
 
 def find_rotation_auto(uv_layer, faces):

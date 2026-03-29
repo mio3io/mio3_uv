@@ -39,8 +39,6 @@ class UVIsland:
 
     selection_loops: dict[int, bool] = field(default_factory=dict)
     selection_uv_faces: dict[int, bool] = field(default_factory=dict)
-    selection_uv_count: int = field(init=False, default=0)  # 削除予定
-    all_uv_count: int = field(init=False, default=0)
 
     @property
     def obj(self):
@@ -82,16 +80,37 @@ class UVIsland:
         return self.faces == other.faces and self.obj_info.obj == other.obj_info.obj
 
     def update_bounds(self):
-        uv_points = [loop[self.uv_layer].uv for face in self.faces for loop in face.loops]
-        if uv_points:
-            x_coords = [uv.x for uv in uv_points]
-            y_coords = [uv.y for uv in uv_points]
-            self.min_uv = Vector((min(x_coords), min(y_coords)))
-            self.max_uv = Vector((max(x_coords), max(y_coords)))
-            self.center = Vector(((self.min_uv.x + self.max_uv.x) / 2, (self.min_uv.y + self.max_uv.y) / 2))
-            self.median_center = Vector((sum(x_coords) / len(uv_points), sum(y_coords) / len(uv_points)))
-            self.width = self.max_uv.x - self.min_uv.x
-            self.height = self.max_uv.y - self.min_uv.y
+        min_x = float("inf")
+        min_y = float("inf")
+        max_x = float("-inf")
+        max_y = float("-inf")
+        sum_x = 0.0
+        sum_y = 0.0
+        count = 0
+        uv_layer = self.uv_layer
+        for face in self.faces:
+            for loop in face.loops:
+                uv = loop[uv_layer].uv
+                x = uv.x
+                y = uv.y
+                if x < min_x:
+                    min_x = x
+                if x > max_x:
+                    max_x = x
+                if y < min_y:
+                    min_y = y
+                if y > max_y:
+                    max_y = y
+                sum_x += x
+                sum_y += y
+                count += 1
+        if count:
+            self.min_uv = Vector((min_x, min_y))
+            self.max_uv = Vector((max_x, max_y))
+            self.center = Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
+            self.median_center = Vector((sum_x / count, sum_y / count))
+            self.width = max_x - min_x
+            self.height = max_y - min_y
         else:
             self.min_uv = Vector((float("inf"), float("inf")))
             self.max_uv = Vector((float("-inf"), float("-inf")))
@@ -100,34 +119,22 @@ class UVIsland:
             self.width = self.height = 0
 
     def move(self, offset, calc=False):
+        uv_layer = self.uv_layer
         for face in self.faces:
             for loop in face.loops:
-                loop[self.uv_layer].uv += offset
+                loop[uv_layer].uv += offset
         if calc:
             self.update_bounds()
 
     def store_selection(self):
-        self.all_uv_count = 0
         self.selection_loops = {}
         self.selection_uv_faces = {}
-        select_uvs = {}
-        all_uvs = {}
-
         for face in self.faces:
             self.selection_uv_faces[face.index] = face.uv_select
             for loop in face.loops:
-                uv = loop[self.uv_layer]
                 is_selected = loop.uv_select_vert
                 is_edge_selected = loop.uv_select_edge
                 self.selection_loops[loop.index] = (is_selected, is_edge_selected)
-                uv_key = (uv.uv.x, uv.uv.y)
-                all_uvs[uv_key] = True
-                if is_selected:
-                    select_uvs[uv_key] = True
-
-        self.all_uv_count = len(all_uvs)
-        self.selection_uv_count = len(select_uvs)
-        # return self.original_selection_uvs
 
     def restore_selection(self):
         for face in self.faces:

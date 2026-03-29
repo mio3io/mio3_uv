@@ -114,13 +114,14 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
         scale = original_size / current_size
         center = island.center.copy()
+        uv_layer = island.uv_layer
 
         for face in island.faces:
             if not link_unwrap and not face.uv_select:
                 continue
             for loop in face.loops:
-                uv = loop[island.uv_layer].uv
-                loop[island.uv_layer].uv = center + (uv - center) * scale + move_offset
+                uv = loop[uv_layer].uv
+                loop[uv_layer].uv = center + (uv - center) * scale + move_offset
 
         island.update_bounds()
 

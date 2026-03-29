@@ -62,7 +62,6 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         original_axis_uvs = {}
         original_keep_samples = {}
         for island in island_manager.islands:
-            island.store_selection()
             island.inplace_flag = use_keep and self.should_restore(island)
 
             if axis != "BOTH":
@@ -100,17 +99,18 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         uv_layer = island.uv_layer
 
         pinned_nodes = set()
+        deselect_count = 0
         for face in island.faces:
             for loop in face.loops:
                 loop_uv = loop[uv_layer]
                 if loop_uv.pin_uv:
                     pinned_nodes.add((loop.vert.index, loop_uv.uv.x, loop_uv.uv.y))
+                if not loop.uv_select_vert:
+                    deselect_count += 1
+                    if deselect_count >= 2:
+                        return False
 
         if len(pinned_nodes) >= 2:
-            return False
-
-        deselect_count = island.all_uv_count - island.selection_uv_count
-        if deselect_count >= 2:
             return False
 
         return True

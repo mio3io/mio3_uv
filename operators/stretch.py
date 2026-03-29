@@ -49,6 +49,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
             total_range_y = max_y - min_y
 
             for island in island_manager.islands:
+                uv_layer = island.uv_layer
                 center_y = island.center.y
                 center_x = island.center.x
 
@@ -57,7 +58,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
                     scale_y = total_range_y / island.height
                     for face in island.faces:
                         for loop in face.loops:
-                            uv = loop[island.uv_layer].uv
+                            uv = loop[uv_layer].uv
                             local_x = uv.x - island.min_uv.x
                             local_y = uv.y - island.min_uv.y
                             uv.x = min_x + (local_x * scale_x)
@@ -67,7 +68,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
                     scale_x = scale_y if self.keep_aspect else 1.0
                     for face in island.faces:
                         for loop in face.loops:
-                            uv = loop[island.uv_layer].uv
+                            uv = loop[uv_layer].uv
                             local_y = uv.y - island.min_uv.y
                             uv.y = min_y + (local_y * scale_y)
                             if self.keep_aspect:
@@ -79,7 +80,7 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
                     for face in island.faces:
                         for loop in face.loops:
-                            uv = loop[island.uv_layer].uv
+                            uv = loop[uv_layer].uv
                             local_x = uv.x - island.min_uv.x
                             uv.x = min_x + (local_x * scale_x)
                             if self.keep_aspect:

@@ -65,6 +65,7 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
         objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
+        is_axis_x = self.axis == "X"
         center = context.space_data.cursor_location.copy()
 
         if self.island:
@@ -86,7 +87,7 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
                 for face in island.faces:
                     for loop in face.loops:
                         loop_uv = loop[uv_layer]
-                        if self.axis == "X":
+                        if is_axis_x:
                             loop_uv.uv.x = 2 * center.x - loop_uv.uv.x
                         else:
                             loop_uv.uv.y = 2 * center.y - loop_uv.uv.y
@@ -109,7 +110,7 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
                     center = group.median_center
 
                 for node in group.nodes:
-                    if self.axis == "X":
+                    if is_axis_x:
                         node.uv.x = 2 * center.x - node.uv.x
                     else:
                         node.uv.y = 2 * center.y - node.uv.y

@@ -336,8 +336,8 @@ class MIO3UV_OT_select_edge(Mio3UVOperator):
         name="Method",
         items=[
             ("BOUNDARY", "Boundary", "Select boundary edges"),
-            ("Y", "Vertical", "Select only vertical edges"),
             ("X", "Horizontal", "Select only horizontal edges"),
+            ("Y", "Vertical", "Select only vertical edges"),
         ],
         default="BOUNDARY",
     )

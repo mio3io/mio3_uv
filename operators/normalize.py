@@ -62,26 +62,13 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
             self.apply_scale(context, island, scale_x, scale_y, min_uv)
 
     def apply_scale(self, context, island, scale_x, scale_y, global_min_uv=None):
-        selected_loops = []
-        for face in island.faces:
-            for loop in face.loops:
-                selected_loops.append(loop)
-
         anchor = self.get_anchor(context, island.center)
-
         min_uv = global_min_uv if global_min_uv else island.min_uv
+        uv_layer = island.uv_layer
         for face in island.faces:
             for loop in face.loops:
-                uv = loop[island.uv_layer]
-                new_x = (uv.uv.x - min_uv.x) * scale_x
-                new_y = (uv.uv.y - min_uv.y) * scale_y
-                uv.uv = anchor + Vector((new_x, new_y))
-
-        island.update_bounds()
-
-        if not global_min_uv:
-            offset = anchor - island.min_uv
-            island.move(offset)
+                uv = loop[uv_layer]
+                uv.uv = anchor + Vector(((uv.uv.x - min_uv.x) * scale_x, (uv.uv.y - min_uv.y) * scale_y))
 
     def get_anchor(self, context, center):
         if context.scene.mio3uv.udim:

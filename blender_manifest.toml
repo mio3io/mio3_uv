@@ -8,7 +8,7 @@ type = "add-on"
 tags = ["UV"]
 blender_version_min = "5.0.0"
 license = ["SPDX:GPL-3.0-or-later"]
-website = "https://github.com/mio3io"
+website = "https://github.com/mio3io/mio3_uv"
 copyright = ["2025 Mio"]
 
 [permissions]
