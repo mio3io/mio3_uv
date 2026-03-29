@@ -225,6 +225,8 @@ class UVIslandManager:
             else:
                 if extend:
                     for face in bm.faces:
+                        if face.hide:
+                            continue
                         if face.select:
                             for loop in face.loops:
                                 if loop.uv_select_vert:
@@ -232,18 +234,20 @@ class UVIslandManager:
                                     break
                 else:
                     for face in bm.faces:
+                        if face.hide:
+                            continue
                         if face.select and face.uv_select:
                             selected_faces.add(face)
             return selected_faces
 
         if self.mesh_all:
-                seed_faces = set(bm.faces)
+                seed_faces = set(bm.faces) # hideメッシュも入れるべき？
         else:
             if all:
                 if sync:
                     seed_faces = {f for f in bm.faces if not f.hide}
                 else:
-                    seed_faces = {f for f in bm.faces if f.select}
+                    seed_faces = {f for f in bm.faces if not f.hide and f.select}
             else:
                 seed_faces = get_selected_faces(bm, sync)
         if not seed_faces:
