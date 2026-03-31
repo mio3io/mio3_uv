@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 from ..utils.utils import straight_uv_nodes
-from ..classes import UVNodeManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 
 class MIO3UV_OT_straight(Mio3UVOperator):
@@ -27,24 +27,27 @@ class MIO3UV_OT_straight(Mio3UVOperator):
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        node_manager = UVNodeManager(objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
+        for island in island_manager.islands:
+            island.store_selection()
 
-        for group in node_manager.groups:
-            group.store_selection()
-            straight_uv_nodes(group, self.type, self.keep_length, center=True)
-            for node in group.nodes:
-                node.update_uv(group.uv_layer)
+            node_manager = UVNodeManager.from_island(island, sync=use_uv_select_sync, sub_faces=island.faces)
+            if node_manager.groups:
+                for group in node_manager.groups:
+                    group.store_selection()
+                    straight_uv_nodes(group, self.type, self.keep_length, center=True)
+                    for node in group.nodes:
+                        node.update_uv(group.uv_layer)
+                    group.set_pin(True)
 
-        bpy.ops.uv.pin(clear=False)
-        bpy.ops.uv.select_linked()
+            island.uv_select_set_all(True)
+
         bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
-        
-        node_manager.uv_select_set_all(False)
 
-        for group in node_manager.groups:
-            group.restore_selection()
+        for island in island_manager.islands:
+            island.restore_selection()
 
-        node_manager.update_uvmeshes(True)
+        island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}

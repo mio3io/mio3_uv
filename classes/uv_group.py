@@ -160,6 +160,11 @@ class UVNodeGroup:
     def get_sum_length(self, ordered_nodes):
         return sum((ordered_nodes[i + 1].uv - ordered_nodes[i].uv).length for i in range(len(ordered_nodes) - 1))
 
+    def set_pin(self, state):
+        uv_layer = self.obj_info.uv_layer
+        for node in self.nodes:
+            for loop in node.loops:
+                loop[uv_layer].pin_uv = state
 
 @dataclass
 class UVNodeManager:
