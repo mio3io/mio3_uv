@@ -1,11 +1,10 @@
 import bpy
 import bmesh
 import time
-import sys
 from bpy.types import Context, Object, Operator, Panel
-from bmesh.types import BMVert, BMLoop, BMLayerItem, BMesh, BMFace, BMEdge
+from bmesh.types import BMesh
 
-DEBUG = bool("--python" in sys.argv)
+DEBUG = "vscode_development" in __file__
 
 
 class Mio3UVPanel(Panel):

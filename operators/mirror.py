@@ -1,5 +1,4 @@
 import bpy
-from mathutils import Vector
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, EnumProperty
 from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator

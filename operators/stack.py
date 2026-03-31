@@ -50,7 +50,7 @@ class MIO3UV_OT_stack(Mio3UVOperator):
 
         island_manager = UVIslandManager(self.objects, sync=use_uv_select_sync, find_all=True)
 
-        selected_islands = [i for i in island_manager.islands if i.is_any_uv_selected]
+        selected_islands = [i for i in island_manager.islands if i.is_any_uv_selected()]
         among_islands = selected_islands if self.selected else island_manager.islands
 
         bpy.ops.uv.copy()

@@ -156,19 +156,10 @@ class UVIsland:
                 loop.uv_select_vert = select
                 loop.uv_select_edge = select
 
-    @cached_property
     def is_any_uv_selected(self):
         for face in self.faces:
             for loop in face.loops:
                 if loop.uv_select_vert:
-                    return True
-        return False
-
-    @cached_property
-    def is_face_selected(self):
-        for face in self.faces:
-            if face.select:
-                if all([l.uv_select_edge for l in face.loops]):  # select_edge -> エッジ選択時の〼を許容しない
                     return True
         return False
 
@@ -198,18 +189,17 @@ class UVIslandManager:
                 continue
 
             uv_sync_valid = bm.uv_select_sync_valid
+            if self.sync and not bm.uv_select_sync_valid:
+                bm.uv_select_sync_from_mesh()
 
             obj_info = UVObject(obj, bm, uv_layer, uv_sync_valid)
             self.collections.append(obj_info)
 
-            if self.sync and not uv_sync_valid:
-                bm.uv_select_sync_from_mesh()
+            self.find_islands(obj_info)
 
-            self.find_islands(obj_info, all=self.find_all, extend=self.extend, sync=self.sync)
-
-    def find_islands(self, obj_info: UVObject, all=False, extend=False, sync=False):
-        bm = obj_info.bm
-        uv_layer = obj_info.uv_layer
+    def find_islands(self, obj_info: UVObject):
+        all, extend, sync = self.find_all, self.extend, self.sync
+        bm, uv_layer = obj_info.bm, obj_info.uv_layer
         eps_eq = 1e-14
 
         def get_selected_faces(bm, sync):
@@ -248,7 +238,7 @@ class UVIslandManager:
             return selected_faces
 
         if self.mesh_all:
-                seed_faces = set(bm.faces) # hideメッシュも入れるべき？
+            seed_faces = set(bm.faces)  # hideメッシュも入れるべき？
         else:
             if all:
                 if sync:

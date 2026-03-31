@@ -1,6 +1,6 @@
 import bpy
 import math
-from mathutils import Vector, Matrix
+from mathutils import Matrix
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager

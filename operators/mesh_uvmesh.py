@@ -4,7 +4,6 @@ import math
 import bmesh
 from bpy.props import BoolProperty, EnumProperty
 from ..classes import Mio3UVOperator
-from ..icons import icons
 
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
 NAME_NODE_GROUP_UV_MESH = "Mio3UVMesh"
