@@ -267,6 +267,8 @@ class UVIslandManager:
                 face = stack.pop()
                 if face in visited:
                     continue
+                if not sync and not face.select:
+                    continue
                 visited_add(face)
                 island_add(face)
 
