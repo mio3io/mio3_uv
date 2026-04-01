@@ -17,11 +17,11 @@ class MIO3UV_PT_main(Mio3UVPanel):
     def draw_header(self, context):
         self.layout.label(icon_value=icons.unwrap)
 
-    def draw_header_preset(self, context):
-        layout = self.layout
-        layout.emboss = "NONE_OR_STATUS"
-        layout.popover("MIO3UV_PT_settings_popover", text="")
-        layout.separator(factor=3)
+    # def draw_header_preset(self, context):
+    #     layout = self.layout
+    #     layout.emboss = "NONE_OR_STATUS"
+    #     layout.popover("MIO3UV_PT_settings_popover", text="")
+    #     layout.separator(factor=3)
 
     def draw(self, context):
         layout = self.layout
@@ -273,17 +273,17 @@ class MIO3UV_PT_auto_body_parts_popover(Panel):
         row.operator("uv.mio3_body_preset", text="Button", icon_value=icons.button).type = "BUTTON"
 
 
-class MIO3UV_PT_settings_popover(Panel):
-    bl_label = "Settings"
-    bl_space_type = "IMAGE_EDITOR"
-    bl_region_type = "WINDOW"
+# class MIO3UV_PT_settings_popover(Panel):
+#     bl_label = "Settings"
+#     bl_space_type = "IMAGE_EDITOR"
+#     bl_region_type = "WINDOW"
 
-    def draw(self, context):
-        pref = get_preferences()
-        layout = self.layout
-        col = layout.column(align=True)
-        col.prop(pref, "auto_uv_sync")
-        col.prop(context.scene.mio3uv, "udim")
+#     def draw(self, context):
+#         pref = get_preferences()
+#         layout = self.layout
+#         col = layout.column(align=True)
+#         col.prop(pref, "auto_uv_sync")
+#         col.prop(context.scene.mio3uv, "udim")
 
 
 class MIO3UV_PT_options_popover(Panel):
@@ -296,6 +296,7 @@ class MIO3UV_PT_options_popover(Panel):
     def draw(self, context):
         layout = self.layout
         layout.ui_units_x = 11
+        pref = get_preferences()
         props_s = context.scene.mio3uv
         props_o = context.object.mio3uv
 
@@ -345,6 +346,10 @@ class MIO3UV_PT_options_popover(Panel):
         exposure_row.active = props_image.use_exposure
         exposure_row.prop(props_s, "exposure", text="")
 
+        col = layout.column(align=True)
+        col.label(text="Options", icon_value=icons.options)
+        col.prop(pref, "auto_uv_sync")
+        col.prop(context.scene.mio3uv, "udim")
 
 class MIO3UV_PT_texel_popover(Panel):
     bl_label = "Texel Density"
@@ -446,7 +451,7 @@ classes = [
     MIO3UV_PT_select,
     MIO3UV_PT_auto_body_parts_popover,
     MIO3UV_PT_options_popover,
-    MIO3UV_PT_settings_popover,
+    # MIO3UV_PT_settings_popover,
     MIO3UV_PT_texel_popover,
     MIO3UV_PT_Utility,
 ]

@@ -48,6 +48,8 @@ translation_dict = {
         ("*", "UV Bounds"): "UVの範囲",
         ("*", "Median Point of UVs"): "UVの中央値（重心）",
         ("*", "Refers to the Mirror setting of the Mirror Modifier"): "ミラーモディファイアのミラーオフセット設定を参照します",
+        ("*", "Based on world coordinates"): "ワールド座標に基づいて処理します",
+        ("*", "Based on object local coordinates"): "オブジェクトのローカル座標に基づいて処理します",
 
         # 🍑 Unwrap
         ("Operator", "UV Unwrap"): "UV展開",
@@ -126,31 +128,28 @@ translation_dict = {
         ("Operator", "Offset"): "オフセット",
         ("*", "Expand/Shrink UV Borders. Ensure space for the overlapping rim created by Solidify."): "UVの境界を拡大/縮小します。ソリッド化で重なってしまったリムのスペースを確保します",
 
-        # Island
+        # Sort
         ("Operator", "Sort Islands"): "アイランドをソート",
-        ("*", "Rearrange islands based on coordinates in 3D space"): "3D空間の座標に基づきアイランドを並び替え",
+        ("*", "Rearrange islands based on coordinates in 3D space"): "3D空間の座標に基づきアイランドを並び替えます",
+        ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標に基づきアイランドをグリッド状に並び替え",
         ("*", "Sort Method"): "ソート方式",
         ("*", "Start Angle (Clock)"): "開始角度（時計）",
         ("Operator", "Island Spacing"): "アイランドの間隔",
+        ("*", "Align Type"): "整列タイプ",
+        ("*", "Align by group"): "グループごとに整列",
+        ("*", "Group Spacing"): "グループの間隔",
+        ("*", "Fixed Width"): "固定幅",
+        ("*", "UV Distance"): "UV空間での距離",
+        ("*", "UV Similar"): "UVの類似性",
+        ("*", "Grid Size"): "グリッド幅",
 
+        # Island
         ("Operator", "Stack"): "重ねる",
         ("*", "Overlap similar UV shapes"): "類似した形状のUVシェイプを重ねます",
         ("Operator", "Shuffle"): "シャッフル",
         ("Operator", "Unify UV Shapes"): "UVの形状を揃える",
         ("Operator", "Average Island Scales"): "3Dに基づく大きさ",
         ("Operator", "Average Scales"): "平均化",
-
-        # Group
-        ("Operator", "Grid Sort"): "グリッド状にソート",
-        ("*", "Gridding island based on coordinates in 3D space"): "3D空間の座標に基づきアイランドをグリッド状に並び替え",
-        ("*", "Grid Threshold"): "グリッドのしきい値",
-        ("*", "UV Distance"): "UV空間での距離",
-        ("*", "UV Similar"): "UVの類似性",
-        ("*", "Grid Size"): "グリッド幅",
-        ("*", "Align Type"): "整列タイプ",
-        ("*", "Align by group"): "グループごとに整列",
-        ("*", "Group Spacing"): "グループの間隔",
-        ("*", "Fixed Width"): "固定幅",
 
         ("Operator", "Map"): "マップ",
         ("*", "Organize UV islands by their structural separation and spatial relationships in 3D space"): "3D空間の構造的分離と位置関係に基づいてUVアイランドを整列します",
