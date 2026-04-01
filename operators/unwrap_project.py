@@ -45,6 +45,8 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
         # 3Dモード
         if context.area.type == "VIEW_3D":
+            mesh_select_mode = context.tool_settings.mesh_select_mode[:]
+            context.tool_settings.mesh_select_mode = (False, False, True)
             for obj in objects:
                 context.view_layer.objects.active = obj
                 bm = bmesh.from_edit_mesh(obj.data)
@@ -64,6 +66,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
                 bpy.ops.uv.unwrap(method=self.method)
                 bpy.ops.uv.pin(clear=True)
             context.view_layer.objects.active = objects[0]
+            context.tool_settings.mesh_select_mode = mesh_select_mode
             return {"FINISHED"}
 
         # UVモード
@@ -74,14 +77,14 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
             island.store_selection()
 
             selected_faces = {face for face in island.faces if face.select and face.uv_select}
-            self.project_faces(selected_faces, uv_layer)
-
-            if self.link_unwrap:
-                island.uv_select_set_all(True)
-                for face in selected_faces:
-                    for loop in face.loops:
-                        if loop.uv_select_vert:
-                            loop[uv_layer].pin_uv = True
+            if selected_faces:
+                self.project_faces(selected_faces, uv_layer)
+                if self.link_unwrap:
+                    island.uv_select_set_all(True)
+                    for face in selected_faces:
+                        for loop in face.loops:
+                            if loop.uv_select_vert:
+                                loop[uv_layer].pin_uv = True
 
                 if bm.uv_select_sync_valid:
                     island.bm.uv_select_sync_to_mesh()
