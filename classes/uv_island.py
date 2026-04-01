@@ -172,6 +172,7 @@ class UVIslandManager:
     extend: bool = True  # 選択しているUVを境界まで拡張する
     find_all: bool = False  # すべてのアイランドを対象にする
     mesh_all: bool = False  # メッシュ全体を対象にする
+    uv_split: bool = True # UVアイランドで分ける（Falseの場合はシームのみ）
 
     orientation_mode = "WORLD"  # "WORLD" or "LOCAL"
 
@@ -253,6 +254,7 @@ class UVIslandManager:
         can_extend = all or extend
         visited = set()
         visited_add = visited.add
+        uv_split = self.uv_split
 
         for seed in seed_faces:
             if seed in visited:
@@ -287,28 +289,29 @@ class UVIslandManager:
                     if not can_extend and linked_face not in seed_faces:
                         continue
 
-                    a = loop[uv_layer].uv
-                    b = loop.link_loop_next[uv_layer].uv
-                    c = linked_loop[uv_layer].uv
-                    d = linked_loop.link_loop_next[uv_layer].uv
+                    if uv_split:
+                        a = loop[uv_layer].uv
+                        b = loop.link_loop_next[uv_layer].uv
+                        c = linked_loop[uv_layer].uv
+                        d = linked_loop.link_loop_next[uv_layer].uv
 
-                    if loop.vert is linked_loop.vert:
-                        du = a.x - c.x
-                        dv = a.y - c.y
+                        if loop.vert is linked_loop.vert:
+                            du = a.x - c.x
+                            dv = a.y - c.y
+                            if du * du + dv * dv > eps_eq:
+                                continue
+                            du = b.x - d.x
+                            dv = b.y - d.y
+                        else:
+                            du = a.x - d.x
+                            dv = a.y - d.y
+                            if du * du + dv * dv > eps_eq:
+                                continue
+                            du = b.x - c.x
+                            dv = b.y - c.y
+
                         if du * du + dv * dv > eps_eq:
                             continue
-                        du = b.x - d.x
-                        dv = b.y - d.y
-                    else:
-                        du = a.x - d.x
-                        dv = a.y - d.y
-                        if du * du + dv * dv > eps_eq:
-                            continue
-                        du = b.x - c.x
-                        dv = b.y - c.y
-
-                    if du * du + dv * dv > eps_eq:
-                        continue
 
                     stack_append(linked_face)
 

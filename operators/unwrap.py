@@ -38,6 +38,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
     keep_position: BoolProperty(name="Position", description="Keep UV position", default=True)
     keep_scale: BoolProperty(name="Scale", description="Keep UV scale", default=True)
     keep_rotate: BoolProperty(name="Angle", description="Keep UV angle", default=True)
+    merge_uv: BoolProperty(name="Merge Seamless Parts", description="Treat islands without seams as one island", default=False)
 
     @classmethod
     def poll(cls, context):
@@ -54,7 +55,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
-        island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
+        island_manager = UVIslandManager(objects, sync=use_uv_select_sync, uv_split=not self.merge_uv)
 
         axis = self.axis
         use_keep = self.keep_position or self.keep_scale or self.keep_rotate
@@ -196,19 +197,27 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-        layout.prop(self, "method")
         layout.use_property_split = False
+        layout.use_property_decorate = False
+
         split = layout.split(factor=0.3, align=True)
+        split.alignment = "RIGHT"
+        split.label(text="Method")
+        split.prop(self, "method", text="")
+        split = layout.split(factor=0.3, align=True)
+        split.alignment = "RIGHT"
         split.label(text="Keep")
         row = split.row(align=True)
         row.prop(self, "keep_position", toggle=True)
         row.prop(self, "keep_scale", toggle=True)
         row.prop(self, "keep_rotate", toggle=True)
         split = layout.split(factor=0.3, align=True)
+        split.alignment = "RIGHT"
         split.label(text="Direction")
         split.row().prop(self, "axis", expand=True)
+        split = layout.split(factor=0.3, align=True)
+        split.label(text="")
+        split.prop(self, "merge_uv")
 
 
 def register():

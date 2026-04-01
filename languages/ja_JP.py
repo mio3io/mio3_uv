@@ -70,6 +70,8 @@ translation_dict = {
         ("*", "Unwrap by linked mesh"): "メッシュごとに投影",
         ("Operator", "Unwrap Virtual Mirror"): "仮想ミラー展開",
         ("*", "Unwrap as if the mirror modifier is applied"): "ミラーモディファイアを適用してあるように展開する",
+        ("*", "Merge Seamless Parts"): "シームの無いパーツを結合",
+        ("*", "Treat islands without seams as one island"): "シームのないアイランドを1つのアイランドとして扱う",
 
         ("Operator", "Mark Seam by Angle"): "角度でシームを設定",
         ("Operator", "Mark Seam by Boundary"): "選択境界にシームを設定",
