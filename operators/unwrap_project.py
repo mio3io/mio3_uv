@@ -1,9 +1,10 @@
 import bpy
 import bmesh
-from bpy.props import BoolProperty, EnumProperty
 from mathutils import Vector
+from bpy.props import BoolProperty, EnumProperty
+from bmesh.types import BMFace, BMLayerItem
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..icons import icons
-from ..classes import UVIslandManager, Mio3UVOperator
 
 
 class MIO3UV_OT_unwrap_project(Mio3UVOperator):
@@ -107,7 +108,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def restore_island(self, island):
+    def restore_island(self, island: UVIsland):
         link_unwrap = self.link_unwrap
         current_size = max(island.width, island.height)
         original_size = max(island.original_width, island.original_height)
@@ -128,7 +129,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
         island.update_bounds()
 
-    def find_groups(self, faces):
+    def find_groups(self, faces: list[BMFace]) -> list[list[BMFace]]:
         face_groups = []
         remaining_faces = set(faces)
 
@@ -153,7 +154,7 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
         return face_groups
 
-    def project_faces(self, faces, uv_layer):
+    def project_faces(self, faces: list[BMFace], uv_layer: BMLayerItem):
         avg_normal = sum((f.normal.copy() for f in faces), Vector()).normalized()
         if abs(avg_normal.z) > 0.99:
             up = Vector((0, 1, 0))

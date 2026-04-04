@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 
 
 class MIO3UV_OT_normalize(Mio3UVOperator):
@@ -31,7 +31,7 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def normalize_island(self, context, island):
+    def normalize_island(self, context, island: UVIsland):
         width = island.width
         height = island.height
 
@@ -44,7 +44,7 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
 
         self.apply_scale(context, island, scale_x, scale_y)
 
-    def normalize_all_islands(self, context, islands):
+    def normalize_all_islands(self, context, islands: list[UVIsland]):
         min_uv = Vector((min(island.min_uv.x for island in islands), min(island.min_uv.y for island in islands)))
         max_uv = Vector((max(island.max_uv.x for island in islands), max(island.max_uv.y for island in islands)))
 
@@ -61,7 +61,7 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
         for island in islands:
             self.apply_scale(context, island, scale_x, scale_y, min_uv)
 
-    def apply_scale(self, context, island, scale_x, scale_y, global_min_uv=None):
+    def apply_scale(self, context, island: UVIsland, scale_x: float, scale_y: float, global_min_uv: Vector = None):
         anchor = self.get_anchor(context, island.center)
         min_uv = global_min_uv if global_min_uv else island.min_uv
         uv_layer = island.uv_layer
@@ -70,13 +70,13 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
                 uv = loop[uv_layer]
                 uv.uv = anchor + Vector(((uv.uv.x - min_uv.x) * scale_x, (uv.uv.y - min_uv.y) * scale_y))
 
-    def get_anchor(self, context, center):
+    def get_anchor(self, context, center: Vector) -> Vector:
         if context.scene.mio3uv.udim:
             return self.get_tile_co(Vector((0, 0)), center)
         else:
             return Vector((0, 0))
 
-    def get_tile_co(self, offset_vector, center):
+    def get_tile_co(self, offset_vector: Vector, center: Vector) -> Vector:
         tile_u = int(center.x)
         tile_v = int(center.y)
         udim_x = tile_u + offset_vector.x

@@ -1,8 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty
-from ..classes import UVIslandManager, Mio3UVOperator
-from ..classes.operator import Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager
 
 
 class MIO3UV_OT_offset(Mio3UVOperator):

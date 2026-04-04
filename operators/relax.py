@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty
-from ..classes import UVNodeManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVNodeManager
 
 
 class MIO3UV_OT_relax(Mio3UVOperator):
@@ -62,13 +62,15 @@ class MIO3UV_OT_relax(Mio3UVOperator):
             keep_boundary = self.keep_boundary and self._face_selected
             keep_pin = self.keep_pin
             for group in node_manager.groups:
-                node_index_map = {id(node): index for index, node in enumerate(group.nodes)}
-                fixed_nodes = [False] * len(group.nodes)
-                neighbor_cache = [[] for _ in group.nodes]
-                selection_boundary_cache = {}
-                uv_layer = group.obj_info.uv_layer
+                uv_layer = group.uv_layer
+                nodes = group.nodes
 
-                for index, node in enumerate(group.nodes):
+                node_index_map = {id(node): index for index, node in enumerate(nodes)}
+                fixed_nodes = [False] * len(nodes)
+                neighbor_cache = [[] for _ in nodes]
+                selection_boundary_cache = {}
+
+                for index, node in enumerate(nodes):
                     if keep_boundary:
                         is_boundary_node = any(
                             loop.edge.is_boundary
@@ -92,11 +94,26 @@ class MIO3UV_OT_relax(Mio3UVOperator):
                         weighted_neighbors.append((node_index_map[id(neighbor)], 1.0 / distance))
                     neighbor_cache[index] = weighted_neighbors
 
-                group.relax_nodes = group.nodes
-                group.relax_fixed_nodes = fixed_nodes
-                group.relax_neighbor_cache = neighbor_cache
+                positions = [node.uv.copy() for node in nodes]
+                lambda_positions = positions.copy()
+                next_positions = positions.copy()
+                lambda_factor = self._lambda * self.strength
+                mu_factor = self._mu * self.strength
 
-                self.relax_group(group)
+                for _ in range(self.iterations):
+                    self.apply_laplacian(positions, lambda_positions, fixed_nodes, neighbor_cache, lambda_factor)
+                    max_move = self.apply_laplacian(
+                        lambda_positions, next_positions, fixed_nodes, neighbor_cache, mu_factor, ref_positions=positions
+                    )
+
+                    positions, lambda_positions, next_positions = next_positions, positions, lambda_positions
+
+                    if max_move < self._eps:
+                        break
+
+                for index, node in enumerate(nodes):
+                    node.uv = positions[index]
+                    node.update_uv(uv_layer)
 
             node_manager.update_uvmeshes()
 
@@ -160,33 +177,6 @@ class MIO3UV_OT_relax(Mio3UVOperator):
                     max_move = movement
 
         return max_move
-
-    def relax_group(self, group):
-        nodes = group.relax_nodes
-        fixed_nodes = group.relax_fixed_nodes
-        neighbor_cache = group.relax_neighbor_cache
-        uv_layer = group.uv_layer
-
-        positions = [node.uv.copy() for node in nodes]
-        lambda_positions = positions.copy()
-        next_positions = positions.copy()
-        lambda_factor = self._lambda * self.strength
-        mu_factor = self._mu * self.strength
-
-        for _ in range(self.iterations):
-            self.apply_laplacian(positions, lambda_positions, fixed_nodes, neighbor_cache, lambda_factor)
-            max_move = self.apply_laplacian(
-                lambda_positions, next_positions, fixed_nodes, neighbor_cache, mu_factor, ref_positions=positions
-            )
-
-            positions, lambda_positions, next_positions = next_positions, positions, lambda_positions
-
-            if max_move < self._eps:
-                break
-
-        for index, node in enumerate(nodes):
-            node.uv = positions[index]
-            node.update_uv(uv_layer)
 
     def draw(self, context):
         layout = self.layout

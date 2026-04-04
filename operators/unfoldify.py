@@ -1,7 +1,8 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty
-from ..classes import UVIslandManager, UVIsland, Mio3UVOperator
+from bmesh.types import BMesh
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..utils.uv_manager_utils import find_rotation_geometry, rotate_island
 
 
@@ -87,7 +88,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def collect_groups(self, island_manager):
+    def collect_groups(self, island_manager: UVIslandManager) -> list[list[UVIsland]]:
         groups = []
         islands_by_object = {}
         for island in island_manager.islands:
@@ -107,11 +108,12 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
         groups.sort(key=self.get_group_sort_key)
         return groups
 
-    def get_group_sort_key(self, group):
+    @staticmethod
+    def get_group_sort_key(group: list[UVIsland]) -> tuple:
         center = sum((island.center_3d_world for island in group), Vector()) / len(group)
         return tuple(center.xyz)
 
-    def find_groups(self, bm, islands):
+    def find_groups(self, bm: BMesh, islands: list[UVIsland]) -> list[list[UVIsland]]:
         island_order = {island: index for index, island in enumerate(islands)}
         face_to_island = {face: island for island in islands for face in island.faces}
         island_groups = []
@@ -133,21 +135,22 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 island_groups.append(sorted(current_group, key=island_order.get))
         return island_groups
 
-    def arrange_islands(self, islands):
+    def arrange_islands(self, islands: list[UVIsland]) -> dict:
         base_island, other_islands = self.categorize_islands(islands)
         self.layout_islands(base_island, other_islands)
 
         min_u, max_u, min_v, _ = self.get_bounds(islands)
         return {"min_u": min_u, "min_v": min_v, "width": max_u - min_u}
 
-    def get_bounds(self, islands):
+    @staticmethod
+    def get_bounds(islands: list[UVIsland]) -> tuple:
         min_u = min(island.min_uv.x for island in islands)
         max_u = max(island.max_uv.x for island in islands)
         min_v = min(island.min_uv.y for island in islands)
         max_v = max(island.max_uv.y for island in islands)
         return min_u, max_u, min_v, max_v
 
-    def build_island_data(self, islands):
+    def build_island_data(self, islands: list[UVIsland]) -> dict:
         island_data = {}
         for island in islands:
             area = 0.0
@@ -161,7 +164,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             island_data[island] = {"area": area, "normal": normal}
         return island_data
 
-    def categorize_islands(self, islands):
+    def categorize_islands(self, islands: list[UVIsland]) -> tuple:
         if not islands:
             return None, IslandCategories()
 
@@ -192,7 +195,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             key=lambda item: normal.dot(item[1][0]) + (0.5 if getattr(position, item[1][1]) * item[1][2] > 0 else 0),
         )[0]
 
-    def move_island_to(self, island, *, min_u=None, min_v=None, max_u=None, max_v=None):
+    def move_island_to(self, island: UVIsland, min_u=None, min_v=None, max_u=None, max_v=None):
         target_min_u = island.min_uv.x if min_u is None else min_u
         target_min_v = island.min_uv.y if min_v is None else min_v
         if max_u is not None:
@@ -201,7 +204,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             target_min_v = max_v - island.height
         island.move(Vector((target_min_u - island.min_uv.x, target_min_v - island.min_uv.y)), True)
 
-    def layout_centered_stack(self, islands, center_u, start_v, margin, align_top=False):
+    def layout_centered_stack(self, islands: list[UVIsland], center_u, start_v, margin, align_top=False):
         current_v = start_v
         for island in islands:
             min_u = center_u - island.width / 2
@@ -212,7 +215,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
             current_v -= island.height + margin
         return current_v
 
-    def layout_horizontal_row(self, islands, center_u, start_v, margin, align_top=False):
+    def layout_horizontal_row(self, islands: list[UVIsland], center_u, start_v, margin, align_top=False):
         total_width = sum(island.width for island in islands) + margin * (len(islands) - 1)
         current_u = center_u - total_width / 2
         for island in islands:
@@ -222,7 +225,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 self.move_island_to(island, min_u=current_u, min_v=start_v)
             current_u += island.width + margin
 
-    def layout_side_stack(self, islands, direction, base_island, margin):
+    def layout_side_stack(self, islands: list[UVIsland], direction, base_island: UVIsland, margin):
         current_v = base_island.max_uv.y
         ref_u = base_island.max_uv.x if direction == "RIGHT" else base_island.min_uv.x
         for island in islands:
@@ -232,7 +235,7 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
                 self.move_island_to(island, max_u=ref_u - margin, max_v=current_v)
             current_v -= island.height + margin
 
-    def layout_islands(self, base_island: UVIsland, other_islands):
+    def layout_islands(self, base_island: UVIsland, other_islands: IslandCategories):
         margin = self.offset_island
         if not base_island:
             return

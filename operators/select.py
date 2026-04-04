@@ -2,8 +2,9 @@ import bpy
 import bmesh
 import math
 from mathutils import Vector, kdtree
+from bmesh.types import BMesh, BMLoop, BMLayerItem
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..utils.utils import uv_select_set_face, uv_select_set_all
 
 
@@ -142,13 +143,13 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def get_island_edge_count(self, island):
+    def get_island_edge_count(self, island: UVIsland):
         return len({edge for face in island.faces for edge in face.edges})
 
-    def get_island_area(self, island):
+    def get_island_area(self, island: UVIsland):
         return sum(face.calc_area() for face in island.faces)
 
-    def is_different(self, island, base_face_count, base_edge_count, base_area):
+    def is_different(self, island: UVIsland, base_face_count, base_edge_count, base_area):
         if len(island.faces) != base_face_count:
             return True
         if self.edges and self.get_island_edge_count(island) != base_edge_count:
@@ -213,7 +214,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def select_mirror(self, bm, use_uv_select_sync):
+    def select_mirror(self, bm: BMesh, use_uv_select_sync: bool):
         target_faces, source_faces, source_verts = self.find_targets(bm, use_uv_select_sync)
 
         kd = kdtree.KDTree(len(bm.faces))
@@ -416,7 +417,7 @@ class MIO3UV_OT_select_edge(Mio3UVOperator):
         island_manager.update_uvmeshes(True)
 
     @staticmethod
-    def is_uv_continuous(loop, linked_loop, uv_layer, eps2):
+    def is_uv_continuous(loop: BMLoop, linked_loop: BMLoop, uv_layer: BMLayerItem, eps2):
         a = loop[uv_layer].uv
         b = loop.link_loop_next[uv_layer].uv
         c = linked_loop[uv_layer].uv
@@ -508,7 +509,7 @@ class MIO3UV_OT_select_edge(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-    def is_direction(self, loop, axis, uv_layer):
+    def is_direction(self, loop: BMLoop, axis, uv_layer: BMLayerItem):
         uv1 = loop[uv_layer].uv
         uv2 = loop.link_loop_next[uv_layer].uv
         edge_vector = uv2 - uv1

@@ -1,15 +1,17 @@
 import math
 import bpy
 import bmesh
+from bpy.types import Object
+from bmesh.types import BMFace, BMLayerItem
 from bpy.props import FloatProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 
 
 COVERAGE_MASK_MAX_SIZE = 256
 NAME_MOD_CHECKER_MAP = "Mio3CheckerMapModifier"
 
 
-def get_texture_size(props, obj, use_checker=False):
+def get_texture_size(props, obj: Object, use_checker: bool = False) -> tuple[int, int]:
     if use_checker:
         mod = obj.modifiers.get(NAME_MOD_CHECKER_MAP)
         if mod and mod.type == "NODES":
@@ -22,7 +24,7 @@ def get_texture_size(props, obj, use_checker=False):
     return int(props.texture_size_x), int(props.texture_size_y)
 
 
-def calc_uv_face_area(face, uv_layer):
+def calc_uv_face_area(face: BMFace, uv_layer: BMLayerItem) -> float:
     if len(face.loops) < 3:
         return 0.0
 
@@ -38,7 +40,7 @@ def calc_uv_face_area(face, uv_layer):
     return total_area
 
 
-def calc_face_world_area(face, obj):
+def calc_face_world_area(face: BMFace, obj: Object) -> float:
     if obj is None or len(face.verts) < 3:
         return face.calc_area()
 
@@ -270,7 +272,7 @@ class UV_OT_texel_density_get(Mio3UVOperator):
         props_s.texel_density = weighted_density / total_face_area
         return {"FINISHED"}
 
-    def get_selected_faces(self, island):
+    def get_selected_faces(self, island: UVIsland) -> list[BMFace]:
         selected_faces = []
 
         for face in island.faces:

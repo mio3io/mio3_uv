@@ -1,8 +1,8 @@
 import bpy
+from mathutils import Vector
 from bpy.props import EnumProperty, BoolProperty
 from bpy.app.translations import pgettext_iface as tt_iface
-from mathutils import Vector
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 
 
 class MIO3UV_OT_unwrap(Mio3UVOperator):
@@ -96,7 +96,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def should_restore(self, island):
+    def should_restore(self, island: UVIsland) -> bool:
         uv_layer = island.uv_layer
 
         pinned_nodes = set()
@@ -116,7 +116,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
         return True
 
-    def capture_uv_samples(self, island):
+    def capture_uv_samples(self, island: UVIsland) -> list:
         uv_samples = []
         uv_layer = island.uv_layer
         for face in island.faces:
@@ -124,7 +124,7 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
                 uv_samples.append((loop, loop[uv_layer].uv.copy()))
         return uv_samples
 
-    def apply_transform(self, island, uv_samples):
+    def apply_transform(self, island: UVIsland, uv_samples: list):
         pair_count = len(uv_samples)
         if pair_count < 2:
             return

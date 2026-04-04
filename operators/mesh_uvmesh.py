@@ -3,6 +3,8 @@ import os
 import math
 import bmesh
 from bpy.props import BoolProperty, EnumProperty
+from bpy.types import Context
+from bmesh.types import BMesh
 from ..classes import Mio3UVOperator
 
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
@@ -74,7 +76,7 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         area = sum(f.calc_area() for f in bm.faces)
         return area
 
-    def calc_uv_area(self, bm):
+    def calc_uv_area(self, bm: BMesh) -> float:
         uv_layer = bm.loops.layers.uv.verify()
         total_area = 0.0
         for face in bm.faces:
@@ -95,7 +97,7 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
     def get_modifier(self, obj):
         return obj.modifiers.get(NAME_MOD_UV_MESH)
 
-    def create_new_geometry_node(self, context):
+    def create_new_geometry_node(self, context: Context):
         blend_path = os.path.join(BLEND_DIR, "mio3uv.blend")
         try:
             mode = context.active_object.mode

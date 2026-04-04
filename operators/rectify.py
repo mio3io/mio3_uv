@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
 from ..utils.utils import straight_uv_nodes
-from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator, UVIsland
+from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager, UVIsland
 
 
 class MIO3UV_OT_rectify(Mio3UVOperator):
@@ -120,8 +120,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
             boundary_loops = set()
             for (curr_loops, _), (next_loops, _) in zip(corners, corners[1:] + [corners[0]]):
-                self.select_uv(curr_loops, uv_layer, True)
-                self.select_uv(next_loops, uv_layer, True)
+                self.select_uv(curr_loops, True)
+                self.select_uv(next_loops, True)
 
                 try:
                     bpy.ops.uv.shortest_path_select()
@@ -139,8 +139,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
                             boundary_loops.add(loop)
                     group.update_uvs()
                 else:
-                    self.select_uv(curr_loops, uv_layer, False)
-                    self.select_uv(next_loops, uv_layer, False)
+                    self.select_uv(curr_loops, False)
+                    self.select_uv(next_loops, False)
 
             if self.bbox_type == "AVERAGE":
                 bboox_ave = self.get_bbox_average([Vector(uvkey) for _, uvkey in corners])
@@ -181,12 +181,12 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         return {"FINISHED"}
 
     @staticmethod
-    def select_uv(loops, uv_layer, select):
+    def select_uv(loops, select):
         for loop in loops:
             loop.uv_select_vert = select
 
     @staticmethod
-    def get_bbox_uvs(uvs):
+    def get_bbox_uvs(uvs: list[Vector]) -> list[Vector]:
         x_coords = [uv.x for uv in uvs]
         y_coords = [uv.y for uv in uvs]
         min_uv = Vector((min(x_coords), min(y_coords)))
@@ -200,7 +200,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         return bbox_uv
 
     @staticmethod
-    def get_bbox_average(uvs):
+    def get_bbox_average(uvs: list[Vector]) -> list[Vector]:
         center_x = sum(uv.x for uv in uvs) / len(uvs)
         center_y = sum(uv.y for uv in uvs) / len(uvs)
         avg_distance_x = sum(abs(uv.x - center_x) for uv in uvs) / len(uvs)
@@ -218,7 +218,7 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
         return average
 
     @staticmethod
-    def remap_bbox(uv_layer, bbox_uvs, bbox_ajs, loops):
+    def remap_bbox(uv_layer, bbox_uvs: list[Vector], bbox_ajs: list[Vector], loops):
         old_width = bbox_uvs[1].x - bbox_uvs[0].x
         old_height = bbox_uvs[0].y - bbox_uvs[3].y
         new_width = bbox_ajs[1].x - bbox_ajs[0].x

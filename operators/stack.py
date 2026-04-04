@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty, EnumProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager
 
 
 class MIO3UV_OT_paste(Mio3UVOperator):

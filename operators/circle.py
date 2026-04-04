@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty
-from ..classes import UVNodeManager, UVNodeGroup, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVNodeManager, UVNodeGroup
 
 
 class MIO3UV_OT_circle(Mio3UVOperator):
@@ -47,7 +47,7 @@ class MIO3UV_OT_circle(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def make_circular(self, group):
+    def make_circular(self, group: UVNodeGroup):
         center = sum((node.uv for node in group.nodes), Vector((0, 0))) / len(group.nodes)
         avg_radius = sum((node.uv - center).length for node in group.nodes) / len(group.nodes)
         for node in group.nodes:

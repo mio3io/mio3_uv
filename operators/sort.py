@@ -5,9 +5,9 @@ from mathutils import Vector
 from bpy.types import SpaceView3D
 from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
 from gpu_extras.batch import batch_for_shader
-from ..icons import icons
-from ..classes import UVIslandManager, UVIsland, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..globals import get_preferences
+from ..icons import icons
 
 IslandList = list[UVIsland]
 IslandGroups = list[IslandList]

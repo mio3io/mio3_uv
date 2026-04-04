@@ -1,10 +1,10 @@
 import bpy
 import math
+from mathutils import Vector
 from dataclasses import dataclass
 from bpy.props import EnumProperty, FloatProperty
 from bpy.app.translations import pgettext_iface as tt_iface
-from mathutils import Vector
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..utils.uv_manager_utils import find_rotation_auto, find_rotation_geometry, rotate_island
 
 
@@ -159,7 +159,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
             parts_type = self.type
 
         if parts_type == "BODY":
-            self.auto_body_mapping(context, island_manager, body_reference)
+            self.auto_body_mapping(island_manager, body_reference)
         else:
             part_info = self.PARTS_GROUP[parts_type]
             self.sort_axis(island_manager, part_info.sort_axis, reverse=part_info.sort_reverse)
@@ -171,7 +171,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 
-    def find_humanoid_part(self, avg_center, body_reference):
+    def find_humanoid_part(self, avg_center: Vector, body_reference: BodyReference) -> str:
         rel_z = (avg_center.z - body_reference.min_xyz.z) / body_reference.height
         relative_center_x = (avg_center.x - body_reference.center_x) / body_reference.half_width
 
@@ -192,7 +192,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         else:
             return "BODY"
 
-    def auto_body_mapping(self, context, island_manager, body_reference):
+    def auto_body_mapping(self, island_manager: UVIslandManager, body_reference: BodyReference):
         part_infos = {parts: [] for parts in self.PARTS_GROUP.keys()}
         for island in island_manager.islands:
             parts_type = self.find_humanoid_part(island.center_3d, body_reference)
@@ -212,7 +212,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                     island.move(offset, True)
                     current_position += direction * (island.width)
 
-    def sort_axis(self, island_manager, axis, reverse=False):
+    def sort_axis(self, island_manager: UVIslandManager, axis: str, reverse: bool = False):
         axis_orders = {
             "X": ["+X", "+Y", "-Z"],
             "Y": ["+Y", "+X", "-Z"],
@@ -220,14 +220,14 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
         }
         sort_order = axis_orders[axis]
 
-        def sort_func(island):
+        def sort_func(island: UVIsland):
             return tuple(
                 island.center_3d["XYZ".index(axis[-1])] * (-1 if axis.startswith("-") else 1) for axis in sort_order
             )
 
         island_manager.islands.sort(key=sort_func, reverse=reverse)
 
-    def align_islands(self, islands):
+    def align_islands(self, islands: list[UVIsland]):
         min_x = min(island.min_uv.x for island in islands)
         max_x = max(island.max_uv.x for island in islands)
         max_y = max(island.max_uv.y for island in islands)
@@ -247,7 +247,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
                 island.move(island_offset, True)
                 offset.y -= island.height + self.spacing
 
-    def rotation_islands(self, islands, part_group):
+    def rotation_islands(self, islands: list[UVIsland], part_group: PartGroup):
         for island in islands:
             world_matrix = island.obj.matrix_world
             for method, axis in part_group.rotation_operations:
@@ -265,7 +265,7 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
             island.update_bounds()
 
     @staticmethod
-    def average_vectors(island_manager):
+    def average_vectors(island_manager: UVIslandManager) -> Vector:
         all_center_3d = [island.center_3d for island in island_manager.islands]
         total = all_center_3d[0].copy()
         for vector in all_center_3d[1:]:

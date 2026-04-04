@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 from bpy.props import BoolProperty, EnumProperty
-from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 
 class MIO3UV_OT_stretch(Mio3UVOperator):

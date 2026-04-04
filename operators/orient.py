@@ -2,7 +2,7 @@ import bpy
 import math
 from mathutils import Vector
 from bpy.props import BoolProperty, EnumProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..utils.utils import get_uv_from_mirror_offset, rotate_uv_faces
 from ..utils.uv_manager_utils import find_rotation_auto, find_rotation_geometry, rotate_island
 
@@ -53,13 +53,13 @@ class MIO3UV_OT_orient(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def align_island_rotation(self, island_manager):
+    def align_island_rotation(self, island_manager: UVIslandManager):
         for island in island_manager.islands:
             angle = find_rotation_auto(island.uv_layer, island.faces)
             if angle != 0.0:
                 rotate_island(island, angle)
 
-    def align_edge_rotation(self, island_manager, udim):
+    def align_edge_rotation(self, island_manager: UVIslandManager, udim):
         for island in island_manager.islands:
             uv_layer = island.uv_layer
             loop_uv1, loop_uv2 = self.get_selected_edge_loop(island)
@@ -97,7 +97,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
                     for l in face.loops:
                         l[uv_layer].uv.y += move_delta
 
-    def get_selected_edge_loop(self, island):
+    def get_selected_edge_loop(self, island: UVIsland):
         uv_layer = island.uv_layer
         if island.sync:
             for face in island.faces:
@@ -114,7 +114,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
                             return (loop[uv_layer], loop.link_loop_next[uv_layer])
         return (None, None)
 
-    def get_udim_co(self, is_udim, co, island):
+    def get_udim_co(self, is_udim: bool, co: Vector, island: UVIsland) -> Vector:
         if is_udim:
             return Vector((int(island.center.x) + co.x, int(island.center.y) + co.y))
         else:

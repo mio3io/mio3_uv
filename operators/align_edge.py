@@ -1,7 +1,8 @@
 import bpy
 import math
 from bpy.props import EnumProperty, FloatProperty
-from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
+from bmesh.types import BMFace, BMLoop, BMLayerItem
+from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 
 class MIO3UV_OT_align_edges(Mio3UVOperator):
@@ -45,7 +46,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         for island in island_manager.islands:
             island.restore_selection()
 
-            self.uv_selection(island.bm, island.uv_layer, island.faces, self.axis)
+            self.uv_selection(island.uv_layer, island.faces, self.axis)
 
             node_manager = UVNodeManager.from_island(island, sync=use_uv_select_sync, sub_faces=island.faces)
             if node_manager.groups:
@@ -59,7 +60,7 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def uv_selection(self, bm, uv_layer, faces, axis):
+    def uv_selection(self, uv_layer: BMLayerItem, faces: list[BMFace], axis):
         selected_uv_edges = set()
         for face in faces:
             if not face.select:
@@ -70,11 +71,11 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
                     selected_uv_edges.add((edge, loop))
 
         for edge, loop in selected_uv_edges:
-            if not self.is_direction(edge, loop, axis, uv_layer):
+            if not self.is_direction(loop, axis, uv_layer):
                 for l in edge.link_loops:
                     l.uv_select_edge = False
 
-    def is_direction(self, edge, loop, axis, uv_layer):
+    def is_direction(self, loop: BMLoop, axis, uv_layer: BMLayerItem) -> bool:
         uv1 = loop[uv_layer].uv
         uv2 = loop.link_loop_next[uv_layer].uv
         edge_vector = uv2 - uv1

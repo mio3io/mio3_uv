@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import EnumProperty
-from ..classes import UVNodeManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVNodeManager
 
 
 class MIO3UV_OT_align_seam(Mio3UVOperator):

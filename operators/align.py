@@ -2,7 +2,8 @@ import bpy
 from mathutils import Vector
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, EnumProperty
-from ..classes import UVIslandManager, UVIsland, UVNodeManager, UVNodeGroup, UVNode, Mio3UVOperator
+from bpy.types import Context
+from ..classes import Mio3UVOperator, UVIslandManager, UVIsland, UVNodeManager, UVNodeGroup, UVNode
 from ..utils.utils import straight_uv_nodes
 
 
@@ -41,7 +42,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
     edge_mode: BoolProperty(name="Edge Mode", description="Process each edge loops", default=False)
     island: BoolProperty(name="Island Mode", default=False)
     align_to: EnumProperty(
-        name="Align To",
+        name="Pivot",
         items=[
             ("BBOX", "Bounding Box", ""),
             ("UV_AREA", "UV Area", ""),
@@ -295,7 +296,7 @@ class MIO3UV_OT_align(Mio3UVOperator):
         for island in islands:
             island.move(offset)
 
-    def get_target_value(self, context, elements, alignment_type, align_to):
+    def get_target_value(self, context: Context, elements, alignment_type: str, align_to: str) -> float:
         axis = 0 if alignment_type in ["MAX_X", "MIN_X", "ALIGN_X"] else 1
         if align_to == "BBOX" and alignment_type in ["ALIGN_X", "ALIGN_Y"]:
             min_type = "MIN_X" if axis == 0 else "MIN_Y"

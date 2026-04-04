@@ -1,17 +1,10 @@
 import bpy
 import math
-from bpy.props import BoolProperty, FloatProperty
 from mathutils import Vector, Matrix
-from ..classes import UVIslandManager, Mio3UVOperator
+from bpy.props import BoolProperty, FloatProperty
+from bmesh.types import BMFace, BMLayerItem
+from ..classes import Mio3UVOperator, UVIslandManager
 from ..utils.uv_follow import uv_follow, build_uv_loop_index, collect_shared_uv_loops
-
-
-def calculate_uv_area(uv_coords):
-    area = 0.0
-    for index, uv in enumerate(uv_coords):
-        next_uv = uv_coords[(index + 1) % len(uv_coords)]
-        area += uv.x * next_uv.y - next_uv.x * uv.y
-    return abs(area) * 0.5
 
 
 class MIO3UV_OT_grid(Mio3UVOperator):
@@ -67,7 +60,7 @@ class MIO3UV_OT_grid(Mio3UVOperator):
         self.print_time()
         return {"FINISHED"}
 
-    def get_base_face(self, uv_layer, selected_faces):
+    def get_base_face(self, uv_layer: BMLayerItem, selected_faces: list[BMFace]) -> BMFace | None:
         best_face = None
         best_score = float("inf")
 
@@ -96,10 +89,9 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
         return best_face
 
-    def align_rect(self, uv_layer, active_face):
-
+    def align_rect(self, uv_layer: BMLayerItem, active_face: BMFace):
         uv_coords = [loop[uv_layer].uv.copy() for loop in active_face.loops]
-        original_area = calculate_uv_area(uv_coords)
+        original_area = self.calculate_uv_area(uv_coords)
         min_uv = Vector((min(uv.x for uv in uv_coords), min(uv.y for uv in uv_coords)))
         max_uv = Vector((max(uv.x for uv in uv_coords), max(uv.y for uv in uv_coords)))
         center_uv = (min_uv + max_uv) / 2
@@ -151,6 +143,14 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
         for (_old_uv, loop), new_uv in zip(corner_pairs, new_uvs):
             loop[uv_layer].uv = new_uv
+
+    @staticmethod
+    def calculate_uv_area(uv_coords: list[Vector]) -> float:
+        area = 0.0
+        for index, uv in enumerate(uv_coords):
+            next_uv = uv_coords[(index + 1) % len(uv_coords)]
+            area += uv.x * next_uv.y - next_uv.x * uv.y
+        return abs(area) * 0.5
 
     def draw(self, context):
         layout = self.layout

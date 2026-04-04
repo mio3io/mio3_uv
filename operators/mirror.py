@@ -1,7 +1,7 @@
 import bpy
 from bpy.app.translations import pgettext_iface as tt_iface
 from bpy.props import BoolProperty, EnumProperty
-from ..classes import UVIslandManager, UVNodeManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 ver_5_1 = bpy.app.version >= (5, 1, 0)
 

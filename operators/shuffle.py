@@ -1,6 +1,6 @@
 import bpy
 import random
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager
 
 
 class MIO3UV_OT_shuffle_island(Mio3UVOperator):

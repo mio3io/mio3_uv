@@ -2,7 +2,8 @@ import bpy
 from bisect import bisect_left, bisect_right
 from mathutils import Vector
 from bpy.props import FloatProperty, EnumProperty
-from ..classes import Mio3UVOperator, UVNodeManager
+from bmesh.types import BMLoop, BMLayerItem
+from ..classes import Mio3UVOperator, UVNodeManager, UVNodeGroup, UVNode
 from ..utils.utils import get_tile_co
 
 
@@ -72,32 +73,46 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
             center_loops = [loop for node in group.nodes for loop in node.loops]
             center = self.get_symmetry_center(context, uv_layer, center_loops)
             if "NEGATIVE_X" in self.ref_direction:
-                self.symmetrize_axis(uv_layer, group.nodes, center, "X", "NEGATIVE")
+                self.symmetrize_axis(group, center, "X", "NEGATIVE")
             elif "POSITIVE_X" in self.ref_direction:
-                self.symmetrize_axis(uv_layer, group.nodes, center, "X", "POSITIVE")
+                self.symmetrize_axis(group, center, "X", "POSITIVE")
 
             if "POSITIVE_Y" in self.ref_direction:
-                self.symmetrize_axis(uv_layer, group.nodes, center, "Y", "POSITIVE")
+                self.symmetrize_axis(group, center, "Y", "POSITIVE")
             elif "NEGATIVE_Y" in self.ref_direction:
-                self.symmetrize_axis(uv_layer, group.nodes, center, "Y", "NEGATIVE")
+                self.symmetrize_axis(group, center, "Y", "NEGATIVE")
 
         node_manager.update_uvmeshes()
 
         self.print_time()
         return {"FINISHED"}
 
-    def symmetrize_axis(self, uv_layer, selected_nodes, center, axis_uv, direction):
+    def symmetrize_axis(self, group: UVNodeGroup, center, axis_uv, direction):
+        uv_layer = group.uv_layer
         axis_index = 0 if axis_uv == "X" else 1
         other_index = 1 - axis_index
         center_value = center[axis_index]
         threshold = self.threshold
         threshold_sq = threshold * threshold
 
-        features = self.build_node_features(selected_nodes)
-        negative_nodes = []
-        positive_nodes = []
+        features = {}
+        negative_nodes: list[UVNode] = []
+        positive_nodes: list[UVNode] = []
 
-        for node in selected_nodes:
+        for node in group.nodes:
+            loop = min(node.loops, key=lambda item: (item.face.index, item.index))
+            face = loop.face
+            vert = loop.vert
+            edge_lengths = sorted((loop.edge.calc_length(), loop.link_loop_prev.edge.calc_length()))
+            max_edge_length = edge_lengths[-1]
+            if max_edge_length <= 1e-8:
+                edge_signature = (0.0, 0.0)
+            else:
+                edge_signature = tuple(length / max_edge_length for length in edge_lengths)
+
+            node_id = id(node)
+            features[node_id] = (len(face.verts), len(vert.link_edges), edge_signature)
+
             uv = node.uv
             axis_value = uv[axis_index]
 
@@ -119,12 +134,16 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         if not source_nodes or not target_nodes:
             return
 
-        source_data = []
+        grouped = {}
+        fallback_items = []
         for node in source_nodes:
             uv = node.uv.copy()
-            source_data.append((node, uv, uv[axis_index], uv[other_index], features[id(node)]))
+            item = (node, uv, uv[axis_index], uv[other_index], features[id(node)])
+            grouped.setdefault(item[4][0], []).append(item)
+            fallback_items.append(item)
 
-        source_index, fallback_index = self.build_source_index(source_data)
+        source_index = {key: self.sort_source_bucket(items) for key, items in grouped.items()}
+        fallback_index = self.sort_source_bucket(fallback_items)
 
         candidate_pairs = []
         for node in target_nodes:
@@ -132,8 +151,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
             mirrored_axis = 2 * center_value - uv[axis_index]
             target_other = uv[other_index]
             target_feature = features[id(node)]
-            bucket = source_index.get(target_feature[0], fallback_index)
-            coordinates, candidates = bucket
+            coordinates, candidates = source_index.get(target_feature[0], fallback_index)
             left = bisect_left(coordinates, target_other - threshold)
             right = bisect_right(coordinates, target_other + threshold)
 
@@ -171,36 +189,6 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
             matched_targets.add(target_node_id)
             matched_sources.add(source_node_id)
 
-    def build_node_features(self, nodes):
-        features = {}
-
-        for node in nodes:
-            loop = min(node.loops, key=lambda item: (item.face.index, item.index))
-            face = loop.face
-            vert = loop.vert
-
-            edge_lengths = sorted((loop.edge.calc_length(), loop.link_loop_prev.edge.calc_length()))
-            max_edge_length = edge_lengths[-1]
-            if max_edge_length <= 1e-8:
-                edge_signature = (0.0, 0.0)
-            else:
-                edge_signature = tuple(length / max_edge_length for length in edge_lengths)
-
-            features[id(node)] = (len(face.verts), len(vert.link_edges), edge_signature)
-
-        return features
-
-    def build_source_index(self, source_data):
-        grouped = {}
-        fallback = []
-        for item in source_data:
-            key = item[4][0]
-            grouped.setdefault(key, []).append(item)
-            fallback.append(item)
-
-        source_index = {key: self.sort_source_bucket(items) for key, items in grouped.items()}
-        return source_index, self.sort_source_bucket(fallback)
-
     @staticmethod
     def sort_source_bucket(items):
         items.sort(key=lambda item: item[3])
@@ -219,7 +207,7 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
         score += signature_distance * 1.5
         return score
 
-    def get_symmetry_center(self, context, uv_layer, loops):
+    def get_symmetry_center(self, context, uv_layer: BMLayerItem, loops: list[BMLoop]):
         if self.center == "SELECT":
             uvs = [loop[uv_layer].uv for loop in loops if loop.uv_select_vert]
             return sum(uvs, Vector((0, 0))) / len(uvs) if uvs else Vector((0.5, 0.5))

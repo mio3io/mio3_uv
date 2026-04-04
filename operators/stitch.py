@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty, IntProperty
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import Mio3UVOperator, UVIslandManager
 
 
 class MIO3UV_OT_stitch(Mio3UVOperator):
