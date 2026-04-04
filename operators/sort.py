@@ -1,51 +1,61 @@
 import bpy
 import math
+import gpu
 from mathutils import Vector
+from bpy.types import SpaceView3D
 from bpy.props import BoolProperty, FloatProperty, EnumProperty, IntProperty
+from gpu_extras.batch import batch_for_shader
 from ..icons import icons
-from ..classes import UVIslandManager, Mio3UVOperator
+from ..classes import UVIslandManager, UVIsland, Mio3UVOperator
+from ..globals import get_preferences
+
+IslandList = list[UVIsland]
+IslandGroups = list[IslandList]
 
 
-def get_alignment_items(self, context):
-    if self.align_uv == "X":
-        return [
-            ("TOP", "Top Align", "Top Align"),
-            ("MIDDLE", "Middle Align", "Middle Align"),
-            ("BOTTOM", "Bottom Align", "Bottom Align"),
-        ]
-    else:
-        return [
-            ("TOP", "Left Align", "Left Align"),
-            ("MIDDLE", "Middle Align", "Middle Align"),
-            ("BOTTOM", "Right Align", "Right Align"),
-        ]
+class DrawState:
+    def __init__(self):
+        self.line_data = None
+        self.arrow_data = None
 
 
-def callback_grid_x(self, context):
-    if self.grid_link:
-        self["grid_y"] = self.grid_x
-        self["grid_y_px"] = self.grid_x_px
-
-
-def callback_grid_y(self, context):
-    if self.grid_link:
-        self["grid_x"] = self.grid_y
-        self["grid_x_px"] = self.grid_y_px
-
-
-class MIO3UV_OT_sort(Mio3UVOperator):
+class UV_OT_mio3_sort(Mio3UVOperator):
     bl_idname = "uv.mio3_sort"
     bl_label = "Sort"
     bl_description = "Rearrange islands based on coordinates in 3D space"
     bl_options = {"REGISTER", "UNDO"}
 
+    def get_alignment_items(self, context):
+        if self.align_uv == "X":
+            return [
+                ("TOP", "Top Align", "Top Align"),
+                ("MIDDLE", "Middle Align", "Middle Align"),
+                ("BOTTOM", "Bottom Align", "Bottom Align"),
+            ]
+        else:
+            return [
+                ("TOP", "Left Align", "Left Align"),
+                ("MIDDLE", "Middle Align", "Middle Align"),
+                ("BOTTOM", "Right Align", "Right Align"),
+            ]
+
+    def callback_grid_x(self, context):
+        if self.grid_link:
+            self["grid_y"] = self.grid_x
+            self["grid_y_px"] = self.grid_x_px
+
+    def callback_grid_y(self, context):
+        if self.grid_link:
+            self["grid_x"] = self.grid_y
+            self["grid_x_px"] = self.grid_y_px
+
     method: EnumProperty(
         name="Sort Method",
         items=[
-            ("AXIS", "Single Axis", "Single Axis"),
-            ("RADIAL", "Radial", "Radial"),
-            ("GRID", "Grid", "Grid"),
-            ("UV", "UV Space", "UV Space"),
+            ("AXIS", "Single Axis", ""),
+            ("RADIAL", "Radial", ""),
+            ("GRID", "Grid", ""),
+            ("UV", "UV Space", ""),
         ],
     )
     aling_mode: EnumProperty(
@@ -57,25 +67,30 @@ class MIO3UV_OT_sort(Mio3UVOperator):
     align_uv: EnumProperty(name="Align", items=[("X", "Align H", ""), ("Y", "Align V", "")], default="X")
     alignment: EnumProperty(name="Alignment", items=get_alignment_items, default=0)
     reverse: BoolProperty(name="Reverse Order", description="Reverse Order", default=False)
-    axis: EnumProperty(
-        name="3D Axis", items=[("AUTO", "Auto", "Auto"), ("X", "X", "X"), ("Y", "Y", "Y"), ("Z", "Z", "Z")]
+    axis: EnumProperty(name="3D Axis", items=[("AUTO", "Auto", ""), ("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
+    coordinate_space: EnumProperty(
+        name="Coordinate Space",
+        items=[
+            ("WORLD", "World", "Based on world coordinates"),
+            ("LOCAL", "Local", "Based on active object local coordinates"),
+        ],
     )
-    group_spacing: FloatProperty(name="Margin", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
-    item_spacing: FloatProperty(name="Margin", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
+    group_spacing: FloatProperty(name="Spacing", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
+    item_spacing: FloatProperty(name="Spacing", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
     line_spacing: FloatProperty(name="Line Spacing", default=0.0, min=-0.5, max=0.5, step=0.1, precision=3)
-
     grid_x: FloatProperty(name="Grid Size X", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_x)
     grid_y: FloatProperty(name="Grid Size Y", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_y)
     grid_x_px: FloatProperty(name="Grid Size X", default=64, min=1, step=100, precision=1, update=callback_grid_x)
     grid_y_px: FloatProperty(name="Grid Size Y", default=64, min=1, step=100, precision=1, update=callback_grid_y)
-    grid_units: EnumProperty(
-        name="Units",
-        items=[("RELATIVE", "Relative", "Relative"), ("PIXEL", "Pixel", "Pixel")],
-    )
+    grid_units: EnumProperty(name="Units", items=[("RELATIVE", "Relative", "Relative"), ("PIXEL", "Pixel", "Pixel")])
     grid_link: BoolProperty(name="Grid Link", default=True)
-
-    grid_threshold: FloatProperty(name="Grid Threshold", default=0.2, min=0.01, max=1, step=1)
-
+    grid_divisions: IntProperty(
+        name="Divisions",
+        description="Number of grid divisions along the longer axis",
+        default=10,
+        min=2,
+        max=50,
+    )
     start_angle: FloatProperty(
         name="Start Angle(Clock)",
         description="Enter time (0-12). 3 o'clock is 0°, 6 is -90°, 9 is -180°, 12 is -270°",
@@ -85,7 +100,6 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         step=10,
         precision=2,
     )
-
     wrap_count: IntProperty(
         name="Wrap Count", description="Number of islands before wrapping", default=5, min=1, max=20
     )
@@ -104,17 +118,224 @@ class MIO3UV_OT_sort(Mio3UVOperator):
     )
     by_group: BoolProperty(name="By Group", default=False, options={"SKIP_SAVE"})
 
-    calc_grid_x = None
-    calc_grid_y = None
+    WATCH_INTERVAL = 1.0
+    GUIDE_LINE_LENGTH = 1000.0
+    GUIDE_CIRCLE_SEGMENTS = 64
+    GUIDE_CIRCLE_DIAMETER_RATIO = 1
+    GUIDE_ARROW_SCALE = 0.1
+    _handle_3d = None
 
     @property
     def start_angle_radian(self):
-        hour = self.start_angle
-        adjusted_hour = (hour - 3) % 12
-        angle = -adjusted_hour * (math.pi / 6)
-        return angle
+        return (3 - self.start_angle) * (math.pi / 6)
+
+    @staticmethod
+    def redraw(context=None):
+        ctx = context or bpy.context
+        window_manager = getattr(ctx, "window_manager", None)
+        if window_manager is None:
+            return
+
+        for window in window_manager.windows:
+            if window.screen:
+                for area in window.screen.areas:
+                    if area.type == "VIEW_3D":
+                        area.tag_redraw()
+
+    @classmethod
+    def remove_handler(cls, context=None):
+        if cls._handle_3d is not None:
+            SpaceView3D.draw_handler_remove(cls._handle_3d, "WINDOW")
+            cls._handle_3d = None
+            cls.redraw(context)
+        if bpy.app.timers.is_registered(cls.watch_operator):
+            bpy.app.timers.unregister(cls.watch_operator)
+
+    @classmethod
+    def watch_operator(cls):
+        context = bpy.context
+        if cls._handle_3d is None:
+            cls.remove_handler(context)
+            return None
+
+        obj = getattr(context, "active_object", None)
+        if obj is None or obj.mode != "EDIT":
+            cls.remove_handler(context)
+            return None
+
+        window_manager = getattr(context, "window_manager", None)
+        if window_manager is None:
+            cls.remove_handler(context)
+            return None
+
+        if window_manager.is_interface_locked:
+            return cls.WATCH_INTERVAL
+
+        operators = window_manager.operators
+        last_operator_id = getattr(getattr(operators[-1], "bl_rna", None), "identifier", "") if operators else ""
+        if last_operator_id != cls.__name__:
+            cls.remove_handler(context)
+            return None
+
+        return cls.WATCH_INTERVAL
+
+    def cancel(self, context):
+        self.__class__.remove_handler(context)
+
+    @staticmethod
+    def draw_3d(draw_state, prefs):
+        if draw_state.line_data is None and draw_state.arrow_data is None or not prefs.ui_guide:
+            return
+
+        line_shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
+        line_shader.uniform_float("viewportSize", gpu.state.viewport_get()[2:])
+        line_shader.uniform_float("lineWidth", 2.0)
+        arrow_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+
+        if draw_state.line_data is not None:
+            line_shader.bind()
+            line_shader.uniform_float("color", prefs.ui_guide_col)
+            batch = batch_for_shader(line_shader, "LINES", {"pos": draw_state.line_data})
+            batch.draw(line_shader)
+        if draw_state.arrow_data is not None:
+            arrow_shader.bind()
+            arrow_shader.uniform_float("color", prefs.ui_guide_col)
+            batch = batch_for_shader(arrow_shader, "TRIS", {"pos": draw_state.arrow_data})
+            batch.draw(arrow_shader)
+
+    @staticmethod
+    def create_arrow(
+        tip: Vector,
+        direction: Vector,
+        size: float,
+        up_hint: Vector | None = None,
+        base_center: Vector | None = None,
+    ):
+        direction = direction.normalized()
+        if direction.length_squared == 0:
+            return None
+
+        if up_hint is None or abs(direction.dot(up_hint.normalized())) > 0.999:
+            up_hint = Vector((0.0, 0.0, 1.0))
+            if abs(direction.dot(up_hint)) > 0.999:
+                up_hint = Vector((1.0, 0.0, 0.0))
+
+        side_a = direction.cross(up_hint).normalized()
+        if side_a.length_squared == 0:
+            return None
+        side_b = direction.cross(side_a).normalized()
+
+        if base_center is None:
+            base_center = tip - direction * (size * 0.9)
+        base_radius = size * 0.4
+        base_segments = 16
+        base_points = []
+        for index in range(base_segments):
+            angle = (math.tau * index) / base_segments
+            radial_dir = side_a * math.cos(angle) + side_b * math.sin(angle)
+            base_points.append(base_center + radial_dir * base_radius)
+
+        faces = []
+        for index in range(base_segments):
+            faces.extend([tip, base_points[index], base_points[(index + 1) % base_segments]])
+
+        for index in range(1, base_segments - 1):
+            faces.extend([base_points[0], base_points[index], base_points[index + 1]])
+        return faces
+
+    def update_guide(self, context, island_manager: UVIslandManager):
+        obj = context.active_object
+        use_local = self.coordinate_space == "LOCAL"
+
+        if self._draw_state is None:
+            self._draw_state = DrawState()
+
+        # 中心・矢印サイズ用にしか使用していない
+        all_centers = [island.center_3d_world for island in island_manager.islands]
+        bbox_min = Vector(tuple(min(center[i] for center in all_centers) for i in range(3)))
+        bbox_max = Vector(tuple(max(center[i] for center in all_centers) for i in range(3)))
+        center = (bbox_min + bbox_max) / 2
+        bbox_extent = bbox_max - bbox_min
+        arrow_size = max(max(bbox_extent), 0.001) * self.GUIDE_ARROW_SCALE
+
+        basis_vectors = {
+            "X": Vector((1.0, 0.0, 0.0)),
+            "Y": Vector((0.0, 1.0, 0.0)),
+            "Z": Vector((0.0, 0.0, 1.0)),
+        }
+        if use_local and obj is not None:
+            rotation = obj.matrix_world.to_3x3().normalized()
+            basis_vectors = {axis_name: (rotation @ vector).normalized() for axis_name, vector in basis_vectors.items()}
+
+        if self.method == "RADIAL":
+            plane = {"X": (1, 2), "Y": (0, 2), "Z": (0, 1)}[self.target_axis]
+            radial_center = obj.matrix_world.translation if use_local and obj is not None else center
+            arrow_size = arrow_size * 0.8  # 放射の場合はサイズ小さめ
+
+            def plane_vec(cos_val, sin_val):
+                return basis_vectors["XYZ"[plane[0]]] * cos_val + basis_vectors["XYZ"[plane[1]]] * sin_val
+
+            def point_on_circle(angle):
+                return radial_center + plane_vec(math.cos(angle), math.sin(angle)) * radius
+
+            radius = max(max(bbox_extent), 0.001) * self.GUIDE_CIRCLE_DIAMETER_RATIO * 0.5
+
+            circle_points = []
+            for index in range(self.GUIDE_CIRCLE_SEGMENTS):
+                circle_points.append(point_on_circle(index / self.GUIDE_CIRCLE_SEGMENTS * math.tau))
+                circle_points.append(point_on_circle((index + 1) / self.GUIDE_CIRCLE_SEGMENTS * math.tau))
+
+            angle = self.start_angle_radian
+            sign = -1 if self.reverse else 1
+            angle_step = min(arrow_size / max(radius, 0.001), math.pi / 3)
+            start_point = point_on_circle(angle)
+            base_angle = angle + angle_step * 0.6 * sign
+            tip_angle = angle + angle_step * 1.6 * sign
+            base_center = point_on_circle(base_angle)
+            tip = point_on_circle(tip_angle)
+
+            bar_offset = plane_vec(math.cos(angle), math.sin(angle)) * (radius * 0.15)  # バーの長さ
+            circle_points.append(start_point - bar_offset)
+            circle_points.append(start_point + bar_offset)
+
+            direction = (tip - base_center).normalized()
+            self._draw_state.line_data = circle_points
+            plane_normal = basis_vectors[self.target_axis]
+            self._draw_state.arrow_data = self.create_arrow(
+                tip,
+                direction,
+                arrow_size,
+                plane_normal,
+                base_center,
+            )
+
+        elif self.method == "AXIS":
+            axis_vector = basis_vectors[self.target_axis]
+            up_hint = basis_vectors["Y"] if self.target_axis == "X" else basis_vectors["X"]
+            sign = -1.0 if self.target_axis == "Z" else 1.0
+            direction = axis_vector * (-sign if self.reverse else sign)
+
+            self._draw_state.line_data = [
+                center - axis_vector * self.GUIDE_LINE_LENGTH,
+                center + axis_vector * self.GUIDE_LINE_LENGTH,
+            ]
+            self._draw_state.arrow_data = self.create_arrow(
+                center + direction * arrow_size,
+                direction,
+                arrow_size,
+                up_hint,
+            )
+
+        else:
+            self._draw_state.line_data = None
+            self._draw_state.arrow_data = None
+
+        self.redraw(context)
 
     def invoke(self, context, event):
+        cls = self.__class__
+        prefs = get_preferences()
+
         if self.aling_mode == "FIXED" and self.grid_units == "PIXEL":
             if context.area.type == "IMAGE_EDITOR":
                 space = context.area.spaces.active
@@ -122,10 +343,22 @@ class MIO3UV_OT_sort(Mio3UVOperator):
                     return self.execute(context)
             self.report({"WARNING"}, "Please display an image if you want to use pixel units")
             return {"CANCELLED"}
+
+        if cls._handle_3d is not None:
+            cls.remove_handler(context)
+
+        self._draw_state = DrawState()
+        if prefs.ui_guide:
+            cls._handle_3d = SpaceView3D.draw_handler_add(
+                self.draw_3d, (self._draw_state, prefs), "WINDOW", "POST_VIEW"
+            )
+            bpy.app.timers.register(cls.watch_operator, first_interval=cls.WATCH_INTERVAL)
+
         return self.execute(context)
 
     def execute(self, context):
         self.start_time()
+        prefs = get_preferences()
         objects = self.get_selected_objects(context)
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -140,6 +373,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
                     grid_x = self.grid_x_px / space.image.size[0]
                     grid_y = self.grid_y_px / space.image.size[1]
             if not grid_x:
+                self.remove_handler(context)
                 self.report({"WARNING"}, "Please display an image if you want to use pixel units")
                 return {"CANCELLED"}
         else:
@@ -151,10 +385,14 @@ class MIO3UV_OT_sort(Mio3UVOperator):
 
         island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
         if not island_manager.islands:
+            self.remove_handler(context)
             return {"CANCELLED"}
 
+        if self.method != "UV":
+            island_manager.set_orientation_mode(self.coordinate_space)
+
         if self.method == "RADIAL":
-            self.sort_cylinder(island_manager)
+            self.sort_radial(island_manager)
         elif self.method == "UV":
             self.sort_uv_space(island_manager)
         elif self.method == "GRID":
@@ -169,18 +407,23 @@ class MIO3UV_OT_sort(Mio3UVOperator):
         else:
             self.align_groups(groups)
 
+        if prefs.ui_guide:
+            self.update_guide(context, island_manager)
+
         island_manager.update_uvmeshes(True)
 
         self.print_time()
         return {"FINISHED"}
 
-    def find_groups(self, island_manager):
+    def find_groups(self, island_manager: UVIslandManager):
         groups = []
         if self.group_type == "NONE":
             return [island_manager.islands]
         elif self.group_type == "OBJECT":
             for oi in island_manager.collections:
-                groups.append([island for island in island_manager.islands if island.obj_info == oi])
+                obj_islands = [island for island in island_manager.islands if island.obj_info == oi]
+                if obj_islands:
+                    groups.append(obj_islands)
             groups.sort(key=lambda x: x[0].obj.name, reverse=self.reverse)
         elif self.group_type == "DISTANCE":
 
@@ -200,7 +443,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
                 prev_distance = current_distance
             if current_group:
                 groups.append(current_group)
-            groups.sort(key=lambda x: len(x[0].center), reverse=self.reverse)
+            groups.sort(key=lambda x: distance(x[0].center), reverse=self.reverse)
         elif self.group_type == "MATERIAL":
 
             def get_island_material(island):
@@ -220,12 +463,14 @@ class MIO3UV_OT_sort(Mio3UVOperator):
 
                 return max(material_count, key=material_count.get)
 
-            material_groups = {}
+            mat_groups = {}
+            mat_islands = {}
             for island in island_manager.islands:
                 material = get_island_material(island)
-                material_groups.setdefault(material, []).append(island)
-            groups = list(material_groups.values())
-            groups.sort(key=lambda x: get_island_material(x[0]).name if get_island_material(x[0]) else "")
+                mat_islands[island] = material
+                mat_groups.setdefault(material, []).append(island)
+            groups = list(mat_groups.values())
+            groups.sort(key=lambda x: mat_islands[x[0]].name if mat_islands[x[0]] else "", reverse=self.reverse)
         elif self.group_type == "SIMILAR":
 
             def get_island_uv_count(island):
@@ -276,26 +521,26 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             groups.sort(key=lambda x: get_island_scale(x[0]), reverse=self.reverse)
         return groups
 
-    def sort_uv_space(self, island_manager):
-        axis = self.axis if self.axis in {"X", "Y"} else island_manager.get_axis_uv()
+    def sort_uv_space(self, island_manager: UVIslandManager):
+        self.target_axis = self.axis if self.axis in {"X", "Y"} else island_manager.get_axis_uv()
 
         def sort_func(island):
-            axis_index = {"X": 0, "Y": 1}[axis]
+            axis_index = {"X": 0, "Y": 1}[self.target_axis]
             return island.center[axis_index]
 
-        if axis == "Y":
+        if self.target_axis == "Y":
             island_manager.sort_all_islands(key=sort_func, reverse=not self.reverse)
         else:
             island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
 
-    def sort_axis(self, island_manager):
-        axis = self.axis if self.axis != "AUTO" else island_manager.get_axis_3d()
+    def sort_axis(self, island_manager: UVIslandManager):
+        self.target_axis = self.axis if self.axis != "AUTO" else island_manager.get_axis_3d()
         axis_orders = {
             "X": ["+X", "+Y", "-Z"],
             "Y": ["+Y", "+X", "-Z"],
             "Z": ["-Z", "+X", "+Y"],
         }
-        sort_order = axis_orders[axis]
+        sort_order = axis_orders[self.target_axis]
 
         def sort_func(island):
             return tuple(
@@ -304,25 +549,27 @@ class MIO3UV_OT_sort(Mio3UVOperator):
 
         island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
 
-    def sort_cylinder(self, island_manager):
+    def sort_radial(self, island_manager: UVIslandManager):
         all_centers = [island.center_3d for island in island_manager.islands]
-        min_coords = [min(center[i] for center in all_centers) for i in range(3)]
-        max_coords = [max(center[i] for center in all_centers) for i in range(3)]
-        axis_widths = [max_coords[i] - min_coords[i] for i in range(3)]
+        min_coords = Vector(tuple(min(center[i] for center in all_centers) for i in range(3)))
+        max_coords = Vector(tuple(max(center[i] for center in all_centers) for i in range(3)))
+        axis_widths = max_coords - min_coords
         if self.axis == "AUTO":
-            narrowest_axis_index = axis_widths.index(min(axis_widths))
-            axis = ["X", "Y", "Z"][narrowest_axis_index]
+            self.target_axis = min(zip(("X", "Y", "Z"), axis_widths), key=lambda item: item[1])[0]
         else:
-            axis = self.axis
+            self.target_axis = self.axis
 
-        center_3d = sum(all_centers, Vector()) / len(all_centers)
+        if self.coordinate_space == "LOCAL":
+            center_3d = Vector((0.0, 0.0, 0.0))
+        else:
+            center_3d = sum(all_centers, Vector()) / len(all_centers)
 
         start_angle_radian = self.start_angle_radian
 
         def sort_func(island):
-            if axis == "X":
+            if self.target_axis == "X":
                 relative_pos = Vector((island.center_3d.y, island.center_3d.z)) - Vector((center_3d.y, center_3d.z))
-            elif axis == "Y":
+            elif self.target_axis == "Y":
                 relative_pos = Vector((island.center_3d.x, island.center_3d.z)) - Vector((center_3d.x, center_3d.z))
             else:
                 relative_pos = Vector((island.center_3d.x, island.center_3d.y)) - Vector((center_3d.x, center_3d.y))
@@ -332,38 +579,62 @@ class MIO3UV_OT_sort(Mio3UVOperator):
 
         island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
 
-    def sort_grid(self, island_manager):
+    def sort_grid(self, island_manager: UVIslandManager):
         all_centers = [island.center_3d for island in island_manager.islands]
-        min_coords = [min(center[i] for center in all_centers) for i in range(3)]
-        max_coords = [max(center[i] for center in all_centers) for i in range(3)]
-        overall_size = max(max_coords[i] - min_coords[i] for i in range(3))
-        base_size = 1.0  # 1が基準
-        scale_factor = overall_size / base_size
-        cell_size = self.grid_threshold * scale_factor
-        axis_widths = [max_coords[i] - min_coords[i] for i in range(3)]
+        min_coords = Vector(tuple(min(center[i] for center in all_centers) for i in range(3)))
+        max_coords = Vector(tuple(max(center[i] for center in all_centers) for i in range(3)))
+        axis_widths = max_coords - min_coords
         if self.axis == "AUTO":
-            narrowest_axis_index = axis_widths.index(min(axis_widths))
-            axis = ["X", "Y", "Z"][narrowest_axis_index]
+            self.target_axis = min(zip(("X", "Y", "Z"), axis_widths), key=lambda item: item[1])[0]
         else:
-            axis = self.axis
+            self.target_axis = self.axis
+
+        divisions = max(self.grid_divisions, 1)
+
+        def build_axis_ranks(axis_index, reverse=False):
+            sorted_islands = sorted(
+                island_manager.islands,
+                key=lambda island: island.center_3d[axis_index],
+                reverse=reverse,
+            )
+            if not sorted_islands:
+                return {}
+
+            axis_span = max(axis_widths[axis_index], 0.0)
+            expected_step = axis_span / max(divisions - 1, 1)
+            axis_tolerance = max(min(expected_step * 0.25, max(axis_span, 1.0) * 0.25), 1e-6)
+            ranks = {}
+            current_rank = 0
+            cluster_center = sorted_islands[0].center_3d[axis_index]
+            ranks[sorted_islands[0]] = current_rank
+
+            for island in sorted_islands[1:]:
+                value = island.center_3d[axis_index]
+                if abs(value - cluster_center) > axis_tolerance:
+                    current_rank += 1
+                    cluster_center = value
+                else:
+                    cluster_center = (cluster_center + value) * 0.5
+                ranks[island] = current_rank
+
+            return ranks
+
+        if self.target_axis == "Y":
+            row_axis, col_axis = 2, 0
+        elif self.target_axis == "Z":
+            row_axis, col_axis = 1, 0
+        else:
+            row_axis, col_axis = 2, 1
+
+        row_ranks = build_axis_ranks(row_axis, reverse=True)
+        col_ranks = build_axis_ranks(col_axis)
 
         def sort_func(island):
-            if axis == "Y":  # Z軸が行（大きい順）、X軸が列（小さい順）
-                z_size = round((max_coords[2] - island.center_3d[2]) / cell_size)
-                x = island.center_3d[0]
-                return (z_size, x)
-            elif axis == "Z":  # Y軸が行（大きい順）、X軸が列（小さい順）
-                y_size = round((max_coords[1] - island.center_3d[1]) / cell_size)
-                x = island.center_3d[0]
-                return (y_size, x)
-            elif axis == "X":  # Z軸が行（大きい順）、Y軸が列（小さい順）
-                z_size = round((max_coords[2] - island.center_3d[2]) / cell_size)
-                y = island.center_3d[1]
-                return (z_size, y)
+            return (row_ranks[island], col_ranks[island], -island.center_3d[row_axis], island.center_3d[col_axis])
 
         island_manager.sort_all_islands(key=sort_func, reverse=self.reverse)
 
-    def align_groups(self, groups):
+    def align_groups(self, groups: list[IslandList]):
         all_islands = [island for group in groups for island in group]
         all_min = Vector(
             (min(island.min_uv[0] for island in all_islands), min(island.min_uv[1] for island in all_islands))
@@ -382,7 +653,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             else:
                 offset.y = group_end.y - spacing
 
-    def align_items(self, islands, group_offset):
+    def align_items(self, islands: IslandList, group_offset: Vector):
         offset = group_offset.copy()
         spacing = 0 if self.aling_mode == "FIXED" else self.item_spacing
         line_spacing = self.line_spacing
@@ -442,7 +713,7 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             group_end = Vector((group_offset.x, min_y))
         return group_end
 
-    def align_row(self, row_islands, row_start, row_size):
+    def align_row(self, row_islands: list[tuple[UVIsland, Vector, Vector]], row_start: Vector, row_size: Vector):
         max_height = max(original_size.y for _, _, original_size in row_islands)
 
         for island, island_size, original_size in row_islands:
@@ -489,13 +760,20 @@ class MIO3UV_OT_sort(Mio3UVOperator):
             row_sub.label(text="Hours")
         if self.method == "GRID":
             row_sub = layout.row()
-            row_sub.label(text="Grid Threshold")
-            row_sub.prop(self, "grid_threshold", text="")
+            row_sub.label(text="Divisions")
+            row_sub.prop(self, "grid_divisions", text="")
 
-        split = layout.split(factor=0.25)
+        split = layout.split(factor=0.35)
         split.label(text="Base Axis")
         split.row().prop(self, "axis", expand=True)
 
+        split = layout.split(factor=0.35)
+        split.label(text="Coordinates")
+        split.row().prop(self, "coordinate_space", expand=True)
+        if self.method == "UV":
+            split.enabled = False
+
+        # 整列
         layout.label(text="Align", icon_value=icons.align_left)
         layout.row().prop(self, "align_uv", expand=True)
         layout.row().prop(self, "alignment", expand=True)
@@ -557,12 +835,20 @@ class MIO3UV_OT_sort(Mio3UVOperator):
 
         layout.prop(self, "reverse")
 
-        # layout.prop(self, "by_group", text="By Group")
+
+@bpy.app.handlers.persistent
+def load_handler(dummy):
+    UV_OT_mio3_sort.remove_handler()
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_sort)
+    if load_handler not in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.append(load_handler)
+    bpy.utils.register_class(UV_OT_mio3_sort)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_sort)
+    if load_handler in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(load_handler)
+    UV_OT_mio3_sort.remove_handler()
+    bpy.utils.unregister_class(UV_OT_mio3_sort)

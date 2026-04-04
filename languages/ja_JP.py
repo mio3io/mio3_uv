@@ -10,6 +10,7 @@ translation_dict = {
         ("*", "Use UDIM UV Tiles"): "UDIM形式のUVタイルを使用する",
         ("*", "Symmetry Priority "): "対称操作の優先",
         ("*", "Specifies which side to use as the reference during automatic symmetry."): "自動対称化の際にどちら側を基準にするかを指定します",
+        ("*", "Show 3D Space Guide"): "3Dスペースガイドを表示",
 
         # 🍑 Common
         ("Operator", "Horizontal"): "水平",
@@ -49,7 +50,7 @@ translation_dict = {
         ("*", "Median Point of UVs"): "UVの中央値（重心）",
         ("*", "Refers to the Mirror setting of the Mirror Modifier"): "ミラーモディファイアのミラーオフセット設定を参照します",
         ("*", "Based on world coordinates"): "ワールド座標に基づいて処理します",
-        ("*", "Based on object local coordinates"): "オブジェクトのローカル座標に基づいて処理します",
+        ("*", "Based on active object local coordinates"): "アクティブオブジェクトのローカル座標に基づいて処理します",
 
         # 🍑 Unwrap
         ("Operator", "UV Unwrap"): "UV展開",

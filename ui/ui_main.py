@@ -296,7 +296,7 @@ class MIO3UV_PT_options_popover(Panel):
     def draw(self, context):
         layout = self.layout
         layout.ui_units_x = 11
-        pref = get_preferences()
+        prefs = get_preferences()
         props_s = context.scene.mio3uv
         props_o = context.object.mio3uv
 
@@ -348,8 +348,10 @@ class MIO3UV_PT_options_popover(Panel):
 
         col = layout.column(align=True)
         col.label(text="Options", icon_value=icons.options)
-        col.prop(pref, "auto_uv_sync")
-        col.prop(context.scene.mio3uv, "udim")
+        col.prop(prefs, "auto_uv_sync")
+        col.prop(prefs, "ui_guide")
+        col.prop(props_s, "udim")
+
 
 class MIO3UV_PT_texel_popover(Panel):
     bl_label = "Texel Density"

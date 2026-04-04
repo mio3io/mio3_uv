@@ -1,15 +1,11 @@
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import BoolProperty, EnumProperty
+from bpy.props import BoolProperty, FloatVectorProperty, EnumProperty
 
 
 class MIO3UV_preferences(AddonPreferences):
     bl_idname = __package__
 
-    # ui_legacy: BoolProperty(
-    #     name="Legacy UI Layout",
-    #     default=True,
-    # )
     auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False, options=set())
     default_symmetry_priority: EnumProperty(
         name="Symmetry Priority",
@@ -22,6 +18,16 @@ class MIO3UV_preferences(AddonPreferences):
         options=set(),
     )
     ui_help: BoolProperty(name="Help Messages", default=True, options=set())
+    ui_guide: BoolProperty(name="Show 3D Space Guide", default=True, options=set())
+    ui_guide_col: FloatVectorProperty(
+        name="Color",
+        subtype="COLOR_GAMMA",
+        size=4,
+        default=(0.0, 0.7, 1.0, 1.0),
+        min=0.0,
+        max=1.0,
+        options=set(),
+    )
 
     def draw(self, context):
         layout = self.layout
@@ -30,7 +36,9 @@ class MIO3UV_preferences(AddonPreferences):
         col = layout.column()
         col.prop(self, "default_symmetry_priority")
         col.prop(self, "auto_uv_sync")
-        col.prop(self, "ui_help", text="Help Messages")
+        col.prop(self, "ui_help")
+        col.prop(self, "ui_guide")
+        col.prop(self, "ui_guide_col")
 
 
 def register():
