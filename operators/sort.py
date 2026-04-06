@@ -28,15 +28,15 @@ class UV_OT_mio3_sort(Mio3UVOperator):
     def get_alignment_items(self, context):
         if self.align_uv == "X":
             return [
-                ("TOP", "Top Align", "Top Align"),
-                ("MIDDLE", "Middle Align", "Middle Align"),
-                ("BOTTOM", "Bottom Align", "Bottom Align"),
+                ("TOP", "Top Align", "Top Align", icons.align_top, 0),
+                ("MIDDLE", "Middle Align", "Middle Align", icons.align_y_center, 1),
+                ("BOTTOM", "Bottom Align", "Bottom Align", icons.align_bottom, 2),
             ]
         else:
             return [
-                ("TOP", "Left Align", "Left Align"),
-                ("MIDDLE", "Middle Align", "Middle Align"),
-                ("BOTTOM", "Right Align", "Right Align"),
+                ("TOP", "Left Align", "Left Align", icons.align_left, 0),
+                ("MIDDLE", "Middle Align", "Middle Align", icons.align_x_center, 1),
+                ("BOTTOM", "Right Align", "Right Align", icons.align_right, 2),
             ]
 
     def callback_grid_x(self, context):
@@ -64,7 +64,16 @@ class UV_OT_mio3_sort(Mio3UVOperator):
             ("FIXED", "Fixed Width", "Gridding island based on coordinates in 3D space"),
         ]
     )
-    align_uv: EnumProperty(name="Align", items=[("X", "Align H", ""), ("Y", "Align V", "")], default="X")
+
+    def get_align_uv_items(self, context):
+        return [
+            ("X", "Align H", "", icons.align_x, 0),
+            ("Y", "Align V", "", icons.align_y, 1),
+        ]
+    align_uv: EnumProperty(
+        name="Align",
+        items=get_align_uv_items,
+    )
     alignment: EnumProperty(name="Alignment", items=get_alignment_items, default=0)
     reverse: BoolProperty(name="Reverse Order", description="Reverse Order", default=False)
     axis: EnumProperty(name="3D Axis", items=[("AUTO", "Auto", ""), ("X", "X", ""), ("Y", "Y", ""), ("Z", "Z", "")])
@@ -78,10 +87,10 @@ class UV_OT_mio3_sort(Mio3UVOperator):
     group_spacing: FloatProperty(name="Spacing", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
     item_spacing: FloatProperty(name="Spacing", default=0.01, min=0.0, max=0.5, step=0.1, precision=3)
     line_spacing: FloatProperty(name="Line Spacing", default=0.0, min=-0.5, max=0.5, step=0.1, precision=3)
-    grid_x: FloatProperty(name="Grid Size X", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_x)
-    grid_y: FloatProperty(name="Grid Size Y", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_y)
-    grid_x_px: FloatProperty(name="Grid Size X", default=64, min=1, step=100, precision=1, update=callback_grid_x)
-    grid_y_px: FloatProperty(name="Grid Size Y", default=64, min=1, step=100, precision=1, update=callback_grid_y)
+    grid_x: FloatProperty(name="Cell Size X", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_x)
+    grid_y: FloatProperty(name="Cell Size Y", default=0.125, min=0.01, step=0.1, precision=3, update=callback_grid_y)
+    grid_x_px: FloatProperty(name="Cell Size X", default=64, min=1, step=100, precision=1, update=callback_grid_x)
+    grid_y_px: FloatProperty(name="Cell Size Y", default=64, min=1, step=100, precision=1, update=callback_grid_y)
     grid_units: EnumProperty(name="Units", items=[("RELATIVE", "Relative", "Relative"), ("PIXEL", "Pixel", "Pixel")])
     grid_link: BoolProperty(name="Grid Link", default=True)
     grid_divisions: IntProperty(
@@ -775,13 +784,15 @@ class UV_OT_mio3_sort(Mio3UVOperator):
 
         # 整列
         layout.label(text="Align", icon_value=icons.align_left)
-        layout.row().prop(self, "align_uv", expand=True)
-        layout.row().prop(self, "alignment", expand=True)
+        row = layout.row(align=True)
+        row.scale_y = 1.2
+        row.row().prop(self, "align_uv", expand=True)
+        row.scale_x = 1.4
+        row.row().prop(self, "alignment", expand=True, text="")
 
         if self.aling_mode == "FIXED":
-            layout.separator()
             split = layout.split(factor=0.3)
-            split.label(text="Grid Size")
+            split.label(text="Cell Size")
             row = split.row(align=True)
             if self.grid_units == "PIXEL":
                 row.prop(self, "grid_x_px", text="")
@@ -795,9 +806,8 @@ class UV_OT_mio3_sort(Mio3UVOperator):
             split = layout.split(factor=0.3)
             split.label(text="Units")
             split.row().prop(self, "grid_units", expand=True)
-            layout.separator(factor=4.2)
+            layout.separator(factor=4.1)
         else:
-            layout.separator()
             row = layout.row()
             row.label(text="Island Spacing", text_ctxt="Operator")
             row.prop(self, "item_spacing", text="")
@@ -842,9 +852,9 @@ def load_handler(dummy):
 
 
 def register():
+    bpy.utils.register_class(UV_OT_mio3_sort)
     if load_handler not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(load_handler)
-    bpy.utils.register_class(UV_OT_mio3_sort)
 
 
 def unregister():

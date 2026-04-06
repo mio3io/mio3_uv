@@ -11,8 +11,8 @@ class MIO3UV_preferences(AddonPreferences):
         name="Symmetry Priority",
         description="Specifies which side to use as the reference during automatic symmetry.",
         items=[
-            ("NEGATIVE", "Negative", ""),
-            ("POSITIVE", "Positive", ""),
+            ("NEGATIVE", "-X", ""),
+            ("POSITIVE", "+X", ""),
         ],
         default="POSITIVE",
         options=set(),
@@ -44,11 +44,11 @@ class MIO3UV_preferences(AddonPreferences):
         layout.use_property_decorate = False
         col = layout.column()
         col.prop(self, "default_symmetry_priority")
-        col.prop(self, "auto_uv_sync")
-        col.prop(self, "ui_help")
         col.prop(self, "ui_guide")
         col.prop(self, "ui_guide_col")
         col.prop(self, "ui_padding_col")
+        col.prop(self, "auto_uv_sync")
+        col.prop(self, "ui_help")
 
 
 def register():

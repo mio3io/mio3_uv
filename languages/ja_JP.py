@@ -8,9 +8,11 @@ translation_dict = {
         ("*", "Legacy UI Layout"): "従来のUIレイアウト",
         ("*", "Use UV Tiles"): "UVタイルを使用する",
         ("*", "Use UDIM UV Tiles"): "UDIM形式のUVタイルを使用する",
-        ("*", "Symmetry Priority "): "対称操作の優先",
+        ("*", "Symmetry Priority"): "対称操作の優先",
         ("*", "Specifies which side to use as the reference during automatic symmetry."): "自動対称化の際にどちら側を基準にするかを指定します",
         ("*", "Show 3D Space Guide"): "3Dスペースガイドを表示",
+        ("*", "3D Space Guide Color"): "3Dスペースガイドの色",
+        ("*", "Padding Guide Color"): "パディングガイドの色",
 
         # 🍑 Common
         ("Operator", "Horizontal"): "水平",
@@ -144,7 +146,6 @@ translation_dict = {
         ("*", "Fixed Width"): "固定幅",
         ("*", "UV Distance"): "UV空間での距離",
         ("*", "UV Similar"): "UVの類似性",
-        ("*", "Grid Size"): "グリッド幅",
 
         # Island
         ("Operator", "Stack"): "重ねる",
