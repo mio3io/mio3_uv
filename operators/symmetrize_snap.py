@@ -7,7 +7,7 @@ from ..classes import Mio3UVOperator, UVNodeManager, UVNodeGroup, UVNode
 from ..utils.utils import get_tile_co
 
 
-class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
+class UV_OT_mio3_symmetry_snap(Mio3UVOperator):
     bl_idname = "uv.mio3_symmetry_snap"
     bl_label = "Snap"
     bl_description = "Symmetrize based on UV space"
@@ -237,8 +237,8 @@ class MIO3UV_OT_symmetry_snap(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_symmetry_snap)
+    bpy.utils.register_class(UV_OT_mio3_symmetry_snap)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_symmetry_snap)
+    bpy.utils.unregister_class(UV_OT_mio3_symmetry_snap)

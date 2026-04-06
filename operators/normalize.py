@@ -4,7 +4,7 @@ from bpy.props import BoolProperty
 from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 
 
-class MIO3UV_OT_normalize(Mio3UVOperator):
+class UV_OT_mio3_normalize(Mio3UVOperator):
     bl_idname = "uv.mio3_normalize"
     bl_label = "Normalize"
     bl_description = "Normalize UVs"
@@ -85,8 +85,8 @@ class MIO3UV_OT_normalize(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_normalize)
+    bpy.utils.register_class(UV_OT_mio3_normalize)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_normalize)
+    bpy.utils.unregister_class(UV_OT_mio3_normalize)

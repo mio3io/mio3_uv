@@ -3,7 +3,7 @@ from bpy.props import EnumProperty
 from ..classes import Mio3UVOperator, UVNodeManager
 
 
-class MIO3UV_OT_align_seam(Mio3UVOperator):
+class UV_OT_mio3_align_seam(Mio3UVOperator):
     bl_idname = "uv.mio3_align_seam"
     bl_label = "Align Seam"
     bl_description = "Align UVs of the same 3D vertex split by a seam"
@@ -129,8 +129,8 @@ class MIO3UV_OT_align_seam(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_align_seam)
+    bpy.utils.register_class(UV_OT_mio3_align_seam)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_align_seam)
+    bpy.utils.unregister_class(UV_OT_mio3_align_seam)

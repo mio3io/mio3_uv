@@ -3,7 +3,7 @@ import random
 from ..classes import Mio3UVOperator, UVIslandManager
 
 
-class MIO3UV_OT_shuffle_island(Mio3UVOperator):
+class UV_OT_mio3_shuffle_island(Mio3UVOperator):
     bl_idname = "uv.mio3_shuffle_island"
     bl_label = "Shuffle"
     bl_description = "Shuffle Island"
@@ -40,8 +40,8 @@ class MIO3UV_OT_shuffle_island(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_shuffle_island)
+    bpy.utils.register_class(UV_OT_mio3_shuffle_island)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_shuffle_island)
+    bpy.utils.unregister_class(UV_OT_mio3_shuffle_island)

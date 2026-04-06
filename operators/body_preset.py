@@ -47,7 +47,7 @@ class PartGroup:
     sort_reverse: bool = True
 
 
-class MIO3UV_OT_body_preset(Mio3UVOperator):
+class UV_OT_mio3_body_preset(Mio3UVOperator):
     bl_idname = "uv.mio3_body_preset"
     bl_label = "Auto Body Parts"
     bl_description = (
@@ -281,8 +281,8 @@ class MIO3UV_OT_body_preset(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_body_preset)
+    bpy.utils.register_class(UV_OT_mio3_body_preset)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_body_preset)
+    bpy.utils.unregister_class(UV_OT_mio3_body_preset)

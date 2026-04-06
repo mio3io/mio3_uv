@@ -4,7 +4,7 @@ from bpy.props import BoolProperty
 from ..classes import Mio3UVOperator, UVNodeManager, UVNodeGroup
 
 
-class MIO3UV_OT_circle(Mio3UVOperator):
+class UV_OT_mio3_circle(Mio3UVOperator):
     bl_idname = "uv.mio3_circle"
     bl_label = "Circular"
     bl_description = "Shape the edge loop into a circular shape"
@@ -57,8 +57,8 @@ class MIO3UV_OT_circle(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_circle)
+    bpy.utils.register_class(UV_OT_mio3_circle)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_circle)
+    bpy.utils.unregister_class(UV_OT_mio3_circle)

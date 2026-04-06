@@ -5,7 +5,7 @@ from mathutils import kdtree
 from ..classes import Mio3UVOperator
 
 
-class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
+class UV_OT_mio3_unwrap_mirror(Mio3UVOperator):
     bl_idname = "uv.mio3_unwrap_mirrored"
     bl_label = "Unwrap Virtual Mirror"
     bl_description = "Unwrap as if the mirror modifier is applied"
@@ -134,8 +134,8 @@ class MIO3UV_OT_unwrap_mirror(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_unwrap_mirror)
+    bpy.utils.register_class(UV_OT_mio3_unwrap_mirror)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_unwrap_mirror)
+    bpy.utils.unregister_class(UV_OT_mio3_unwrap_mirror)

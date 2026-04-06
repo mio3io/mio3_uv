@@ -5,7 +5,7 @@ from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager, UVNodeGrou
 from ..utils.utils import straight_uv_nodes
 
 
-class MIO3UV_OT_distribute(Mio3UVOperator):
+class UV_OT_mio3_distribute(Mio3UVOperator):
     bl_idname = "uv.mio3_distribute"
     bl_label = "Distribute"
     bl_description = "Island Mode: Distribute islands evenly spaced\nUV Group: evenly spaced or based on geometry"
@@ -263,8 +263,8 @@ class MIO3UV_OT_distribute(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_distribute)
+    bpy.utils.register_class(UV_OT_mio3_distribute)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_distribute)
+    bpy.utils.unregister_class(UV_OT_mio3_distribute)

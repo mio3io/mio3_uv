@@ -4,7 +4,7 @@ from bpy.props import BoolProperty, FloatProperty
 from ..classes import Mio3UVOperator, UVIslandManager
 
 
-class MIO3UV_OT_offset(Mio3UVOperator):
+class UV_OT_mio3_offset(Mio3UVOperator):
     bl_idname = "uv.mio3_offset"
     bl_label = "Offset"
     bl_description = "Expand/Shrink UV Borders. Ensure space for the overlapping rim created by Solidify."
@@ -66,8 +66,8 @@ class MIO3UV_OT_offset(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_offset)
+    bpy.utils.register_class(UV_OT_mio3_offset)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_offset)
+    bpy.utils.unregister_class(UV_OT_mio3_offset)

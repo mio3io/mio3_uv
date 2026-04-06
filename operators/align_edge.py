@@ -5,7 +5,7 @@ from bmesh.types import BMFace, BMLoop, BMLayerItem
 from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 
-class MIO3UV_OT_align_edges(Mio3UVOperator):
+class UV_OT_mio3_align_edges(Mio3UVOperator):
     bl_idname = "uv.mio3_align_edges"
     bl_label = "Align Edge Loops"
     bl_description = "Align Edge Loops"
@@ -102,8 +102,8 @@ class MIO3UV_OT_align_edges(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_align_edges)
+    bpy.utils.register_class(UV_OT_mio3_align_edges)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_align_edges)
+    bpy.utils.unregister_class(UV_OT_mio3_align_edges)

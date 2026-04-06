@@ -7,9 +7,9 @@ from ..globals import PADDING_AUTO
 from ..operators.view_padding import UV_OT_mio3_guide_padding
 
 
-class MIO3UV_PT_main(Mio3UVPanel):
+class UV_PT_mio3_main(Mio3UVPanel):
     bl_label = "Mio3 UV"
-    bl_idname = "MIO3UV_PT_main"
+    bl_idname = "UV_PT_mio3_main"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -20,7 +20,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
     # def draw_header_preset(self, context):
     #     layout = self.layout
     #     layout.emboss = "NONE_OR_STATUS"
-    #     layout.popover("MIO3UV_PT_settings_popover", text="")
+    #     layout.popover("UV_PT_mio3_settings_popover", text="")
     #     layout.separator(factor=3)
 
     def draw(self, context):
@@ -43,7 +43,7 @@ class MIO3UV_PT_main(Mio3UVPanel):
             text="",
         )
         row3.separator(factor=0.2)
-        row3.popover("MIO3UV_PT_options_popover", text="", icon_value=icons.paw)
+        row3.popover("UV_PT_mio3_options_popover", text="", icon_value=icons.paw)
 
         col.separator(factor=0.4)
 
@@ -67,9 +67,9 @@ class MIO3UV_PT_main(Mio3UVPanel):
         row.operator("uv.mio3_rectify", icon_value=icons.rectify)
 
 
-class MIO3UV_PT_align(Mio3UVPanel):
+class UV_PT_mio3_align(Mio3UVPanel):
     bl_label = "Layout"
-    bl_idname = "MIO3UV_PT_align"
+    bl_idname = "UV_PT_mio3_align"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -142,7 +142,7 @@ class MIO3UV_PT_align(Mio3UVPanel):
         )
         row = split.row(align=True)
         row.prop(context.scene.mio3uv, "texel_density", text="")
-        row.popover("MIO3UV_PT_texel_popover", text="", icon_value=icons.gear)
+        row.popover("UV_PT_mio3_texel_popover", text="", icon_value=icons.gear)
 
         if props_w.texel_preset_buttons:
             grid_flow = col.grid_flow(align=True, row_major=True, columns=4, even_columns=True, even_rows=True)
@@ -161,9 +161,9 @@ class MIO3UV_PT_align(Mio3UVPanel):
         row.prop(context.scene.mio3uv, "island_mode", text="Island", toggle=True)
 
 
-class MIO3UV_PT_arrange(Mio3UVPanel):
+class UV_PT_mio3_arrange(Mio3UVPanel):
     bl_label = "Arrange"
-    bl_idname = "MIO3UV_PT_arrange"
+    bl_idname = "UV_PT_mio3_arrange"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -197,12 +197,12 @@ class MIO3UV_PT_arrange(Mio3UVPanel):
 
         row = col.row(align=True)
         row.operator("uv.mio3_body_preset", icon_value=icons.body).type = "AUTO"
-        row.popover("MIO3UV_PT_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
+        row.popover("UV_PT_mio3_auto_body_parts_popover", text="", icon="DOWNARROW_HLT")
 
 
-class MIO3UV_PT_symmetry(Mio3UVPanel):
+class UV_PT_mio3_symmetry(Mio3UVPanel):
     bl_label = "Symmetrize"
-    bl_idname = "MIO3UV_PT_symmetry"
+    bl_idname = "UV_PT_mio3_symmetry"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -225,9 +225,9 @@ class MIO3UV_PT_symmetry(Mio3UVPanel):
         row.prop(context.scene.mio3uv, "symmetry_3d_axis", text="")
 
 
-class MIO3UV_PT_select(Mio3UVPanel):
+class UV_PT_mio3_select(Mio3UVPanel):
     bl_label = "Select"
-    bl_idname = "MIO3UV_PT_select"
+    bl_idname = "UV_PT_mio3_select"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -252,9 +252,9 @@ class MIO3UV_PT_select(Mio3UVPanel):
         row.operator("uv.mio3_select_flipped_faces")
 
 
-class MIO3UV_PT_Utility(Panel):
+class UV_PT_mio3_Utility(Panel):
     bl_label = "Utility"
-    bl_idname = "MIO3UV_PT_Utility"
+    bl_idname = "UV_PT_mio3_Utility"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -314,7 +314,7 @@ class MIO3UV_PT_Utility(Panel):
             layout.prop(prefs, "ui_help", text="Don’t show this again", toggle=True)
 
 
-class MIO3UV_PT_texel_popover(Panel):
+class UV_PT_mio3_texel_popover(Panel):
     bl_label = "Texel Density"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "WINDOW"
@@ -344,7 +344,7 @@ class MIO3UV_PT_texel_popover(Panel):
         col.operator("uv.mio3_texel_density_coverage", text="Calculate Coverage")
 
 
-class MIO3UV_PT_auto_body_parts_popover(Panel):
+class UV_PT_mio3_auto_body_parts_popover(Panel):
     bl_label = "Auto Body Parts"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "WINDOW"
@@ -366,7 +366,7 @@ class MIO3UV_PT_auto_body_parts_popover(Panel):
         row.operator("uv.mio3_body_preset", text="Button", icon_value=icons.button).type = "BUTTON"
 
 
-class MIO3UV_PT_options_popover(Panel):
+class UV_PT_mio3_options_popover(Panel):
     bl_label = "Options"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "WINDOW"
@@ -439,16 +439,16 @@ class MIO3UV_PT_options_popover(Panel):
 
 
 classes = [
-    MIO3UV_PT_main,
-    MIO3UV_PT_align,
-    MIO3UV_PT_symmetry,
-    MIO3UV_PT_arrange,
-    MIO3UV_PT_select,
-    MIO3UV_PT_auto_body_parts_popover,
-    MIO3UV_PT_options_popover,
-    # MIO3UV_PT_settings_popover,
-    MIO3UV_PT_texel_popover,
-    MIO3UV_PT_Utility,
+    UV_PT_mio3_main,
+    UV_PT_mio3_align,
+    UV_PT_mio3_symmetry,
+    UV_PT_mio3_arrange,
+    UV_PT_mio3_select,
+    UV_PT_mio3_auto_body_parts_popover,
+    UV_PT_mio3_options_popover,
+    # UV_PT_mio3_settings_popover,
+    UV_PT_mio3_texel_popover,
+    UV_PT_mio3_Utility,
 ]
 
 

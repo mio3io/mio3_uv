@@ -3,7 +3,7 @@ from bpy.props import BoolProperty, IntProperty
 from ..classes import Mio3UVOperator, UVIslandManager
 
 
-class MIO3UV_OT_stitch(Mio3UVOperator):
+class UV_OT_mio3_stitch(Mio3UVOperator):
     bl_idname = "uv.mio3_stitch"
     bl_label = "Stitch"
     bl_description = "Stitch Island"
@@ -36,8 +36,8 @@ class MIO3UV_OT_stitch(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_stitch)
+    bpy.utils.register_class(UV_OT_mio3_stitch)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_stitch)
+    bpy.utils.unregister_class(UV_OT_mio3_stitch)

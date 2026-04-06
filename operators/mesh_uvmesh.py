@@ -17,7 +17,7 @@ NAME_MOD_UV_MESH = "Mio3UVMeshModifier"
 # https://blender.stackexchange.com/questions/302193/get-edge-seams-from-uv-islands-in-geometry-nodes/
 
 
-class MIO3UV_OT_uvmesh(Mio3UVOperator):
+class UV_OT_mio3_uvmesh(Mio3UVOperator):
     bl_idname = "mesh.mio3_uvmesh"
     bl_label = "UV Mesh"
     bl_description = "Set up a modifier for UV to Mesh (using Geometry Nodes)"
@@ -118,7 +118,7 @@ class MIO3UV_OT_uvmesh(Mio3UVOperator):
         return None
 
 
-class MIO3UV_OT_uvmesh_control(Mio3UVOperator):
+class UV_OT_mio3_uvmesh_control(Mio3UVOperator):
     bl_idname = "mesh.mio3_uvmesh_control"
     bl_label = "UV Mesh"
     bl_description = "Control UV Mesh Factor"
@@ -147,7 +147,7 @@ class MIO3UV_OT_uvmesh_control(Mio3UVOperator):
         return {"FINISHED"}
 
 
-class MIO3UV_OT_uvmesh_clear(Mio3UVOperator):
+class UV_OT_mio3_uvmesh_clear(Mio3UVOperator):
     bl_idname = "mesh.mio3_uvmesh_clear"
     bl_label = "UV Mesh"
     bl_description = ""
@@ -168,7 +168,7 @@ class MIO3UV_OT_uvmesh_clear(Mio3UVOperator):
         return {"FINISHED"}
 
 
-classes = [MIO3UV_OT_uvmesh, MIO3UV_OT_uvmesh_control, MIO3UV_OT_uvmesh_clear]
+classes = [UV_OT_mio3_uvmesh, UV_OT_mio3_uvmesh_control, UV_OT_mio3_uvmesh_clear]
 
 
 def register():

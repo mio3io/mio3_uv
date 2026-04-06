@@ -7,7 +7,7 @@ from ..utils.utils import get_uv_from_mirror_offset, rotate_uv_faces
 from ..utils.uv_manager_utils import find_rotation_auto, find_rotation_geometry, rotate_island
 
 
-class MIO3UV_OT_orient(Mio3UVOperator):
+class UV_OT_mio3_orient(Mio3UVOperator):
     bl_idname = "uv.mio3_orient"
     bl_label = "Align Axis"
     bl_description = "Align the selected edge or island to an axis"
@@ -131,7 +131,7 @@ class MIO3UV_OT_orient(Mio3UVOperator):
         split.enabled = not self.island
 
 
-class MIO3UV_OT_orient_world(Mio3UVOperator):
+class UV_OT_mio3_orient_world(Mio3UVOperator):
     bl_idname = "uv.mio3_orient_world"
     bl_label = "Orient World"
     bl_description = "Align the selected islands to the world axis"
@@ -167,10 +167,10 @@ class MIO3UV_OT_orient_world(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_orient)
-    bpy.utils.register_class(MIO3UV_OT_orient_world)
+    bpy.utils.register_class(UV_OT_mio3_orient)
+    bpy.utils.register_class(UV_OT_mio3_orient_world)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_orient)
-    bpy.utils.unregister_class(MIO3UV_OT_orient_world)
+    bpy.utils.unregister_class(UV_OT_mio3_orient)
+    bpy.utils.unregister_class(UV_OT_mio3_orient_world)

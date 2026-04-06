@@ -10,7 +10,7 @@ NAME_NODE_GROUP_OVERRIDE = "Mio3MaterialOverride"
 NAME_MOD_CHECKER_MAP = "Mio3CheckerMapModifier"
 
 
-class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
+class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map"
     bl_label = "Checker Map"
     bl_description = "Set the checker map (using Geometry Nodes)"
@@ -145,7 +145,7 @@ class MIO3UV_OT_checker_map(Mio3UVGlobalOperator):
         return mat
 
 
-class MIO3UV_OT_checker_map_clear(Mio3UVGlobalOperator):
+class UV_OT_mio3_checker_map_clear(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map_clear"
     bl_label = "Clear Checker Map"
     bl_description = "Clear Checker Map"
@@ -168,7 +168,7 @@ class MIO3UV_OT_checker_map_clear(Mio3UVGlobalOperator):
         return {"FINISHED"}
 
 
-class MIO3UV_OT_checker_map_cleanup(Mio3UVGlobalOperator):
+class UV_OT_mio3_checker_map_cleanup(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map_cleanup"
     bl_label = "Cleanup All Checker Maps"
     bl_description = "Cleanup checker map images, materials, modifiers, and geometry nodes"
@@ -225,9 +225,9 @@ class MIO3UV_OT_checker_map_cleanup(Mio3UVGlobalOperator):
 
 
 classes = [
-    MIO3UV_OT_checker_map,
-    MIO3UV_OT_checker_map_clear,
-    MIO3UV_OT_checker_map_cleanup,
+    UV_OT_mio3_checker_map,
+    UV_OT_mio3_checker_map_clear,
+    UV_OT_mio3_checker_map_cleanup,
 ]
 
 

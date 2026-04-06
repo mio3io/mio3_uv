@@ -4,7 +4,7 @@ from bpy.props import BoolProperty, EnumProperty
 from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 
-class MIO3UV_OT_stretch(Mio3UVOperator):
+class UV_OT_mio3_stretch(Mio3UVOperator):
     bl_idname = "uv.mio3_stretch"
     bl_label = "Stretch"
     bl_description = "Align the width of islands or UV groups"
@@ -157,8 +157,8 @@ class MIO3UV_OT_stretch(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_stretch)
+    bpy.utils.register_class(UV_OT_mio3_stretch)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_stretch)
+    bpy.utils.unregister_class(UV_OT_mio3_stretch)

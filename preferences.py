@@ -3,7 +3,7 @@ from bpy.types import AddonPreferences
 from bpy.props import BoolProperty, FloatVectorProperty, EnumProperty
 
 
-class MIO3UV_preferences(AddonPreferences):
+class UV_mio3_preferences(AddonPreferences):
     bl_idname = __package__
 
     auto_uv_sync: BoolProperty(name="UV Sync Auto Select", default=False, options=set())
@@ -52,8 +52,8 @@ class MIO3UV_preferences(AddonPreferences):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_preferences)
+    bpy.utils.register_class(UV_mio3_preferences)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_preferences)
+    bpy.utils.unregister_class(UV_mio3_preferences)

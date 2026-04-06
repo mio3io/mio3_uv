@@ -10,7 +10,7 @@ from ..globals import get_preferences
 from ..icons import icons
 
 
-class MIO3UV_OT_symmetrize(Mio3UVOperator):
+class UV_OT_mio3_symmetrize(Mio3UVOperator):
     bl_idname = "uv.mio3_symmetrize"
     bl_label = "Symmetrize"
     bl_description = "Symmetrize based on 3D space"
@@ -346,8 +346,8 @@ class MIO3UV_OT_symmetrize(Mio3UVOperator):
         split.prop(self, "stack")
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_symmetrize)
+    bpy.utils.register_class(UV_OT_mio3_symmetrize)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_symmetrize)
+    bpy.utils.unregister_class(UV_OT_mio3_symmetrize)

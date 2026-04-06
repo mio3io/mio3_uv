@@ -5,9 +5,9 @@ from ..icons import icons
 from ..globals import PADDING_AUTO
 
 
-class MIO3UV_PT_Utility(Panel):
+class UV_PT_mio3_Utility(Panel):
     bl_label = "Utility"
-    bl_idname = "MIO3UV_PT_Utility"
+    bl_idname = "UV_PT_mio3_Utility"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
@@ -35,13 +35,13 @@ class MIO3UV_PT_Utility(Panel):
         )
 
 
-class MIO3UV_PT_UVMesh(Panel):
+class UV_PT_mio3_UVMesh(Panel):
     bl_label = "UV Mesh Nodes"
-    bl_idname = "MIO3UV_PT_UVMesh"
+    bl_idname = "UV_PT_mio3_UVMesh"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
-    bl_parent_id = "MIO3UV_PT_Utility"
+    bl_parent_id = "UV_PT_mio3_Utility"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
@@ -85,13 +85,13 @@ class MIO3UV_PT_UVMesh(Panel):
             row.label(text="Add Modifier")
 
 
-class MIO3UV_PT_SubGuidePadding(Panel):
+class UV_PT_mio3_SubGuidePadding(Panel):
     bl_label = "Padding"
-    bl_idname = "MIO3UV_PT_SubGuidePadding"
+    bl_idname = "UV_PT_mio3_SubGuidePadding"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Mio3"
-    bl_parent_id = "MIO3UV_PT_Utility"
+    bl_parent_id = "UV_PT_mio3_Utility"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
@@ -120,7 +120,7 @@ class MIO3UV_PT_SubGuidePadding(Panel):
             row.label(text="px", translate=False)
 
 
-classes = [MIO3UV_PT_Utility, MIO3UV_PT_UVMesh, MIO3UV_PT_SubGuidePadding]
+classes = [UV_PT_mio3_Utility, UV_PT_mio3_UVMesh, UV_PT_mio3_SubGuidePadding]
 
 
 def register():

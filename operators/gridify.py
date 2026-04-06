@@ -7,7 +7,7 @@ from ..classes import Mio3UVOperator, UVIslandManager
 from ..utils.uv_follow import uv_follow, build_uv_loop_index, collect_shared_uv_loops
 
 
-class MIO3UV_OT_grid(Mio3UVOperator):
+class UV_OT_mio3_grid(Mio3UVOperator):
     bl_idname = "uv.mio3_gridify"
     bl_label = "Gridify"
     bl_description = "Align UVs of a quadrangle in a grid"
@@ -165,8 +165,8 @@ class MIO3UV_OT_grid(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_grid)
+    bpy.utils.register_class(UV_OT_mio3_grid)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_grid)
+    bpy.utils.unregister_class(UV_OT_mio3_grid)

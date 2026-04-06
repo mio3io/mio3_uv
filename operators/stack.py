@@ -3,7 +3,7 @@ from bpy.props import BoolProperty, EnumProperty
 from ..classes import Mio3UVOperator, UVIslandManager
 
 
-class MIO3UV_OT_paste(Mio3UVOperator):
+class UV_OT_mio3_paste(Mio3UVOperator):
     bl_idname = "uv.mio3_paste"
     bl_label = "Paste"
     bl_description = "Paste selected UV vertices"
@@ -35,7 +35,7 @@ class MIO3UV_OT_paste(Mio3UVOperator):
         return {"FINISHED"}
 
 
-class MIO3UV_OT_stack(Mio3UVOperator):
+class UV_OT_mio3_stack(Mio3UVOperator):
     bl_idname = "uv.mio3_stack"
     bl_label = "Stack"
     bl_description = "Overlap similar UV shapes"
@@ -83,8 +83,8 @@ class MIO3UV_OT_stack(Mio3UVOperator):
 
 
 classes = [
-    MIO3UV_OT_paste,
-    MIO3UV_OT_stack,
+    UV_OT_mio3_paste,
+    UV_OT_mio3_stack,
 ]
 
 

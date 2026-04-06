@@ -6,7 +6,7 @@ from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 ver_5_1 = bpy.app.version >= (5, 1, 0)
 
 
-class MIO3UV_OT_mirror(Mio3UVOperator):
+class UV_OT_mio3_mirror(Mio3UVOperator):
     bl_idname = "uv.mio3_mirror"
     bl_label = "Mirror"
     bl_description = "[Shift] {}\n[Alt] {}".format(tt_iface("Individual Origins"), tt_iface("Y Axis"))
@@ -123,8 +123,8 @@ class MIO3UV_OT_mirror(Mio3UVOperator):
         return {"FINISHED"}
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_mirror)
+    bpy.utils.register_class(UV_OT_mio3_mirror)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_mirror)
+    bpy.utils.unregister_class(UV_OT_mio3_mirror)

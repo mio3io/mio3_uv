@@ -7,7 +7,7 @@ from ..icons import icons
 from ..classes import Mio3UVOperator
 
 
-class MIO3UV_OT_seam(Mio3UVOperator):
+class UV_OT_mio3_seam(Mio3UVOperator):
     bl_idname = "uv.mio3_seam"
     bl_label = "Mark Seam by Angle"
     bl_description = "Mark Seam by Angle"
@@ -269,7 +269,7 @@ class MIO3UV_OT_seam(Mio3UVOperator):
         layout.prop(self, "unwrap")
 
 
-class MIO3UV_OT_seam_boundary(Mio3UVOperator):
+class UV_OT_mio3_seam_boundary(Mio3UVOperator):
     bl_idname = "uv.mio3_seam_boundary"
     bl_label = "Mark Seam by Boundary"
     bl_description = "Mark Seam by Boundary"
@@ -303,20 +303,20 @@ class MIO3UV_OT_seam_boundary(Mio3UVOperator):
 
 
 classes = [
-    MIO3UV_OT_seam,
-    MIO3UV_OT_seam_boundary,
+    UV_OT_mio3_seam,
+    UV_OT_mio3_seam_boundary,
 ]
 
 
 def menu_context(self, context):
     self.layout.operator(
         "uv.mio3_seam",
-        text=MIO3UV_OT_seam.bl_label,
+        text=UV_OT_mio3_seam.bl_label,
         icon_value=icons.seam,
     )
     self.layout.operator(
         "uv.mio3_seam_boundary",
-        text=MIO3UV_OT_seam_boundary.bl_label,
+        text=UV_OT_mio3_seam_boundary.bl_label,
         icon_value=icons.seam,
     )
 

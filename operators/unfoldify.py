@@ -32,7 +32,7 @@ class IslandCategories:
             yield islands
 
 
-class MIO3UV_OT_unfoldify(Mio3UVOperator):
+class UV_OT_mio3_unfoldify(Mio3UVOperator):
     CATEGORY_AXES = {
         "FRONT": (-Vector((0, 1, 0)), "y", -1),
         "BACK": (Vector((0, 1, 0)), "y", 1),
@@ -298,8 +298,8 @@ class MIO3UV_OT_unfoldify(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_unfoldify)
+    bpy.utils.register_class(UV_OT_mio3_unfoldify)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_unfoldify)
+    bpy.utils.unregister_class(UV_OT_mio3_unfoldify)

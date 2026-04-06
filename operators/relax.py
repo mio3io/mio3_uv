@@ -4,7 +4,7 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty
 from ..classes import Mio3UVOperator, UVNodeManager
 
 
-class MIO3UV_OT_relax(Mio3UVOperator):
+class UV_OT_mio3_relax(Mio3UVOperator):
     bl_idname = "uv.mio3_relax"
     bl_label = "Relax"
     bl_description = "Relax UVs"
@@ -210,8 +210,8 @@ class MIO3UV_OT_relax(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_relax)
+    bpy.utils.register_class(UV_OT_mio3_relax)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_relax)
+    bpy.utils.unregister_class(UV_OT_mio3_relax)

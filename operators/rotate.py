@@ -8,7 +8,7 @@ from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 ver_5_1 = bpy.app.version >= (5, 1, 0)
 
 
-class MIO3UV_OT_rotate(Mio3UVOperator):
+class UV_OT_mio3_rotate(Mio3UVOperator):
     bl_idname = "uv.mio3_rotate"
     bl_label = "Rotate"
     bl_description = "[Shift] {}".format(tt_iface("Individual Origins"))
@@ -128,8 +128,8 @@ class MIO3UV_OT_rotate(Mio3UVOperator):
         return {"FINISHED"}
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_rotate)
+    bpy.utils.register_class(UV_OT_mio3_rotate)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_rotate)
+    bpy.utils.unregister_class(UV_OT_mio3_rotate)

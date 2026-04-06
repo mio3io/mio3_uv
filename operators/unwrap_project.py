@@ -7,7 +7,7 @@ from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..icons import icons
 
 
-class MIO3UV_OT_unwrap_project(Mio3UVOperator):
+class UV_OT_mio3_unwrap_project(Mio3UVOperator):
     bl_idname = "uv.mio3_unwrap_project"
     bl_label = "Normal Projection Unwrap"
     bl_description = "Project the UVs based on the normal direction of the selected faces.\nAvailable only when UV Sync Selection is enabled in the UV Editor"
@@ -192,14 +192,14 @@ class MIO3UV_OT_unwrap_project(Mio3UVOperator):
 
 def menu_context(self, context):
     self.layout.separator()
-    self.layout.operator(MIO3UV_OT_unwrap_project.bl_idname, icon_value=icons.camera)
+    self.layout.operator(UV_OT_mio3_unwrap_project.bl_idname, icon_value=icons.camera)
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_unwrap_project)
+    bpy.utils.register_class(UV_OT_mio3_unwrap_project)
     bpy.types.VIEW3D_MT_uv_map.append(menu_context)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_unwrap_project)
+    bpy.utils.unregister_class(UV_OT_mio3_unwrap_project)
     bpy.types.VIEW3D_MT_uv_map.remove(menu_context)

@@ -4,7 +4,7 @@ from ..utils.utils import straight_uv_nodes
 from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager
 
 
-class MIO3UV_OT_straight(Mio3UVOperator):
+class UV_OT_mio3_straight(Mio3UVOperator):
     bl_idname = "uv.mio3_straight"
     bl_label = "Straight"
     bl_description = "Unwrap selected edge loop to a straight line"
@@ -54,8 +54,8 @@ class MIO3UV_OT_straight(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_straight)
+    bpy.utils.register_class(UV_OT_mio3_straight)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_straight)
+    bpy.utils.unregister_class(UV_OT_mio3_straight)

@@ -8,7 +8,7 @@ from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 from ..utils.utils import uv_select_set_face, uv_select_set_all
 
 
-class MIO3UV_OT_auto_uv_sync(bpy.types.Operator):
+class UV_OT_mio3_auto_uv_sync(bpy.types.Operator):
     bl_idname = "uv.mio3_auto_uv_sync"
     bl_label = "Auto UV Sync"
     bl_description = "Auto UV Sync"
@@ -34,7 +34,7 @@ class MIO3UV_OT_auto_uv_sync(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MIO3UV_OT_select_half(Mio3UVOperator):
+class UV_OT_mio3_select_half(Mio3UVOperator):
     bl_idname = "uv.mio3_select_half"
     bl_label = "Select Half"
     bl_description = "Select UVs on one side of the axis in 3D space"
@@ -98,7 +98,7 @@ class MIO3UV_OT_select_half(Mio3UVOperator):
         return {"FINISHED"}
 
 
-class MIO3UV_OT_select_similar(Mio3UVOperator):
+class UV_OT_mio3_select_similar(Mio3UVOperator):
     bl_idname = "uv.mio3_select_similar"
     bl_label = "Similar"
     bl_description = "Select Similar"
@@ -169,7 +169,7 @@ class MIO3UV_OT_select_similar(Mio3UVOperator):
         if self.area != True:
             col.enabled = False
 
-class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
+class UV_OT_mio3_select_mirror3d(Mio3UVOperator):
     bl_idname = "uv.mio3_select_mirror3d"
     bl_label = "Mirror"
     bl_description = "Select Mirror 3D"
@@ -327,7 +327,7 @@ class MIO3UV_OT_select_mirror3d(Mio3UVOperator):
         return target_faces, source_faces, source_face_verts
 
 
-class MIO3UV_OT_select_edge(Mio3UVOperator):
+class UV_OT_mio3_select_edge(Mio3UVOperator):
     bl_idname = "uv.mio3_select_edge"
     bl_label = "Edges"
     bl_description = "Select edges based on their direction in UV space"
@@ -523,7 +523,7 @@ class MIO3UV_OT_select_edge(Mio3UVOperator):
             return abs(math.cos(angle)) < self.threshold
 
 
-class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
+class UV_OT_mio3_select_zero(Mio3UVOperator, bpy.types.Operator):
     bl_idname = "uv.mio3_select_zero"
     bl_label = "No Region"
     bl_description = "Select Zero Area UV Faces"
@@ -569,7 +569,7 @@ class MIO3UV_OT_select_zero(Mio3UVOperator, bpy.types.Operator):
         return {"FINISHED"}
 
 
-class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
+class UV_OT_mio3_select_flipped_faces(Mio3UVOperator):
     bl_idname = "uv.mio3_select_flipped_faces"
     bl_label = "Flipped"
     bl_description = "Select Flipped UV Faces"
@@ -619,13 +619,13 @@ class MIO3UV_OT_select_flipped_faces(Mio3UVOperator):
 
 
 classes = [
-    MIO3UV_OT_auto_uv_sync,
-    MIO3UV_OT_select_half,
-    MIO3UV_OT_select_similar,
-    MIO3UV_OT_select_mirror3d,
-    MIO3UV_OT_select_edge,
-    MIO3UV_OT_select_flipped_faces,
-    MIO3UV_OT_select_zero,
+    UV_OT_mio3_auto_uv_sync,
+    UV_OT_mio3_select_half,
+    UV_OT_mio3_select_similar,
+    UV_OT_mio3_select_mirror3d,
+    UV_OT_mio3_select_edge,
+    UV_OT_mio3_select_flipped_faces,
+    UV_OT_mio3_select_zero,
 ]
 
 

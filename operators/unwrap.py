@@ -5,7 +5,7 @@ from bpy.app.translations import pgettext_iface as tt_iface
 from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
 
 
-class MIO3UV_OT_unwrap(Mio3UVOperator):
+class UV_OT_mio3_unwrap(Mio3UVOperator):
     bl_idname = "uv.mio3_unwrap"
     bl_label = "UV Unwrap"
     bl_description = "UV Unwrap"
@@ -221,8 +221,8 @@ class MIO3UV_OT_unwrap(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_unwrap)
+    bpy.utils.register_class(UV_OT_mio3_unwrap)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_unwrap)
+    bpy.utils.unregister_class(UV_OT_mio3_unwrap)

@@ -5,7 +5,7 @@ from bpy.props import BoolProperty
 from ..classes import Mio3UVOperator
 
 
-class MIO3UV_OT_pin(Mio3UVOperator):
+class UV_OT_mio3_pin(Mio3UVOperator):
     bl_idname = "uv.mio3_pin"
     bl_label = "Pin"
     bl_description = "[Alt] {}".format(tt_iface("Clear"))
@@ -59,8 +59,8 @@ class MIO3UV_OT_pin(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_pin)
+    bpy.utils.register_class(UV_OT_mio3_pin)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_pin)
+    bpy.utils.unregister_class(UV_OT_mio3_pin)

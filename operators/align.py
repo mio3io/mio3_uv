@@ -7,7 +7,7 @@ from ..classes import Mio3UVOperator, UVIslandManager, UVIsland, UVNodeManager, 
 from ..utils.utils import straight_uv_nodes
 
 
-class MIO3UV_OT_align(Mio3UVOperator):
+class UV_OT_mio3_align(Mio3UVOperator):
     bl_idname = "uv.mio3_align"
     bl_label = "Align UVs"
     bl_description = "Align UVs of vertices, edge loops and islands"
@@ -375,8 +375,8 @@ class MIO3UV_OT_align(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_align)
+    bpy.utils.register_class(UV_OT_mio3_align)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_align)
+    bpy.utils.unregister_class(UV_OT_mio3_align)

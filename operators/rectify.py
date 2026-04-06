@@ -5,7 +5,7 @@ from ..utils.utils import straight_uv_nodes
 from ..classes import Mio3UVOperator, UVIslandManager, UVNodeManager, UVIsland
 
 
-class MIO3UV_OT_rectify(Mio3UVOperator):
+class UV_OT_mio3_rectify(Mio3UVOperator):
     bl_idname = "uv.mio3_rectify"
     bl_label = "Rectify"
     bl_description = "Unwrap boundary to rectangle using four corners or a range as reference"
@@ -241,8 +241,8 @@ class MIO3UV_OT_rectify(Mio3UVOperator):
 
 
 def register():
-    bpy.utils.register_class(MIO3UV_OT_rectify)
+    bpy.utils.register_class(UV_OT_mio3_rectify)
 
 
 def unregister():
-    bpy.utils.unregister_class(MIO3UV_OT_rectify)
+    bpy.utils.unregister_class(UV_OT_mio3_rectify)
