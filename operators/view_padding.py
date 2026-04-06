@@ -1,11 +1,12 @@
 import bpy
 import bmesh
 import gpu
+from collections import defaultdict
 from mathutils import Vector
 from bpy.types import SpaceImageEditor
 from gpu_extras.batch import batch_for_shader
 from ..classes import Mio3UVOperator
-from ..globals import PADDING_AUTO
+from ..globals import PADDING_AUTO, get_preferences
 
 msgbus_owner = object()
 
@@ -60,7 +61,8 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         if is_running:
             return {"FINISHED"}
 
-        cls._handle = SpaceImageEditor.draw_handler_add(self.draw_2d, ((self, context)), "WINDOW", "POST_PIXEL")
+        prefs = get_preferences()
+        cls._handle = SpaceImageEditor.draw_handler_add(self.draw_2d, ((self, context, prefs)), "WINDOW", "POST_PIXEL")
 
         def callback():
             cls.remove_handler()
@@ -68,8 +70,6 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         bpy.msgbus.subscribe_rna(key=(bpy.types.Object, "mode"), owner=msgbus_owner, args=(), notify=callback)
 
         self._shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-        self._press_mouse_pos = None
-        self._mouse_pressed = False
         self._prev_active_op_key = None
 
         self.update_state(context)
@@ -90,20 +90,9 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
 
         if is_new_active_op and is_relevant_active_op:
             self.update_mesh(context)
-            self._press_mouse_pos = None
-            self._mouse_pressed = False
 
-        if event.type == "LEFTMOUSE" and event.value == "PRESS":
-            self._press_mouse_pos = (event.mouse_region_x, event.mouse_region_y)
-            self._mouse_pressed = True
-
-        if event.type == "LEFTMOUSE" and event.value == "RELEASE":
-            self._mouse_pressed = False
-            self._press_mouse_pos = None
-
-        if event.type in ("ESC", "RIGHTMOUSE") and event.value == "PRESS":
-            self._press_mouse_pos = None
-            self._mouse_pressed = False
+        if event.type == "RET" and event.value == "PRESS":
+            self.update_mesh(context)
 
         if event.type == "Z" and event.ctrl and event.value == "RELEASE":
             self.update_mesh(context)
@@ -127,33 +116,146 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
             obj.data.update()
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
-            
-            vertex_to_padded = {}
 
+            edge_segs = defaultdict(list)
+            uv_by_key = {}
             for face in bm.faces:
                 for loop in face.loops:
-                    curr_uv = loop[uv_layer].uv
-                    next_uv = loop.link_loop_next[uv_layer].uv
+                    uv1 = loop[uv_layer].uv.copy()
+                    uv2 = loop.link_loop_next[uv_layer].uv.copy()
+                    k1, k2 = uv1.to_tuple(5), uv2.to_tuple(5)
+                    edge_segs[loop.edge].append((k1, k2))
+                    uv_by_key.setdefault(k1, uv1)
+                    uv_by_key.setdefault(k2, uv2)
 
-                    curr_key = curr_uv.to_tuple(5)
-                    next_key = next_uv.to_tuple(5)
+            boundary_edges = set()
+            for edge, segs in edge_segs.items():
+                if edge.is_boundary or edge.seam or len(segs) != 2:
+                    for k1, k2 in segs:
+                        if k1 != k2:
+                            boundary_edges.add(frozenset((k1, k2)))
+                else:
+                    (a1, a2), (b1, b2) = segs
+                    if {a1, a2} != {b1, b2}:
+                        for k1, k2 in segs:
+                            if k1 != k2:
+                                boundary_edges.add(frozenset((k1, k2)))
 
-                    if loop.edge.is_boundary or loop.edge.seam:
-                        edge_vec = next_uv - curr_uv
-                        normal = Vector((edge_vec.y, -edge_vec.x)).normalized()
+            neighbors = defaultdict(set)
+            for e in boundary_edges:
+                k1, k2 = tuple(e)
+                neighbors[k1].add(k2)
+                neighbors[k2].add(k1)
 
-                        pad_uv1 = curr_uv + normal * padding
-                        pad_uv2 = next_uv + normal * padding
+            unused = set(boundary_edges)
 
-                        cls._vertices.extend([pad_uv1, pad_uv2])
+            def pop_next(curr, prev=None):
+                for nxt in neighbors[curr]:
+                    if nxt != prev and frozenset((curr, nxt)) in unused:
+                        return nxt
+                for nxt in neighbors[curr]:
+                    if frozenset((curr, nxt)) in unused:
+                        return nxt
+                return None
 
-                        vertex_to_padded.setdefault(curr_key, []).append(pad_uv1)
-                        vertex_to_padded.setdefault(next_key, []).append(pad_uv2)
+            polylines = []
+            for start in [k for k, ns in neighbors.items() if len(ns) == 1]:
+                if not any(frozenset((start, n)) in unused for n in neighbors[start]):
+                    continue
+                chain, prev, curr = [start], None, start
+                while True:
+                    nxt = pop_next(curr, prev)
+                    if nxt is None:
+                        break
+                    unused.discard(frozenset((curr, nxt)))
+                    chain.append(nxt)
+                    prev, curr = curr, nxt
+                if len(chain) >= 2:
+                    polylines.append((chain, False))
 
-            for uv_key, padded_list in vertex_to_padded.items():
-                for i in range(len(padded_list)):
-                    for j in range(i + 1, len(padded_list)):
-                        cls._vertices.extend([padded_list[i], padded_list[j]])
+            while unused:
+                e = unused.pop()
+                a, b = tuple(e)
+                chain, prev, curr = [a, b], a, b
+                while True:
+                    nxt = pop_next(curr, prev)
+                    if nxt is None or frozenset((curr, nxt)) not in unused:
+                        break
+                    unused.discard(frozenset((curr, nxt)))
+                    if nxt == chain[0]:
+                        break
+                    chain.append(nxt)
+                    prev, curr = curr, nxt
+                closed = len(chain) >= 3 and frozenset((chain[-1], chain[0])) in boundary_edges
+                if len(chain) >= 2:
+                    polylines.append((chain, closed))
+
+            # CCW正規化 + ポイントリスト作成
+            resolved = []
+            for keys, closed in polylines:
+                points = [uv_by_key[k] for k in keys]
+                n = len(points)
+                if n < 2:
+                    continue
+                if closed and n >= 3:
+                    area2 = sum(
+                        points[i].x * points[(i + 1) % n].y - points[(i + 1) % n].x * points[i].y for i in range(n)
+                    )
+                    if area2 < 0:
+                        points.reverse()
+                resolved.append((points, closed))
+
+            # 閉ループの判定
+            closed_loops = [(pts, i) for i, (pts, c) in enumerate(resolved) if c and len(pts) >= 3]
+            nest_sign = {}
+            for idx, (pts, ri) in enumerate(closed_loops):
+                px, py = pts[0].x, pts[0].y
+                depth = 0
+                for jdx, (other, _) in enumerate(closed_loops):
+                    if idx == jdx:
+                        continue
+                    inside = False
+                    m = len(other)
+                    j = m - 1
+                    for i in range(m):
+                        iy, jy = other[i].y, other[j].y
+                        if (iy > py) != (jy > py):
+                            if px < (other[j].x - other[i].x) * (py - iy) / (jy - iy) + other[i].x:
+                                inside = not inside
+                        j = i
+                    if inside:
+                        depth += 1
+                nest_sign[ri] = -1.0 if depth % 2 == 1 else 1.0
+
+            for ri, (points, closed) in enumerate(resolved):
+                n = len(points)
+                sign = nest_sign.get(ri, 1.0)
+
+                seg_right = []
+                for i in range(n if closed else n - 1):
+                    d = points[(i + 1) % n] - points[i]
+                    if d.length > 0:
+                        d = d.normalized()
+                        seg_right.append(Vector((d.y, -d.x)))
+                    else:
+                        seg_right.append(Vector((0, 0)))
+
+                offset_pts = []
+                for i in range(n):
+                    if closed:
+                        nrm = seg_right[(i - 1) % n] + seg_right[i]
+                    elif i == 0:
+                        nrm = seg_right[0]
+                    elif i == n - 1:
+                        nrm = seg_right[-1]
+                    else:
+                        nrm = seg_right[i - 1] + seg_right[i]
+                    offset_pts.append(points[i] + (nrm.normalized() if nrm.length > 0 else nrm) * padding * sign)
+
+                for i in range(n - 1):
+                    cls._vertices.extend([offset_pts[i], offset_pts[i + 1]])
+                if closed and n >= 3:
+                    cls._vertices.extend([offset_pts[-1], offset_pts[0]])
 
             bm.free()
 
@@ -167,12 +269,12 @@ class UV_OT_mio3_guide_padding(Mio3UVOperator):
         cls._padding = int(calc_padding_px) / int(obj.mio3uv.image_size)
 
     @staticmethod
-    def draw_2d(self, context):
+    def draw_2d(self, context, prefs):
         viewport_vertices = [context.region.view2d.view_to_region(v[0], v[1], clip=False) for v in self._vertices]
         shader = self._shader
         batch = batch_for_shader(shader, "LINES", {"pos": viewport_vertices})
         shader.bind()
-        shader.uniform_float("color", self._color)
+        shader.uniform_float("color", prefs.ui_padding_col)
         batch.draw(shader)
 
     @classmethod

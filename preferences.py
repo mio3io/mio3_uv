@@ -20,10 +20,19 @@ class MIO3UV_preferences(AddonPreferences):
     ui_help: BoolProperty(name="Help Messages", default=True, options=set())
     ui_guide: BoolProperty(name="Show 3D Space Guide", default=True, options=set())
     ui_guide_col: FloatVectorProperty(
-        name="Color",
+        name="3D Space Guide Color",
         subtype="COLOR_GAMMA",
         size=4,
         default=(0.0, 0.7, 1.0, 1.0),
+        min=0.0,
+        max=1.0,
+        options=set(),
+    )
+    ui_padding_col: FloatVectorProperty(
+        name="Padding Guide Color",
+        subtype="COLOR_GAMMA",
+        size=4,
+        default=(0.1, 0.5, 1.0, 1.0),
         min=0.0,
         max=1.0,
         options=set(),
@@ -39,6 +48,7 @@ class MIO3UV_preferences(AddonPreferences):
         col.prop(self, "ui_help")
         col.prop(self, "ui_guide")
         col.prop(self, "ui_guide_col")
+        col.prop(self, "ui_padding_col")
 
 
 def register():
