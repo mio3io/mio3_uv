@@ -238,8 +238,8 @@ class UV_PT_mio3_select(Mio3UVPanel):
 
         col2 = col.column(align=True)
         row = col2.row(align=True)
-        row.operator("uv.mio3_select_half", text="-X", icon_value=icons.x_n)
-        row.operator("uv.mio3_select_half", text="+X", icon_value=icons.x_p)
+        row.operator("uv.mio3_select_half", text="-X", icon_value=icons.x_n).direction = "NEGATIVE_X"
+        row.operator("uv.mio3_select_half", text="+X", icon_value=icons.x_p).direction = "POSITIVE_X"
         row.scale_x = 1.3
         row.operator("uv.mio3_select_mirror3d", icon_value=icons.mirror_uv)
         row = col2.row(align=True)
