@@ -3,7 +3,7 @@ translation_dict = {
         # Preferences
         ("*", "Help Messages"): "ヘルプメッセージ",
         ("*", "Don’t show this again"): "二度と表示しない",
-        ("*", "Padding and checker map have been relocated to the top-left paw icon menu"): "パディングとチェッカーマップは左上のパウアイコンメニューに移動しました",
+        ("*", "Padding and checker map have been relocated to the top options menu"): "パディングとチェッカーマップは上部のオプションメニューに移動しました",
         ("*", "UV Sync Auto Select"): "選択同期で自動選択",
         ("*", "Legacy UI Layout"): "従来のUIレイアウト",
         ("*", "Use UV Tiles"): "UVタイルを使用する",
@@ -171,7 +171,7 @@ translation_dict = {
         ("Operator", "Hand R"): "右手R",
         ("Operator", "Foot L"): "左足L",
         ("Operator", "Foot R"): "右足R",
-        ("Operator", "Button"): "ボタン",
+        ("Operator", "Vertical Parts"): "縦並びのパーツ",
         ("Operator", "Front Hair"): "前髪",
         ("Operator", "Back Hair"): "後髪",
         ("*", "Automatically detects body parts and classifies or arranges them"): "体の部位を自動的に検出し、分類または整列します",

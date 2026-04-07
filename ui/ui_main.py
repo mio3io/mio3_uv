@@ -42,10 +42,10 @@ class UV_PT_mio3_main(Mio3UVPanel):
             depress=True if UV_OT_mio3_guide_padding.is_running() else False,
             text="",
         )
-        row3.separator(factor=0.2)
+        row3.separator(factor=0.3)
         row3.popover("UV_PT_mio3_options_popover", text="", icon_value=icons.paw)
 
-        col.separator(factor=0.4)
+        col.separator(factor=0.6)
 
         split = col.split(align=True)
         split.scale_y = 1.18
@@ -68,7 +68,7 @@ class UV_PT_mio3_main(Mio3UVPanel):
 
 
 class UV_PT_mio3_align(Mio3UVPanel):
-    bl_label = "Layout"
+    bl_label = "Align"
     bl_idname = "UV_PT_mio3_align"
     bl_space_type = "IMAGE_EDITOR"
     bl_region_type = "UI"
@@ -128,9 +128,6 @@ class UV_PT_mio3_align(Mio3UVPanel):
         row = col.row(align=True)
         row.operator("uv.mio3_sort", icon_value=icons.align_x)
         row.operator("uv.mio3_distribute", icon_value=icons.dist_x)
-        row = col.row(align=True)
-        row.operator("uv.mio3_relax", icon_value=icons.relax)
-        row.operator("uv.mio3_stack", icon_value=icons.stack)
 
         col.separator(factor=0.3)
 
@@ -173,20 +170,23 @@ class UV_PT_mio3_arrange(Mio3UVPanel):
         col = layout.column(align=True)
 
         row = col.row(align=True)
-        row.operator("uv.mio3_align_seam", icon_value=icons.align_seam_y)
+        row.operator("uv.mio3_relax", icon_value=icons.relax)
         row.operator("uv.mio3_merge", icon_value=icons.merge)
         row = col.row(align=True)
         row.operator("uv.mio3_circle", icon_value=icons.circle)
         row.operator("uv.mio3_offset", icon_value=icons.offset)
+        row = col.row(align=True)
+        row.operator("uv.mio3_align_seam", icon_value=icons.align_seam_y)
+        row.operator("uv.mio3_stretch", icon_value=icons.stretch)
 
         col.separator(factor=0.3)
 
         row = col.row(align=True)
+        row.operator("uv.mio3_stack", icon_value=icons.stack)
+        row.operator("uv.mio3_shuffle_island", icon_value=icons.shuffle)
+        row = col.row(align=True)
         row.operator("uv.copy", text="Copy", icon_value=icons.copy)
         row.operator("uv.mio3_paste", icon_value=icons.paste).mode = "PASTE"
-        row = col.row(align=True)
-        row.operator("uv.mio3_stretch", icon_value=icons.stretch)
-        row.operator("uv.mio3_shuffle_island", icon_value=icons.shuffle)
         row = col.row(align=True)
         row.operator("uv.mio3_stitch", icon_value=icons.stitch)
         row.operator("uv.mio3_unfoldify", icon_value=icons.map)
@@ -211,7 +211,7 @@ class UV_PT_mio3_symmetry(Mio3UVPanel):
         layout = self.layout
         col = layout.column()
         row = col.row(align=True)
-        row.scale_y = 1.15
+        row.scale_y = 1.2
         row.operator("uv.mio3_symmetrize", icon_value=icons.symmetrize)
         row.operator("uv.mio3_symmetry_snap", icon_value=icons.snap)
         row_option = col.row()
@@ -309,7 +309,7 @@ class UV_PT_mio3_Utility(Panel):
         if prefs.ui_help:
             layout.use_property_split = False
             layout.label(
-                text="Padding and checker map have been relocated to the top-left paw icon menu", icon_value=icons.paw
+                text="Padding and checker map have been relocated to the top options menu", icon_value=icons.paw
             )
             layout.prop(prefs, "ui_help", text="Don’t show this again", toggle=True)
 
@@ -363,7 +363,7 @@ class UV_PT_mio3_auto_body_parts_popover(Panel):
         row.operator("uv.mio3_body_preset", text="Foot R", icon_value=icons.foot_r).type = "FOOT_R"
         row.operator("uv.mio3_body_preset", text="Foot L", icon_value=icons.foot_l).type = "FOOT_L"
         row = col.row(align=True)
-        row.operator("uv.mio3_body_preset", text="Button", icon_value=icons.button).type = "BUTTON"
+        row.operator("uv.mio3_body_preset", text="Vertical Parts", icon_value=icons.button).type = "BUTTON"
 
 
 class UV_PT_mio3_options_popover(Panel):
