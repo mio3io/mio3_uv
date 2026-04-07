@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2022-2023 Blender Authors
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Modifications:
+# - Adapted for this add-on
+# - Minor changes by Mio (2026)
+
+
 import math
 from mathutils import Matrix, Vector
 
