@@ -66,6 +66,9 @@ translation_dict = {
         ("*", "Unwrap boundary to rectangle using four corners or a range as reference"): "基準のコーナー4点または範囲を選択し境界が矩形になるように展開する",
         ("Operator", "Gridify"): "グリッド",
         ("*", "Align UVs of a quadrangle in a grid"): "四角形のUVをグリッド状に整列させる",
+        ("*", "Geometry Ratio"): "ジオメトリ比率",
+        ("*", "1 matches the aspect ratio of the geometry"): "1=ジオメトリのアスペクト比に合わせる",
+
         ("*", "Evenness"): "均一化",
         ("Operator", "Normal Projection Unwrap"): "ノーマルプロジェクション展開",
         ("*", "Project the UVs based on the normal direction of the selected faces.\nAvailable only when UV Sync Selection is enabled in the UV Editor"): "選択した面のノーマル方向に基づいてUVをプロジェクション展開します。\nUVエディタからは選択同期モードでのみ使用できます。",

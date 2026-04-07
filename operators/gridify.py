@@ -13,8 +13,14 @@ class UV_OT_mio3_grid(Mio3UVOperator):
     bl_description = "Align UVs of a quadrangle in a grid"
     bl_options = {"REGISTER", "UNDO"}
 
-    normalize: BoolProperty(name="Normalize", default=False)
-    keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
+    ratio_influence: FloatProperty(
+        name="Geometry Ratio",
+        description="1 matches the aspect ratio of the geometry",
+        default=0.5,
+        min=0.0,
+        max=1.0,
+        step=10
+    )
     shape_blend: FloatProperty(
         name="Evenness",
         description="0 keeps average edge-length scaling, 1 makes spacing even",
@@ -23,6 +29,8 @@ class UV_OT_mio3_grid(Mio3UVOperator):
         max=1.0,
         step=10
     )
+    normalize: BoolProperty(name="Normalize", default=False)
+    keep_aspect: BoolProperty(name="Keep Aspect Ratio", default=False)
 
     def execute(self, context):
         self.start_time()
@@ -41,15 +49,15 @@ class UV_OT_mio3_grid(Mio3UVOperator):
             uv_layer = island.uv_layer
             obj = island.obj
 
-            if obj not in uv_loop_index_cache:
-                uv_loop_index_cache[obj] = build_uv_loop_index(bm, uv_layer)
-
             f_act = self.get_base_face(uv_layer, island.faces)
             if not f_act:
                 continue
 
+            if obj not in uv_loop_index_cache:
+                uv_loop_index_cache[obj] = build_uv_loop_index(bm, uv_layer)
+
             shared_uvs = collect_shared_uv_loops(uv_layer, island.faces, uv_loop_index_cache[obj])
-            self.align_rect(uv_layer, f_act)
+            self.align_rect(uv_layer, f_act, island.faces)
             uv_follow(self.shape_blend, island, f_act, shared_uvs)
 
         island_manager.update_uvmeshes()
@@ -61,55 +69,83 @@ class UV_OT_mio3_grid(Mio3UVOperator):
         return {"FINISHED"}
 
     def get_base_face(self, uv_layer: BMLayerItem, selected_faces: list[BMFace]) -> BMFace | None:
+        THRESHOLD = 1e-4
         best_face = None
         best_score = float("inf")
-
-        total_area = sum(face.calc_area() for face in selected_faces)
-        avg_area = total_area / len(selected_faces)
+        all_rect = True
 
         for face in selected_faces:
-            if len(face.loops) == 4 and face.uv_select:
-                max_angle_diff = 0
-                for i in range(4):
-                    v1 = face.loops[i][uv_layer].uv - face.loops[(i - 1) % 4][uv_layer].uv
-                    v2 = face.loops[(i + 1) % 4][uv_layer].uv - face.loops[i][uv_layer].uv
-                    angle_diff = abs(math.degrees(math.atan2(v1.x * v2.y - v1.y * v2.x, v1.dot(v2))) - 90)
-                    if angle_diff > max_angle_diff:
-                        max_angle_diff = angle_diff
+            if len(face.loops) != 4:
+                continue
+            max_angle_diff = 0
+            for i in range(4):
+                v1 = face.loops[i][uv_layer].uv - face.loops[(i - 1) % 4][uv_layer].uv
+                v2 = face.loops[(i + 1) % 4][uv_layer].uv - face.loops[i][uv_layer].uv
+                angle_diff = abs(math.atan2(v1.x * v2.y - v1.y * v2.x, v1.dot(v2)) - math.pi / 2)
+                if angle_diff > max_angle_diff:
+                    max_angle_diff = angle_diff
+            if max_angle_diff >= THRESHOLD:
+                all_rect = False
+            if max_angle_diff < best_score:
+                best_score = max_angle_diff
+                best_face = face
 
-                area_diff = abs(face.calc_area() - avg_area)
-
-                angle_weight = 0.2
-                area_weight = 1.0
-                score = angle_weight * max_angle_diff + area_weight * (area_diff / avg_area)
-
-                if score < best_score:
-                    best_score = score
-                    best_face = face
+        if all_rect:
+            return None
 
         return best_face
 
-    def align_rect(self, uv_layer: BMLayerItem, active_face: BMFace):
+    def compute_aspect(self, active_face: BMFace, selected_faces):
+        selected_set = set(f for f in selected_faces if len(f.loops) == 4)
+        edge_dir = {}
+        for i, loop in enumerate(active_face.loops):
+            edge_dir[loop.edge] = i % 2
+
+        visited = {active_face}
+        queue = [active_face]
+        while queue:
+            face = queue.pop(0)
+            for loop in face.loops:
+                edge = loop.edge
+                if not edge.is_manifold or edge.seam:
+                    continue
+                other_face = loop.link_loop_radial_next.face
+                if other_face in visited or other_face not in selected_set:
+                    continue
+                visited.add(other_face)
+                queue.append(other_face)
+                shared_dir = edge_dir[edge]
+                shared_verts = set(edge.verts)
+                for other_loop in other_face.loops:
+                    other_edge = other_loop.edge
+                    if other_edge in edge_dir:
+                        continue
+                    if shared_verts & set(other_edge.verts):
+                        edge_dir[other_edge] = 1 - shared_dir
+                    else:
+                        edge_dir[other_edge] = shared_dir
+
+        dir0 = [e.calc_length() for e, d in edge_dir.items() if d == 0]
+        dir1 = [e.calc_length() for e, d in edge_dir.items() if d == 1]
+        avg0 = sum(dir0) / len(dir0) if dir0 else 1.0
+        avg1 = sum(dir1) / len(dir1) if dir1 else 1.0
+        return avg0 / avg1 if avg1 > 1e-10 else 1.0
+
+    def align_rect(self, uv_layer: BMLayerItem, active_face: BMFace, selected_faces):
         uv_coords = [loop[uv_layer].uv.copy() for loop in active_face.loops]
-        original_area = self.calculate_uv_area(uv_coords)
         min_uv = Vector((min(uv.x for uv in uv_coords), min(uv.y for uv in uv_coords)))
         max_uv = Vector((max(uv.x for uv in uv_coords), max(uv.y for uv in uv_coords)))
         center_uv = (min_uv + max_uv) / 2
 
-        # 特定のエッジを基準に水平 or 垂直にする
         edge_uv = uv_coords[1] - uv_coords[0]
         current_angle = math.atan2(edge_uv.y, edge_uv.x)
-        target_angle = round(current_angle / (math.pi / 2)) * (math.pi / 2)  # 90度単位
+        target_angle = round(current_angle / (math.pi / 2)) * (math.pi / 2)
         angle_diff = target_angle - current_angle
         sin_a = math.sin(angle_diff)
         cos_a = math.cos(angle_diff)
 
         rot_matrix = Matrix(((cos_a, -sin_a), (sin_a, cos_a)))
-        rotated_uvs = []
-        for uv in uv_coords:
-            local = uv - center_uv
-            uv_rotated = rot_matrix @ local + center_uv
-            rotated_uvs.append(uv_rotated)
+        rotated_uvs = [rot_matrix @ (uv - center_uv) + center_uv for uv in uv_coords]
 
         sorted_by_y = sorted(zip(rotated_uvs, active_face.loops), key=lambda pair: (pair[0].y, pair[0].x))
         bottom_pairs = sorted(sorted_by_y[:2], key=lambda pair: pair[0].x)
@@ -117,45 +153,40 @@ class UV_OT_mio3_grid(Mio3UVOperator):
         corner_pairs = [bottom_pairs[0], bottom_pairs[1], top_pairs[1], top_pairs[0]]
         ordered_uvs = [uv for uv, _loop in corner_pairs]
 
-        width_average = ((ordered_uvs[1] - ordered_uvs[0]).length + (ordered_uvs[2] - ordered_uvs[3]).length) / 2
-        height_average = ((ordered_uvs[2] - ordered_uvs[1]).length + (ordered_uvs[3] - ordered_uvs[0]).length) / 2
+        w = max(((ordered_uvs[1] - ordered_uvs[0]).length + (ordered_uvs[2] - ordered_uvs[3]).length) / 2, 1e-8)
+        h = max(((ordered_uvs[2] - ordered_uvs[1]).length + (ordered_uvs[3] - ordered_uvs[0]).length) / 2, 1e-8)
 
-        if width_average <= 0 or height_average <= 0:
-            width = max(max(uv.x for uv in rotated_uvs) - min(uv.x for uv in rotated_uvs), 1e-8)
-            height = max(max(uv.y for uv in rotated_uvs) - min(uv.y for uv in rotated_uvs), 1e-8)
-        else:
-            aspect_ratio = width_average / height_average
-            if original_area > 0:
-                width = math.sqrt(original_area * aspect_ratio)
-                height = math.sqrt(original_area / aspect_ratio)
-            else:
-                width = width_average
-                height = height_average
+        if self.ratio_influence > 0:
+            geo_aspect = self.compute_aspect(active_face, selected_faces)
+            # dir0 = loops[0].edge direction
+            dir0_vec = rotated_uvs[1] - rotated_uvs[0]
+            if abs(dir0_vec.x) < abs(dir0_vec.y):
+                geo_aspect = 1.0 / geo_aspect if geo_aspect > 1e-10 else 1.0
+            uv_aspect = w / h
+            target_aspect = math.exp(
+                math.log(uv_aspect) * (1 - self.ratio_influence)
+                + math.log(max(geo_aspect, 1e-10)) * self.ratio_influence
+            )
+            scale = math.sqrt(target_aspect / uv_aspect)
+            w *= scale
+            h /= scale
 
-        half_width = width / 2
-        half_height = height / 2
+        hw, hh = w / 2, h / 2
         new_uvs = [
-            Vector((center_uv.x - half_width, center_uv.y - half_height)),
-            Vector((center_uv.x + half_width, center_uv.y - half_height)),
-            Vector((center_uv.x + half_width, center_uv.y + half_height)),
-            Vector((center_uv.x - half_width, center_uv.y + half_height)),
+            Vector((center_uv.x - hw, center_uv.y - hh)),
+            Vector((center_uv.x + hw, center_uv.y - hh)),
+            Vector((center_uv.x + hw, center_uv.y + hh)),
+            Vector((center_uv.x - hw, center_uv.y + hh)),
         ]
 
-        for (_old_uv, loop), new_uv in zip(corner_pairs, new_uvs):
+        for (_, loop), new_uv in zip(corner_pairs, new_uvs):
             loop[uv_layer].uv = new_uv
-
-    @staticmethod
-    def calculate_uv_area(uv_coords: list[Vector]) -> float:
-        area = 0.0
-        for index, uv in enumerate(uv_coords):
-            next_uv = uv_coords[(index + 1) % len(uv_coords)]
-            area += uv.x * next_uv.y - next_uv.x * uv.y
-        return abs(area) * 0.5
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_decorate = False
         layout.use_property_split = True
+        layout.prop(self, "ratio_influence")
         layout.prop(self, "shape_blend")
         layout.prop(self, "normalize")
 
