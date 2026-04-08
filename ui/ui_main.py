@@ -43,7 +43,7 @@ class UV_PT_mio3_main(Mio3UVPanel):
             text="",
         )
         row3.separator(factor=0.3)
-        row3.popover("UV_PT_mio3_options_popover", text="", icon_value=icons.paw)
+        row3.popover("UV_PT_mio3_options_popover", text="", icon_value=icons.options)
 
         col.separator(factor=0.6)
 
@@ -139,7 +139,7 @@ class UV_PT_mio3_align(Mio3UVPanel):
         )
         row = split.row(align=True)
         row.prop(context.scene.mio3uv, "texel_density", text="")
-        row.popover("UV_PT_mio3_texel_popover", text="", icon_value=icons.gear)
+        row.popover("UV_PT_mio3_texel_popover", text="", icon="DOWNARROW_HLT")
 
         if props_w.texel_preset_buttons:
             grid_flow = col.grid_flow(align=True, row_major=True, columns=4, even_columns=True, even_rows=True)
