@@ -65,7 +65,7 @@ class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
             modifier = obj.modifiers.new(name=NAME_MOD_CHECKER_MAP, type="NODES")
             modifier.show_expanded = False
             modifier.node_group = geometry_node
-            modifier["Socket_2"] = mat
+            modifier.properties.inputs.Socket_2.value = mat
             obj.select_set(True)
 
         if mode != "OBJECT":
