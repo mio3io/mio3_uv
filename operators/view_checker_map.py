@@ -65,7 +65,11 @@ class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
             modifier = obj.modifiers.new(name=NAME_MOD_CHECKER_MAP, type="NODES")
             modifier.show_expanded = False
             modifier.node_group = geometry_node
-            modifier["Socket_2"] = mat
+            # 互換用：Blender 5.2
+            if hasattr(getattr(getattr(modifier, "properties", None), "inputs", None), "Socket_2"):
+                modifier.properties.inputs.Socket_2.value = mat
+            else:
+                modifier["Socket_2"] = mat
             obj.select_set(True)
 
         if mode != "OBJECT":

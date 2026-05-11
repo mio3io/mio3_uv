@@ -99,24 +99,26 @@ class OBJECT_PG_mio3uv(PropertyGroup):
     def callback_update_uvmesh_factor(self, context):
         modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
         if modifier:
-            node_group = modifier.node_group
-            if hasattr(node_group, "interface"):
-                modifier[node_group.interface.items_tree["Factor"].identifier] = self.uvmesh_factor
+            # 古いblend用
+            if modifier.node_group.interface.items_tree["Size"].socket_type == "NodeSocketInt":
+                modifier.node_group.interface.items_tree["Size"].socket_type = "NodeSocketFloat"
+            # 互換用：Blender 5.2
+            if hasattr(getattr(getattr(modifier, "properties", None), "inputs", None), "Socket_4"):
+                modifier.properties.inputs.Socket_4.value = self.uvmesh_factor
             else:
-                modifier[node_group.inputs["Factor"].identifier] = self.uvmesh_factor
+                modifier["Socket_4"] = self.uvmesh_factor
 
     def callback_update_uvmesh_size(self, context):
         modifier = context.active_object.modifiers.get("Mio3UVMeshModifier")
         if modifier:
-            node_group = modifier.node_group
-            if hasattr(node_group, "interface"):
-                if node_group.interface.items_tree["Size"].socket_type == "NodeSocketInt":
-                    node_group.interface.items_tree["Size"].socket_type = "NodeSocketFloat"
-                modifier[node_group.interface.items_tree["Size"].identifier] = self.uvmesh_size
+            # 古いblend用
+            if modifier.node_group.interface.items_tree["Size"].socket_type == "NodeSocketInt":
+                modifier.node_group.interface.items_tree["Size"].socket_type = "NodeSocketFloat"
+            # 互換用：Blender 5.2
+            if hasattr(getattr(getattr(modifier, "properties", None), "inputs", None), "Socket_6"):
+                modifier.properties.inputs.Socket_6.value = self.uvmesh_size
             else:
-                if node_group.inputs["Size"].socket_type == "NodeSocketInt":
-                    node_group.inputs["Size"].socket_type = "NodeSocketFloat"
-                modifier[node_group.inputs["Size"].identifier] = self.uvmesh_size
+                modifier["Socket_6"] = self.uvmesh_size
 
     realtime: BoolProperty(name="Realtime", description="Warning: This option may poor performance", default=False)
     image_size: EnumProperty(

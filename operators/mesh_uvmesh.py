@@ -46,10 +46,14 @@ class UV_OT_mio3_uvmesh(Mio3UVOperator):
             modifier = obj.modifiers.new(name=NAME_MOD_UV_MESH, type="NODES")
             modifier.show_expanded = False
             modifier.node_group = geometry_node
-            modifier["Socket_3_use_attribute"] = True
-            modifier["Socket_3_attribute_name"] = obj.data.uv_layers.active.name
-            # modifier["Socket_4"] = 1
-            # modifier["Socket_6"] = 2
+            # 互換用：Blender 5.2
+            if hasattr(getattr(getattr(modifier, "properties", None), "inputs", None), "Socket_3"):
+                modifier.properties.inputs.Socket_3.type = "ATTRIBUTE"
+                modifier.properties.inputs.Socket_3.attribute_name = obj.data.uv_layers.active.name
+            else:
+                modifier["Socket_3_use_attribute"] = True
+                modifier["Socket_3_attribute_name"] = obj.data.uv_layers.active.name
+
             props_object.uvmesh_factor = 1
             if self.auto_scale:
                 props_object.uvmesh_size = self.auto_adjust_size(obj)

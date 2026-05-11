@@ -15,7 +15,12 @@ def get_texture_size(props, obj: Object, use_checker: bool = False) -> tuple[int
     if use_checker:
         mod = obj.modifiers.get(NAME_MOD_CHECKER_MAP)
         if mod and mod.type == "NODES":
-            mat = mod.get("Socket_2")
+            # 互換用：Blender 5.2
+            if hasattr(getattr(getattr(mod, "properties", None), "inputs", None), "Socket_2"):
+                mat = mod.properties.inputs.Socket_2.value
+            else:
+                mat = mod.get("Socket_2")
+
             if mat and hasattr(mat, "name") and mat.name.startswith("Mio3CheckerMapMat_"):
                 size_str = mat.name[len("Mio3CheckerMapMat_") :]
                 if size_str.isdigit():
