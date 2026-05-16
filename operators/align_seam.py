@@ -112,7 +112,7 @@ class UV_OT_mio3_align_seam(Mio3UVOperator):
 
         node_manager.update_uvmeshes()
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def cancel_operator(self, context):

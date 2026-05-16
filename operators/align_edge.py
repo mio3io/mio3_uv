@@ -57,7 +57,7 @@ class UV_OT_mio3_align_edges(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def uv_selection(self, uv_layer: BMLayerItem, faces: list[BMFace], axis):

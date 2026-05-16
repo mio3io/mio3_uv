@@ -31,7 +31,7 @@ class UV_OT_mio3_offset(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def expand_uv_boundary(self, island, offset):

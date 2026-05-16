@@ -65,7 +65,7 @@ class UV_OT_mio3_grid(Mio3UVOperator):
         if self.normalize:
             bpy.ops.uv.mio3_normalize(keep_aspect=self.keep_aspect)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def get_base_face(self, uv_layer: BMLayerItem, selected_faces: list[BMFace]) -> BMFace | None:

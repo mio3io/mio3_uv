@@ -54,7 +54,7 @@ class UV_OT_mio3_pin(Mio3UVOperator):
 
             bmesh.update_edit_mesh(obj.data)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
 

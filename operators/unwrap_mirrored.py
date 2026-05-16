@@ -98,7 +98,7 @@ class UV_OT_mio3_unwrap_mirror(Mio3UVOperator):
         bpy.data.objects.remove(copy_obj, do_unlink=True)
         bpy.data.meshes.remove(copy_mesh, do_unlink=True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     @staticmethod

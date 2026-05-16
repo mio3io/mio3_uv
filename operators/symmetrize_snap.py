@@ -84,7 +84,7 @@ class UV_OT_mio3_symmetry_snap(Mio3UVOperator):
 
         node_manager.update_uvmeshes()
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def symmetrize_axis(self, group: UVNodeGroup, center, axis_uv, direction):

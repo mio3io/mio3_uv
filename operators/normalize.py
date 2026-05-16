@@ -28,7 +28,7 @@ class UV_OT_mio3_normalize(Mio3UVOperator):
 
         island_manager.update_uvmeshes()
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def normalize_island(self, context, island: UVIsland):

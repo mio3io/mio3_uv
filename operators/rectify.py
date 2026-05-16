@@ -177,7 +177,7 @@ class UV_OT_mio3_rectify(Mio3UVOperator):
         else:
             context.tool_settings.uv_select_mode = uv_select_mode
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     @staticmethod

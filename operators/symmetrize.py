@@ -105,7 +105,7 @@ class UV_OT_mio3_symmetrize(Mio3UVOperator):
         if self.merge:
             bpy.ops.uv.remove_doubles(threshold=self._threshold_uv)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def symmetrize(self, context, obj: bpy.types.Object):

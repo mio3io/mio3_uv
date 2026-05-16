@@ -136,7 +136,7 @@ class UV_OT_mio3_seam(Mio3UVOperator):
         if self.unwrap:
             bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     @staticmethod

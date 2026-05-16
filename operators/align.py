@@ -151,7 +151,7 @@ class UV_OT_mio3_align(Mio3UVOperator):
                 self.align_uv_nodes(context, node_manager, align_type, align_to)
             node_manager.update_uvmeshes()
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def expand_align_types(self, align_type):

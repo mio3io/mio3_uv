@@ -19,7 +19,7 @@ class Mio3UVDebug:
     def start_time(self):
         self._start_time = time.time()
 
-    def print_time(self):
+    def end_time(self):
         if DEBUG:
             print("Time: {:.5f}".format(time.time() - self._start_time))
 

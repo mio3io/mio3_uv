@@ -94,7 +94,7 @@ class UV_OT_mio3_select_half(Mio3UVOperator):
 
             bmesh.update_edit_mesh(obj.data)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
 
@@ -140,7 +140,7 @@ class UV_OT_mio3_select_similar(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def get_island_edge_count(self, island: UVIsland):
@@ -211,7 +211,7 @@ class UV_OT_mio3_select_mirror3d(Mio3UVOperator):
 
             bmesh.update_edit_mesh(obj.data)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def select_mirror(self, bm: BMesh, use_uv_select_sync: bool):
@@ -369,7 +369,7 @@ class UV_OT_mio3_select_edge(Mio3UVOperator):
                 context.tool_settings.uv_select_mode = "EDGE"
             self.select_direction(objects, use_uv_select_sync)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def select_boundary(self, objects, use_uv_select_sync):
@@ -565,7 +565,7 @@ class UV_OT_mio3_select_zero(Mio3UVOperator, bpy.types.Operator):
 
             bmesh.update_edit_mesh(obj.data)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
 
@@ -614,7 +614,7 @@ class UV_OT_mio3_select_flipped_faces(Mio3UVOperator):
 
             bmesh.update_edit_mesh(obj.data)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
 

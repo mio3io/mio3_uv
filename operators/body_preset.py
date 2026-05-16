@@ -167,7 +167,7 @@ class UV_OT_mio3_body_preset(Mio3UVOperator):
             self.align_islands(island_manager.islands)
 
         island_manager.update_uvmeshes(True)
-        self.print_time()
+        self.end_time()
         self.report({"INFO"}, "Match as {}".format(parts_type))
         return {"FINISHED"}
 

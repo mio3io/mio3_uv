@@ -73,7 +73,7 @@ class UV_OT_mio3_stack(Mio3UVOperator):
         bpy.ops.uv.paste()
 
         island_manager.update_uvmeshes()
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def is_different(self, island, base_face_count):

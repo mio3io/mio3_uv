@@ -50,7 +50,7 @@ class UV_OT_mio3_orient(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def align_island_rotation(self, island_manager: UVIslandManager):
@@ -162,7 +162,7 @@ class UV_OT_mio3_orient_world(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
 

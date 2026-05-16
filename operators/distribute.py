@@ -93,7 +93,7 @@ class UV_OT_mio3_distribute(Mio3UVOperator):
                 group.update_uvs()
             node_manager.update_uvmeshes()
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def align_islands(self, island_manager: UVIslandManager):

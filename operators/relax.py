@@ -117,7 +117,7 @@ class UV_OT_mio3_relax(Mio3UVOperator):
 
             node_manager.update_uvmeshes()
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     @staticmethod

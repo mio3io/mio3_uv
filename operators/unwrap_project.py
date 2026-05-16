@@ -105,7 +105,7 @@ class UV_OT_mio3_unwrap_project(Mio3UVOperator):
         island_manager.update_uvmeshes()
 
         context.view_layer.objects.active = objects[0]
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def restore_island(self, island: UVIsland):

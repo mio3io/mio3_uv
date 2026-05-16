@@ -421,7 +421,7 @@ class UV_OT_mio3_sort(Mio3UVOperator):
 
         island_manager.update_uvmeshes(True)
 
-        self.print_time()
+        self.end_time()
         return {"FINISHED"}
 
     def find_groups(self, island_manager: UVIslandManager):
