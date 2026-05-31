@@ -23,16 +23,16 @@ class BodyReference:
         bp = [Vector(point) @ obj.matrix_world for point in obj.bound_box]
         min_xyz = Vector((min(point.x for point in bp), min(point.y for point in bp), min(point.z for point in bp)))
         max_xyz = Vector((max(point.x for point in bp), max(point.y for point in bp), max(point.z for point in bp)))
-        dimensions = max_xyz - min_xyz
-        width = max(dimensions.x, 1e-6)
-        height = max(dimensions.z, 1e-6)
+        size_diff = max_xyz - min_xyz
+        width = max(size_diff.x, 1e-6)
+        height = max(size_diff.z, 1e-6)
         return cls(
             min_xyz=min_xyz,
             max_xyz=max_xyz,
             width=width,
             height=height,
             center_x=(min_xyz.x + max_xyz.x) / 2,
-            half_width=max(dimensions.x * 0.5, 1e-6),
+            half_width=max(size_diff.x * 0.5, 1e-6),
             center_margin=min(0.12, max(0.06, 0.08 * (0.8 / height))),
         )
 

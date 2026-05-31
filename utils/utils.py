@@ -2,6 +2,7 @@ import bpy
 import bmesh
 import math
 from mathutils import Vector, Matrix
+from bmesh.types import BMLoop, BMFace, BMLayerItem
 
 
 # bm.uv_select_foreach_set(select, /, *, loop_verts=(), loop_edges=(), faces=())
@@ -75,6 +76,52 @@ def get_bounds(uv_layer, faces):
     return min_u, max_u, min_v, max_v
 
 
+def find_uv_boundary_edges(faces: list[BMFace], uv_layer):
+    island_edges = {edge for face in faces for edge in face.edges}
+    uv_boundary_edges = set()
+    for edge in island_edges:
+        island_loops = [ll for ll in edge.link_loops if ll.face in faces]
+        is_boundary = False
+
+        if len(island_loops) != 2:
+            is_boundary = True
+        else:
+            loop_a, loop_b = island_loops
+            if loop_a.face is loop_b.face:
+                is_boundary = True
+            else:
+                is_boundary = not is_uv_continuous(loop_a, loop_b, uv_layer)
+
+        if is_boundary:
+            uv_boundary_edges.add(edge)
+    return uv_boundary_edges
+
+
+def is_uv_continuous(loop: BMLoop, linked_loop: BMLoop, uv_layer):
+    a = loop[uv_layer].uv
+    b = loop.link_loop_next[uv_layer].uv
+    c = linked_loop[uv_layer].uv
+    d = linked_loop.link_loop_next[uv_layer].uv
+
+    eps_eq = 1e-12
+    if loop.vert is linked_loop.vert:
+        du = a.x - c.x
+        dv = a.y - c.y
+        if du * du + dv * dv > eps_eq:
+            return False
+        du = b.x - d.x
+        dv = b.y - d.y
+    else:
+        du = a.x - d.x
+        dv = a.y - d.y
+        if du * du + dv * dv > eps_eq:
+            return False
+        du = b.x - c.x
+        dv = b.y - c.y
+
+    return du * du + dv * dv <= eps_eq
+
+
 def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=False):
     ordered_nodes = node_group.get_ordered_nodes()
     if len(ordered_nodes) <= 1:
@@ -113,9 +160,7 @@ def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=Fal
             new_position = start_uv + direction * t
             new_positions[node] = new_position
     else:
-        total_uv_distance = sum(
-            (ordered_nodes[i + 1].uv - ordered_nodes[i].uv).length for i in range(len(ordered_nodes) - 1)
-        )
+        total_uv_distance = sum((ordered_nodes[i + 1].uv - ordered_nodes[i].uv).length for i in range(len(ordered_nodes) - 1))
         if total_uv_distance <= 0:
             return
 
@@ -129,10 +174,7 @@ def straight_uv_nodes(node_group, mode="GEOMETRY", keep_length=False, center=Fal
             new_positions[node] = new_position
 
     if keep_length:
-        new_uv_length = sum(
-            (new_positions[ordered_nodes[i + 1]] - new_positions[ordered_nodes[i]]).length
-            for i in range(len(ordered_nodes) - 1)
-        )
+        new_uv_length = sum((new_positions[ordered_nodes[i + 1]] - new_positions[ordered_nodes[i]]).length for i in range(len(ordered_nodes) - 1))
         scale_factor = original_uv_length / new_uv_length if new_uv_length > 0 else 1
         for node, new_position in new_positions.items():
             scaled_position = start_uv + (new_position - start_uv) * scale_factor

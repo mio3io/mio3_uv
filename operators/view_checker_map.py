@@ -8,7 +8,7 @@ CHECKER_MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "imag
 BLEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blend")
 NAME_NODE_GROUP_OVERRIDE = "Mio3MaterialOverride"
 NAME_MOD_CHECKER_MAP = "Mio3CheckerMapModifier"
-
+ENABLED_OBJECT_TYPE = {"MESH", "CURVE", "FONT"}
 
 class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
     bl_idname = "mio3uv.checker_map"
@@ -32,10 +32,10 @@ class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return obj is not None and obj.type == "MESH"
+        return obj is not None and obj.type in ENABLED_OBJECT_TYPE
 
     def execute(self, context):
-        selected_objects = [obj for obj in context.selected_objects if obj.type == "MESH"]
+        selected_objects = [obj for obj in context.selected_objects if obj.type in ENABLED_OBJECT_TYPE]
         if not selected_objects:
             return {"CANCELLED"}
 
@@ -63,7 +63,8 @@ class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
                 obj.modifiers.remove(existing_modifier)
 
             modifier = obj.modifiers.new(name=NAME_MOD_CHECKER_MAP, type="NODES")
-            modifier.show_expanded = False
+            if hasattr(modifier, "show_expanded"):
+                modifier.show_expanded = False
             modifier.node_group = geometry_node
             # 互換用：Blender 5.2
             if hasattr(getattr(getattr(modifier, "properties", None), "inputs", None), "Socket_2"):
@@ -79,8 +80,9 @@ class UV_OT_mio3_checker_map(Mio3UVGlobalOperator):
             if area.type == "VIEW_3D":
                 for space in area.spaces:
                     if space.type == "VIEW_3D":
-                        space.shading.type = "SOLID"
-                        space.shading.color_type = "TEXTURE"
+                        space.shading.type = "MATERIAL"
+                        # space.shading.type = "SOLID"
+                        # space.shading.color_type = "TEXTURE"
 
         return {"FINISHED"}
 

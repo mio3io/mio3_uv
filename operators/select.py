@@ -5,7 +5,7 @@ from mathutils import Vector, kdtree
 from bmesh.types import BMesh, BMLoop, BMLayerItem
 from bpy.props import BoolProperty, FloatProperty, EnumProperty
 from ..classes import Mio3UVOperator, UVIslandManager, UVIsland
-from ..utils.utils import uv_select_set_face, uv_select_set_all
+from ..utils.utils import uv_select_set_face, uv_select_set_all, find_uv_boundary_edges
 
 
 class UV_OT_mio3_auto_uv_sync(bpy.types.Operator):
@@ -168,6 +168,7 @@ class UV_OT_mio3_select_similar(Mio3UVOperator):
         col.prop(self, "area_threshold")
         if self.area != True:
             col.enabled = False
+
 
 class UV_OT_mio3_select_mirror3d(Mio3UVOperator):
     bl_idname = "uv.mio3_select_mirror3d"
@@ -379,7 +380,7 @@ class UV_OT_mio3_select_edge(Mio3UVOperator):
         for island in island_manager.islands:
             uv_layer = island.uv_layer
             island_faces = set(island.faces)
-            uv_boundary_edges = self.find_uv_boundary_edges(island_faces, uv_layer)
+            uv_boundary_edges = find_uv_boundary_edges(island_faces, uv_layer)
 
             uv_to_loops = {}
             selected_uv_coords = set()
@@ -415,52 +416,6 @@ class UV_OT_mio3_select_edge(Mio3UVOperator):
                             shared_loop.uv_select_vert = True
                         break
         island_manager.update_uvmeshes(True)
-
-    @staticmethod
-    def is_uv_continuous(loop: BMLoop, linked_loop: BMLoop, uv_layer: BMLayerItem, eps2):
-        a = loop[uv_layer].uv
-        b = loop.link_loop_next[uv_layer].uv
-        c = linked_loop[uv_layer].uv
-        d = linked_loop.link_loop_next[uv_layer].uv
-
-        if loop.vert is linked_loop.vert:
-            du = a.x - c.x
-            dv = a.y - c.y
-            if du * du + dv * dv > eps2:
-                return False
-            du = b.x - d.x
-            dv = b.y - d.y
-        else:
-            du = a.x - d.x
-            dv = a.y - d.y
-            if du * du + dv * dv > eps2:
-                return False
-            du = b.x - c.x
-            dv = b.y - c.y
-
-        return du * du + dv * dv <= eps2
-
-    @classmethod
-    def find_uv_boundary_edges(cls, island_faces, uv_layer):
-        eps_eq = 1e-14
-        island_edges = {edge for face in island_faces for edge in face.edges}
-        uv_boundary_edges = set()
-        for edge in island_edges:
-            island_loops = [ll for ll in edge.link_loops if ll.face in island_faces]
-            is_boundary = False
-
-            if len(island_loops) != 2:
-                is_boundary = True
-            else:
-                loop_a, loop_b = island_loops
-                if loop_a.face is loop_b.face:
-                    is_boundary = True
-                else:
-                    is_boundary = not cls.is_uv_continuous(loop_a, loop_b, uv_layer, eps_eq)
-
-            if is_boundary:
-                uv_boundary_edges.add(edge)
-        return uv_boundary_edges
 
     def select_direction(self, objects, use_uv_select_sync):
         check_selected = self.check_selected_face_objects(objects)
@@ -513,7 +468,7 @@ class UV_OT_mio3_select_edge(Mio3UVOperator):
         uv1 = loop[uv_layer].uv
         uv2 = loop.link_loop_next[uv_layer].uv
         edge_vector = uv2 - uv1
-        if edge_vector.length < 1e-7:
+        if edge_vector.length < 1e-8:
             return False
 
         angle = math.atan2(edge_vector.y, edge_vector.x)
@@ -534,6 +489,7 @@ class UV_OT_mio3_select_zero(Mio3UVOperator, bpy.types.Operator):
         objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
+        count = 0
         for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
@@ -562,8 +518,12 @@ class UV_OT_mio3_select_zero(Mio3UVOperator, bpy.types.Operator):
                 if area < 1e-8:
                     face.select = True
                     uv_select_set_face(face, True)
+                    count += 1
 
             bmesh.update_edit_mesh(obj.data)
+
+        if count:
+            self.report({"INFO"}, "Selected {} faces".format(count))
 
         self.end_time()
         return {"FINISHED"}
@@ -580,6 +540,7 @@ class UV_OT_mio3_select_flipped_faces(Mio3UVOperator):
         objects = self.get_selected_objects(context)
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
 
+        count = 0
         for obj in objects:
             bm = bmesh.from_edit_mesh(obj.data)
             uv_layer = bm.loops.layers.uv.verify()
@@ -605,14 +566,17 @@ class UV_OT_mio3_select_flipped_faces(Mio3UVOperator):
                     area += face_uvs[i].x * face_uvs[j].y - face_uvs[j].x * face_uvs[i].y
                 area *= 0.5
 
-                threshold = 1e-7
-                is_flipped = area < -threshold
+                is_flipped = area < -1e-6
 
                 if is_flipped:
                     face.select = True
                     uv_select_set_face(face, True)
+                    count += 1
 
             bmesh.update_edit_mesh(obj.data)
+        
+        if count:
+            self.report({"INFO"}, "Selected {} faces".format(count))
 
         self.end_time()
         return {"FINISHED"}

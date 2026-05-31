@@ -251,7 +251,7 @@ class UV_OT_mio3_symmetrize(Mio3UVOperator):
             uv = loop[uv_layer].uv
             area += prev_uv.x * uv.y - uv.x * prev_uv.y
             prev_uv = uv
-        return area < -1e-7
+        return area < -1e-6
 
     # 対称化化するか判定
     @staticmethod

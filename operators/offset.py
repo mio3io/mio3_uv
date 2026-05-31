@@ -2,6 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.props import BoolProperty, FloatProperty
 from ..classes import Mio3UVOperator, UVIslandManager
+from ..utils.utils import find_uv_boundary_edges
 
 
 class UV_OT_mio3_offset(Mio3UVOperator):
@@ -11,12 +12,15 @@ class UV_OT_mio3_offset(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     offset: FloatProperty(
-        name="Offset", description="Offset to expand UV boundary.", default=0.001, min=-1.0, max=1.0, step=0.01
+        name="Offset",
+        description="Offset to expand UV boundary.",
+        default=0.005,
+        min=-1.0,
+        max=1.0,
+        step=0.01,
+        precision=3,
     )
     keep_pin: BoolProperty(name="Keep Pin", default=False)
-    use_seam: BoolProperty(name="Seam", default=True)
-    use_mesh_boundary: BoolProperty(name="Mesh Boundary", default=True)
-    use_uv_boundary: BoolProperty(name="UV Space Boundary", default=False)
 
     def execute(self, context):
         self.start_time()
@@ -37,32 +41,60 @@ class UV_OT_mio3_offset(Mio3UVOperator):
     def expand_uv_boundary(self, island, offset):
         uv_layer = island.uv_layer
 
-        selected_uv_edges = []
-        for face in island.faces:
-            if face.select:
-                for loop in face.loops:
-                    if loop.uv_select_vert and loop.link_loop_next.uv_select_vert:
-                        selected_uv_edges.append((loop, loop.link_loop_next))
+        faces = {f for f in island.faces if f.select}
+        boundary_edges = find_uv_boundary_edges(faces, uv_layer)
 
-        uv_movements = {}
-        for loop1, loop2 in selected_uv_edges:
-            uv1 = loop1[uv_layer].uv
-            uv2 = loop2[uv_layer].uv
-            edge_vector = (uv2 - uv1).normalized()
-            perp_vector = -Vector((-edge_vector.y, edge_vector.x))
+        def uv_key(loop):
+            uv = loop[uv_layer].uv
+            return (loop.vert.index, round(uv.x, 6), round(uv.y, 6))
 
-            uv_movements[loop1.vert] = uv_movements.get(loop1.vert, Vector((0, 0))) + (perp_vector * offset)
-            uv_movements[loop2.vert] = uv_movements.get(loop2.vert, Vector((0, 0))) + (perp_vector * offset)
+        uv_groups = {}
+        for face in faces:
+            for loop in face.loops:
+                uv_groups.setdefault(uv_key(loop), []).append(loop)
 
-        for vert, movement in uv_movements.items():
-            # if vert in island_verts:
-            for face in island.faces:
-                if face.select:
-                    for loop in face.loops:
-                        if loop.vert == vert:
-                            if not (self.keep_pin and loop[uv_layer].pin_uv):
-                                loop[uv_layer].uv += movement
+        group_perps = {}
+        for edge in boundary_edges:
+            for loop in edge.link_loops:
+                if loop.face not in faces:
+                    continue
+                loop1 = loop
+                loop2 = loop.link_loop_next
+                if not (loop1.uv_select_vert and loop2.uv_select_vert):
+                    continue
 
+                uv1 = loop1[uv_layer].uv
+                uv2 = loop2[uv_layer].uv
+                edge_vec = uv2 - uv1
+                length = edge_vec.length
+                if length < 1e-10:
+                    continue
+                edge_vec = edge_vec / length
+                perp = Vector((edge_vec.y, -edge_vec.x))
+
+                face_loops = loop.face.loops
+                n = len(face_loops)
+                cx = sum(l[uv_layer].uv.x for l in face_loops) / n
+                cy = sum(l[uv_layer].uv.y for l in face_loops) / n
+                mid_x = (uv1.x + uv2.x) * 0.5
+                mid_y = (uv1.y + uv2.y) * 0.5
+                if perp.x * (mid_x - cx) + perp.y * (mid_y - cy) < 0.0:
+                    perp = -perp
+
+                key1, key2 = uv_key(loop1), uv_key(loop2)
+                group_perps.setdefault(key1, []).append(perp)
+                group_perps.setdefault(key2, []).append(perp)
+
+        for key, perps in group_perps.items():
+            p1 = perps[0]
+            p2 = perps[1] if len(perps) > 1 else p1
+            s = p1 + p2
+            denom = 1.0 + p1.dot(p2)
+            movement = s * (offset / denom) if denom > 1e-6 else s * (0.5 * offset)
+            for loop in uv_groups.get(key, ()):
+                if self.keep_pin and loop[uv_layer].pin_uv:
+                    continue
+                loop[uv_layer].uv += movement
 
 
 def register():

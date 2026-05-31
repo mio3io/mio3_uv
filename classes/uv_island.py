@@ -201,7 +201,7 @@ class UVIslandManager:
     def find_islands(self, obj_info: UVObject):
         all, extend, sync = self.find_all, self.extend, self.sync
         bm, uv_layer = obj_info.bm, obj_info.uv_layer
-        eps_eq = 1e-14
+        eps_eq = 1e-12
 
         def get_selected_faces(bm, sync):
             selected_faces = set()

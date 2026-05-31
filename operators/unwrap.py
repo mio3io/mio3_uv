@@ -146,7 +146,7 @@ class UV_OT_mio3_unwrap(Mio3UVOperator):
             curr = curr_uv - current_center
             denominator += curr.x * curr.x + curr.y * curr.y
 
-        if denominator < 1e-20:
+        if denominator < 1e-16:
             base_cos_term = 1.0
             base_sin_term = 0.0
             scale = 1.0
@@ -184,7 +184,7 @@ class UV_OT_mio3_unwrap(Mio3UVOperator):
         tx = target_center.x - (cos_term * current_center.x - sin_term * current_center.y)
         ty = target_center.y - (sin_term * current_center.x + cos_term * current_center.y)
 
-        if abs(cos_term - 1.0) < 1e-12 and abs(sin_term) < 1e-12 and abs(tx) < 1e-12 and abs(ty) < 1e-12:
+        if abs(cos_term - 1.0) < 1e-8 and abs(sin_term) < 1e-8 and abs(tx) < 1e-8 and abs(ty) < 1e-8:
             return
 
         for face in island.faces:
