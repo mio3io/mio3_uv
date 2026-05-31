@@ -1,6 +1,7 @@
 import math
 import bpy
 import bmesh
+from mathutils import Vector
 from bpy.types import Object
 from bmesh.types import BMFace, BMLayerItem
 from bpy.props import FloatProperty
@@ -304,6 +305,11 @@ class UV_OT_texel_density_set(Mio3UVOperator):
         return context.active_object and context.active_object.type == "MESH"
 
     td: FloatProperty(name="Texel Density", default=0, precision=4, options={"SKIP_SAVE", "HIDDEN"})
+    individual: bpy.props.BoolProperty(
+        name="Scale Individually",
+        description="Scale each selected island individually, preserving their relative layout",
+        default=False,
+    )
 
     def execute(self, context):
         props_s = context.scene.mio3uv
@@ -320,7 +326,25 @@ class UV_OT_texel_density_set(Mio3UVOperator):
             island_manager = UVIslandManager(objects, sync=use_uv_select_sync)
 
         props_w = context.window_manager.mio3uv
-        for island in island_manager.islands:
+        if self.individual:
+            self.scale_individual(context, island_manager)
+        else:
+            self.scale_all(context, island_manager)
+
+        if not is_edit_mode:
+            bpy.ops.object.mode_set(mode="OBJECT")
+
+        return {"FINISHED"}
+
+    def scale_individual(self, context, island_manager: UVIslandManager):
+        islands = island_manager.islands
+        if not islands:
+            return
+
+        props_s = context.scene.mio3uv
+        props_w = context.window_manager.mio3uv
+
+        for island in islands:
             tex_x, tex_y = get_texture_size(props_s, island.obj, props_w.texel_use_checker)
             face_area = sum(calc_face_world_area(face, island.obj) for face in island.faces)
             uv_area = sum(calc_uv_face_area(face, island.uv_layer) for face in island.faces)
@@ -341,10 +365,48 @@ class UV_OT_texel_density_set(Mio3UVOperator):
 
             island_manager.update_uvmeshes()
 
-        if not is_edit_mode:
-            bpy.ops.object.mode_set(mode="OBJECT")
+    def scale_all(self, context, island_manager: UVIslandManager):
+        islands = island_manager.islands
+        if not islands:
+            return
 
-        return {"FINISHED"}
+        props_s = context.scene.mio3uv
+        props_w = context.window_manager.mio3uv
+
+        total_face_area = 0.0
+        weighted_density = 0.0
+        for island in islands:
+            tex_x, tex_y = get_texture_size(props_s, island.obj, props_w.texel_use_checker)
+            face_area = sum(calc_face_world_area(face, island.obj) for face in island.faces)
+            uv_area = sum(calc_uv_face_area(face, island.uv_layer) for face in island.faces)
+            density = calc_texel_density(face_area, uv_area, tex_x, tex_y)
+            if density <= 0:
+                continue
+            total_face_area += face_area
+            weighted_density += density * face_area
+
+        if total_face_area <= 0:
+            return
+
+        current_density = weighted_density / total_face_area
+        scale_factor = self.td / current_density
+        if scale_factor <= 0:
+            return
+
+        min_x = min(island.min_uv.x for island in islands)
+        min_y = min(island.min_uv.y for island in islands)
+        max_x = max(island.max_uv.x for island in islands)
+        max_y = max(island.max_uv.y for island in islands)
+        pivot = Vector(((min_x + max_x) / 2, (min_y + max_y) / 2))
+
+        for island in islands:
+            for face in island.faces:
+                for loop in face.loops:
+                    uv = loop[island.uv_layer].uv.copy()
+                    loop[island.uv_layer].uv = pivot + (uv - pivot) * scale_factor
+            island.update_bounds()
+
+        island_manager.update_uvmeshes()
 
 
 classes = [UV_OT_texel_density_coverage, UV_OT_texel_density_get, UV_OT_texel_density_set]

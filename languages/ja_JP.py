@@ -240,6 +240,8 @@ translation_dict = {
         ("*", "Use Mio3UV checker size if available. \nDisable if the actual texture size differs from the checker size"): "利用可能な場合はMio3UVのチェッカーマップのサイズを使用します。\n実際のテクスチャサイズがチェッカーマップのサイズと異なる場合は無効にしてください",
         ("*", "Show Preset Buttons"): "プリセットボタンを表示",
         ("*", "Show quick set buttons for common texel densities"): "一般的なテクセル密度のクイックセットボタンを表示します",
+        ("*", "Scale Individually"): "個別にスケール",
+        ("*", "Scale each selected island individually, preserving their relative layout"): "選択した各アイランドを個別にスケールし、相対的なレイアウトを保持します",
 
         ("*", ""): "",
     }
