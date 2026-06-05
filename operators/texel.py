@@ -308,7 +308,8 @@ class UV_OT_texel_density_set(Mio3UVOperator):
     individual: bpy.props.BoolProperty(
         name="Scale Individually",
         description="Scale each selected island individually, preserving their relative layout",
-        default=False,
+        default=True,
+        options={"SKIP_SAVE", "HIDDEN"},
     )
 
     def execute(self, context):
