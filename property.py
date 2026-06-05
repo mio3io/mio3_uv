@@ -89,7 +89,7 @@ class SCENE_PG_mio3uv(PropertyGroup):
         name="Size Y", items=ITEMS_TEXTURE_SIZE, default="2048", update=callback_update_texture_size_y
     )
     texture_size_link: BoolProperty(name="Size Link", default=True)
-    texel_density: FloatProperty(name="Texel Density", default=256, min=0.01, max=10000, step=10, precision=1)
+    texel_density: FloatProperty(name="Texel Density", default=256, min=0.01, step=10, precision=1)
 
 
 class OBJECT_PG_mio3uv(PropertyGroup):
