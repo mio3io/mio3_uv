@@ -14,7 +14,7 @@ class UV_OT_mio3_distribute(Mio3UVOperator):
     island: BoolProperty(name="Island Mode", default=False)
     method: EnumProperty(
         name="Method",
-        items=[("FREE", "Free", ""), ("DISTRIBUTE", "Distribute", "")],
+        items=[("FREE", "Free", ""), ("DISTRIBUTE", "Distribute", ""), ("SHIFT", "Shift", "")],
         default="FREE",
     )
     axis: EnumProperty(
@@ -26,11 +26,15 @@ class UV_OT_mio3_distribute(Mio3UVOperator):
         items=[("BBOX", "Boundary", ""), ("CENTER", "Center", "")],
     )
     spacing: FloatProperty(
-        name="Margin",
+        name="Spacing",
         default=0.01,
         min=0.0,
         step=0.1,
         precision=3,
+    )
+    offset: FloatProperty(
+        name="Offset",
+        default=1.0,
     )
     align_uvs: EnumProperty(
         name="Align",
@@ -110,7 +114,14 @@ class UV_OT_mio3_distribute(Mio3UVOperator):
         else:
             island_manager.islands.sort(key=lambda island: island.center[1], reverse=True)
 
-        if self.method == "DISTRIBUTE":
+        if self.method == "SHIFT":
+            current_pos = islands[0].min_uv[axis_index] + self.offset
+            for island in islands[1:]:
+                offset_value = current_pos - island.min_uv[axis_index]
+                offset = Vector((offset_value, 0)) if axis == "X" else Vector((0, offset_value))
+                island.move(offset)
+                current_pos += self.offset if axis == "X" else self.offset
+        elif self.method == "DISTRIBUTE":
             total_islands = len(islands)
             if total_islands < 3:
                 return
@@ -245,21 +256,42 @@ class UV_OT_mio3_distribute(Mio3UVOperator):
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
+        col = layout.column()
 
         if self.island:
-            layout.row().prop(self, "method", expand=True)
-            layout.row().prop(self, "spacing", text="Spacing")
-            layout.row().prop(self, "axis", expand=True)
-            layout.row().prop(self, "reference", expand=True)
+            split = col.split(factor=0.3)
+            split.label(text="Method")
+            split.row().prop(self, "method", expand=True)
+            split = col.split(factor=0.3)
+            if self.method == "SHIFT":
+                split.label(text="Offset")
+                split.prop(self, "offset", text="")
+            else:
+                split.label(text="Spacing")
+                split.row().prop(self, "spacing", text="")
+            split = col.split(factor=0.3)
+            split.label(text="Axis")
+            split.row().prop(self, "axis", expand=True)
+            split = col.split(factor=0.3)
+            split.label(text="Reference")
+            split.row().prop(self, "reference", expand=True)
         else:
-            layout.row().prop(self, "align_uvs", expand=True)
-            layout.prop(self, "smooth_factor")
-            layout.prop(self, "iteration")
-            layout.prop(self, "straight")
+            split = col.split(factor=0.3)
+            split.label(text="Align")
+            split.row().prop(self, "align_uvs", expand=True)
+            split = col.split(factor=0.3)
+            split.label(text="Smooth")
+            split.prop(self, "smooth_factor", text="")
+            split = col.split(factor=0.3)
+            split.label(text="Iterations")
+            split.prop(self, "iteration", text="")
+            split = col.split(factor=0.3)
+            split.label()
+            split.prop(self, "straight")
 
-        layout.prop(self, "island")
+        split = col.split(factor=0.3)
+        split.label()
+        split.prop(self, "island")
 
 
 def register():

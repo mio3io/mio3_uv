@@ -1,5 +1,6 @@
 import bpy
-from bpy.props import BoolProperty, EnumProperty
+from mathutils import Vector
+from bpy.props import BoolProperty, FloatProperty, EnumProperty, FloatVectorProperty
 from ..classes import Mio3UVOperator, UVIslandManager
 
 
@@ -42,6 +43,8 @@ class UV_OT_mio3_stack(Mio3UVOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     selected: BoolProperty(name="Selected Only", default=False)
+    use_offset: BoolProperty(name="Offset", default=False)
+    offset: FloatVectorProperty(name="Offset", size=2, default=(1.0, 0.0))
 
     def execute(self, context):
         self.start_time()
@@ -56,6 +59,7 @@ class UV_OT_mio3_stack(Mio3UVOperator):
         bpy.ops.uv.copy()
 
         processed = set()
+        stacked_islands = set(selected_islands)
         for source_island in selected_islands:
             if source_island in processed:
                 continue
@@ -69,8 +73,14 @@ class UV_OT_mio3_stack(Mio3UVOperator):
                     for face in island.faces:
                         face.select = True
                     processed.add(island)
+                    stacked_islands.add(island)
 
         bpy.ops.uv.paste()
+
+        if self.use_offset:
+            ordered_islands = [island for island in island_manager.islands if island in stacked_islands]
+            for i, island in enumerate(ordered_islands):
+                island.move(Vector(self.offset) * i)
 
         island_manager.update_uvmeshes()
         self.end_time()
@@ -80,6 +90,18 @@ class UV_OT_mio3_stack(Mio3UVOperator):
         if len(island.faces) != base_face_count:
             return True
         return False
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_decorate = False
+        layout.use_property_split = True
+        layout.prop(self, "selected")
+        layout.prop(self, "use_offset")
+        col = layout.column(align=True)
+        if not self.use_offset:
+            col.enabled = False
+        col.prop(self, "offset", index=0, text="Offset X")
+        col.prop(self, "offset", index=1, text="Y")
 
 
 classes = [
