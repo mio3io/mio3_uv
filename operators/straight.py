@@ -42,7 +42,7 @@ class UV_OT_mio3_straight(Mio3UVOperator):
 
             island.uv_select_set_all(True)
 
-        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
+        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
 
         for island in island_manager.islands:
             island.restore_selection()

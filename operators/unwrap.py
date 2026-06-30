@@ -50,7 +50,7 @@ class UV_OT_mio3_unwrap(Mio3UVOperator):
 
         for obj in objects:
             if not obj.data.uv_layers:
-                bpy.ops.uv.unwrap(method=self.method, margin=0.001)
+                bpy.ops.uv.unwrap(method=self.method, margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
                 return {"FINISHED"}
 
         use_uv_select_sync = context.tool_settings.use_uv_select_sync
@@ -77,7 +77,7 @@ class UV_OT_mio3_unwrap(Mio3UVOperator):
             if island.inplace_flag:
                 original_keep_samples[island] = self.capture_uv_samples(island)
 
-        bpy.ops.uv.unwrap(method=self.method, margin=0.001)
+        bpy.ops.uv.unwrap(method=self.method, margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
 
         for island in island_manager.islands:
             if island.inplace_flag:

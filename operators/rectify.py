@@ -153,7 +153,7 @@ class UV_OT_mio3_rectify(Mio3UVOperator):
                 island.uv_select_set_all(True)
                 for face in island.faces:
                     face.select = True
-            bpy.ops.uv.unwrap(method=self.method, margin=0.001)
+            bpy.ops.uv.unwrap(method=self.method, margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
 
         if self.stretch and self.unwrap:
             for island, _ in valid_islands:

@@ -49,7 +49,7 @@ class UV_OT_mio3_unwrap_mirror(Mio3UVOperator):
         context.view_layer.objects.active = copy_obj
         bpy.ops.object.mode_set(mode="EDIT")
 
-        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001)
+        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
         if self.orient_world:
             bpy.ops.uv.align_rotation(method="GEOMETRY", axis="Z")
 

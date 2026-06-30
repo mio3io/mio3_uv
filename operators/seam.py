@@ -134,7 +134,7 @@ class UV_OT_mio3_seam(Mio3UVOperator):
             bmesh.update_edit_mesh(obj.data)
 
         if self.unwrap:
-            bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0)
+            bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
 
         self.end_time()
         return {"FINISHED"}

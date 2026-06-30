@@ -64,7 +64,7 @@ class UV_OT_mio3_unwrap_project(Mio3UVOperator):
                     bpy.ops.uv.select_all(action="SELECT")
                 bpy.ops.uv.pin(clear=False)
                 bpy.ops.mesh.select_linked(delimit={"SEAM"})
-                bpy.ops.uv.unwrap(method=self.method)
+                bpy.ops.uv.unwrap(method=self.method, margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
                 bpy.ops.uv.pin(clear=True)
             context.view_layer.objects.active = objects[0]
             context.tool_settings.mesh_select_mode = mesh_select_mode
@@ -91,7 +91,7 @@ class UV_OT_mio3_unwrap_project(Mio3UVOperator):
                     island.bm.uv_select_sync_to_mesh()
 
         if self.link_unwrap:
-            bpy.ops.uv.unwrap(method=self.method)
+            bpy.ops.uv.unwrap(method=self.method, margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
             bpy.ops.uv.pin(clear=True)
 
         for island in island_manager.islands:
