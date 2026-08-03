@@ -18,8 +18,16 @@ class UV_OT_mio3_straight(Mio3UVOperator):
             ("NONE", "None", ""),
         ],
     )
-
+    method: EnumProperty(
+        name="Method",
+        items=[
+            ("ANGLE_BASED", "Angle Based", "Angle based unwrapping method"),
+            ("CONFORMAL", "Conformal", "Conformal mapping method"),
+            ("MINIMUM_STRETCH", "Minimum Stretch", "Minimum stretch mapping method"),
+        ],
+    )
     keep_length: BoolProperty(name="Preserve Length", default=True)
+    pin: BoolProperty(name="Pinned", default=True)
 
     def execute(self, context):
         self.start_time()
@@ -42,10 +50,15 @@ class UV_OT_mio3_straight(Mio3UVOperator):
 
             island.uv_select_set_all(True)
 
-        bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
+        bpy.ops.uv.unwrap(method=self.method, margin=0.001, use_subsurf_data=False, fill_holes=True, correct_aspect=True)
 
         for island in island_manager.islands:
             island.restore_selection()
+            if not self.pin:
+                for face in island.faces:
+                    for loop in face.loops:
+                        if loop.uv_select_vert:
+                            loop[island.uv_layer].pin_uv = False
 
         island_manager.update_uvmeshes(True)
 
